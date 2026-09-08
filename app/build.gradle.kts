@@ -52,5 +52,6 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.0")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("io.github.Rosemoe.sora-editor:editor:0.23.4")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
