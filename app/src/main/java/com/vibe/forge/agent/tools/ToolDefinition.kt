@@ -109,9 +109,35 @@ object ToolRegistry {
         required = emptyList()
     )
 
+    val searchInProject = ToolDefinition(
+        name = "search_in_project",
+        description = "Full-text search across the active workspace (file:line results)",
+        properties = mapOf(
+            "query" to ToolParam("string", "Search query")
+        ),
+        required = listOf("query")
+    )
+
+    val getBuildErrors = ToolDefinition(
+        name = "get_build_errors",
+        description = "Get structured errors from the last build run (file, line, message)",
+        properties = emptyMap(),
+        required = emptyList()
+    )
+
+    val undoLastChange = ToolDefinition(
+        name = "undo_last_change",
+        description = "Revert a file to its state before the last edit (restores from local backup)",
+        properties = mapOf(
+            "path" to ToolParam("string", "File path to revert")
+        ),
+        required = listOf("path")
+    )
+
     val phase2Tools = listOf(
         listFiles, readFile, writeFile, runBuild,
         editLayoutXml, editKotlinLogic, previewMockup, getDiff,
+        searchInProject, getBuildErrors, undoLastChange,
         searchHistory, updateMemory
     )
 

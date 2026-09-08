@@ -59,8 +59,37 @@ class FileTools(private val workspaceRoot: File) {
         try {
             val file = resolve(path) ?: return@withContext "error: path outside workspace"
             file.parentFile?.mkdirs()
+            if (file.exists()) {
+                file.copyTo(java.io.File(file.parentFile, file.name + ".vibeforge.bak"), overwrite = true)
+            }
             file.writeText(content)
             "written: " + file.absolutePath
+        } catch (t: Throwable) {
+            "error: ${t.message}"
+        }
+    }
+
+    suspend fun searchInProject(query: String): String = withContext(Dispatchers.IO) {
+        try {
+            if (query.isBlank()) return@withContext "error: query required"
+            val results = StringBuilder()
+            var hits = 0
+            workspaceRoot.walkTopDown()
+                .filter { it.isFile && it.extension in listOf("kt", "java", "xml", "md", "json", "gradle", "kts") }
+                .forEach { file ->
+                    if (hits >= 50) return@forEach
+                    try {
+                        file.readLines().forEachIndexed { index, line ->
+                            if (line.contains(query, ignoreCase = true) && hits < 50) {
+                                results.append(file.name).append(":")
+                                    .append(index + 1).append(": ")
+                                    .append(line.trim().take(120)).append("\n")
+                                hits++
+                            }
+                        }
+                    } catch (t: Throwable) { }
+                }
+            if (hits == 0) "no matches for: $query" else results.toString()
         } catch (t: Throwable) {
             "error: ${t.message}"
         }

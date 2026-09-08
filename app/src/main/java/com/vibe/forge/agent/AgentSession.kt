@@ -6,6 +6,7 @@ import com.vibe.forge.agent.memory.MemoryStore
 import com.vibe.forge.agent.tools.BuildTools
 import com.vibe.forge.agent.tools.GitTools
 import com.vibe.forge.agent.tools.MockupTools
+import com.vibe.forge.agent.tools.UndoTools
 import com.vibe.forge.vcs.GitCredentialStore
 import com.vibe.forge.vcs.GitRepoManager
 import com.vibe.forge.agent.tools.FileTools
@@ -43,6 +44,7 @@ class AgentSession(
     private val memoryTools = MemoryTools(memoryStore)
     private var buildTools: BuildTools? = null
     private val mockupTools = MockupTools(workspaceRoot)
+    private val undoTools = UndoTools(workspaceRoot)
     private val client = LlmClient(config)
 
     /** Pending memory entries awaiting one-time user confirmation. */
@@ -61,6 +63,8 @@ class AgentSession(
     private var skillsSeeded = false
 
     var mode: Mode = Mode.MODE_A
+
+    private var lastBuildErrors: List<com.vibe.forge.compiler.BuildPipelineManager.BuildError> = emptyList()
 
     /** Last skills loaded into the prompt - exposed for the debug panel. */
     var lastLoadedSkills: List<String> = emptyList()
@@ -89,7 +93,9 @@ class AgentSession(
         return "You are Vibe Forge, an on-device Android development agent. " +
                 modeDesc + " " +
                 "Use the provided tools to inspect the workspace before answering. " +
-                "Be concise. Never fabricate file contents - read them first." +
+                "Be concise. Never fabricate file contents - read them first. " +
+                "For complex instructions touching more than 2 related files, " +
+                "present a short step plan to the user BEFORE executing tool calls." +
                 skillsSection +
                 memorySection()
     }
@@ -123,7 +129,7 @@ class AgentSession(
     private suspend fun runLoop() {
         val maxRounds = 6
         repeat(maxRounds) { round ->
-            val result = client.send(systemPrompt(currentInstruction), history, ToolRegistry.phase2Tools)
+            val result = sendWithRetry()
             val response = result.getOrElse { e ->
                 append(Step(Step.Kind.ERROR, e.message ?: "request failed"))
                 return
@@ -158,6 +164,28 @@ class AgentSession(
         append(Step(Step.Kind.INFO, "max tool rounds reached"))
     }
 
+    /** Retry LLM calls with exponential backoff (network/rate-limit failures). */
+    private suspend fun sendWithRetry(): Result<LlmClient.LlmResponse> {
+        val delays = longArrayOf(0, 2000, 5000)
+        var lastError: Throwable? = null
+        for (attempt in delays.indices) {
+            if (delays[attempt] > 0) {
+                append(Step(Step.Kind.INFO, "retrying request (attempt " + (attempt + 1) + ")..."))
+                kotlinx.coroutines.delay(delays[attempt])
+            }
+            val result = client.send(systemPrompt(currentInstruction), history, ToolRegistry.phase2Tools)
+            if (result.isSuccess) return result
+            lastError = result.exceptionOrNull()
+            val msg = lastError?.message ?: ""
+            // Only retry on network/rate-limit errors, not parse/logic errors
+            if (!msg.contains("HTTP 5") && !msg.contains("HTTP 429") &&
+                !msg.contains("timeout", true) && !msg.contains("connect", true)) {
+                break
+            }
+        }
+        return Result.failure(lastError ?: Exception("request failed"))
+    }
+
     private suspend fun executeTool(name: String, input: JsonObject): String {
         return try {
             when (name) {
@@ -185,7 +213,10 @@ class AgentSession(
                     if (buildTools == null) {
                         buildTools = BuildTools(ctx, workspaceRoot)
                     }
-                    buildTools!!.runBuild { line -> append(Step(Step.Kind.TOOL_RESULT, line.take(300))) }
+                    val result = buildTools!!.runBuild { line ->
+                        append(Step(Step.Kind.TOOL_RESULT, line.take(300)))
+                    }
+                    result
                 }
                 "edit_layout_xml" -> {
                     val path = input.get("path")?.asString ?: ""
@@ -205,6 +236,20 @@ class AgentSession(
                     val ctx = appContext ?: return "error: no context"
                     val token = GitCredentialStore.token(ctx)
                     GitTools(GitRepoManager(workspaceRoot, token)).getDiff()
+                }
+                "search_in_project" -> {
+                    val query = input.get("query")?.asString ?: ""
+                    fileTools.searchInProject(query)
+                }
+                "get_build_errors" -> {
+                    if (lastBuildErrors.isEmpty()) "no build errors recorded"
+                    else lastBuildErrors.joinToString("\n") {
+                        "${it.file}:${it.line} ${it.message}"
+                    }
+                }
+                "undo_last_change" -> {
+                    val path = input.get("path")?.asString ?: ""
+                    undoTools.undoLastChange(path)
                 }
                 "search_history" -> {
                     val query = input.get("query")?.asString ?: ""
