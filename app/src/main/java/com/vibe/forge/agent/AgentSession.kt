@@ -3,6 +3,7 @@ package com.vibe.forge.agent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibe.forge.agent.memory.MemoryStore
+import com.vibe.forge.agent.tools.BuildTools
 import com.vibe.forge.agent.tools.FileTools
 import com.vibe.forge.agent.tools.MemoryTools
 import com.vibe.forge.agent.tools.ToolRegistry
@@ -20,7 +21,7 @@ import java.io.File
  */
 class AgentSession(
     private val config: ProviderConfig,
-    workspaceRoot: File,
+    private val workspaceRoot: File,
     private val appContext: android.content.Context? = null
 ) : ViewModel() {
 
@@ -36,6 +37,7 @@ class AgentSession(
     private val fileTools = FileTools(workspaceRoot)
     private val memoryStore = MemoryStore(workspaceRoot)
     private val memoryTools = MemoryTools(memoryStore)
+    private var buildTools: BuildTools? = null
     private val client = LlmClient(config)
 
     /** Pending memory entries awaiting one-time user confirmation. */
@@ -161,6 +163,18 @@ class AgentSession(
                         ?.map { it.asString } ?: emptyList()
                     if (paths.isEmpty()) "error: paths required"
                     else fileTools.readFiles(paths)
+                }
+                "write_file" -> {
+                    val path = input.get("path")?.asString ?: ""
+                    val content = input.get("content")?.asString ?: ""
+                    fileTools.writeFile(path, content)
+                }
+                "run_build" -> {
+                    val ctx = appContext ?: return "error: no context for build"
+                    if (buildTools == null) {
+                        buildTools = BuildTools(ctx, workspaceRoot)
+                    }
+                    buildTools!!.runBuild { line -> append(Step(Step.Kind.TOOL_RESULT, line.take(300))) }
                 }
                 "search_history" -> {
                     val query = input.get("query")?.asString ?: ""

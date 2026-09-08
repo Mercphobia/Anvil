@@ -56,7 +56,24 @@ object ToolRegistry {
         required = listOf("entry", "is_new_entry")
     )
 
-    val phase2Tools = listOf(listFiles, readFile, searchHistory, updateMemory)
+    val writeFile = ToolDefinition(
+        name = "write_file",
+        description = "Write or overwrite a file in the local workspace (MODE_A projects)",
+        properties = mapOf(
+            "path" to ToolParam("string", "Workspace-relative file path"),
+            "content" to ToolParam("string", "Full file content")
+        ),
+        required = listOf("path", "content")
+    )
+
+    val runBuild = ToolDefinition(
+        name = "run_build",
+        description = "Run the on-device build pipeline (aapt2 -> ecj -> d8 -> sign) and trigger the package installer",
+        properties = emptyMap(),
+        required = emptyList()
+    )
+
+    val phase2Tools = listOf(listFiles, readFile, writeFile, runBuild, searchHistory, updateMemory)
 
     fun byName(name: String): ToolDefinition? = phase2Tools.firstOrNull { it.name == name }
 }

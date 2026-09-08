@@ -55,6 +55,17 @@ class FileTools(private val workspaceRoot: File) {
         sb.toString()
     }
 
+    suspend fun writeFile(path: String, content: String): String = withContext(Dispatchers.IO) {
+        try {
+            val file = resolve(path) ?: return@withContext "error: path outside workspace"
+            file.parentFile?.mkdirs()
+            file.writeText(content)
+            "written: " + file.absolutePath
+        } catch (t: Throwable) {
+            "error: ${t.message}"
+        }
+    }
+
     /** Resolve a path against the workspace; null if it escapes the sandbox. */
     private fun resolve(path: String): File? {
         return try {
