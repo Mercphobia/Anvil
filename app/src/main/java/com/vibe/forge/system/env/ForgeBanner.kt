@@ -18,14 +18,14 @@ object ForgeBanner {
         val envReady = EmbeddedEnvironment.isInstalled(context)
 
         val logo = listOf(
-            "\\        /",
-            " \\      / ",
-            "  \\    /  ",
-            "   \\  /   ",
-            "    \\/\/  ",
-            "    /\\/\\ ",
-            "   /  \\  \\",
-            "  -------- "
+            "\\        //",
+            " \\      // ",
+            "  \\    //  ",
+            "   \\  //   ",
+            "    \\//    ",
+            "    //\\    ",
+            "   //  \\   ",
+            "  --------  "
         )
 
         val info = listOf(

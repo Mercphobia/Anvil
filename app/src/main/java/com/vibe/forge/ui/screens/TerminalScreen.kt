@@ -179,7 +179,7 @@ fun TerminalScreen(
         .fillMaxWidth()
         .weight(1f)
         .clip(RoundedCornerShape(16.dp)),
-      color = Color(0xFF0F1117)
+      color = MaterialTheme.colorScheme.surfaceContainerLowest
     ) {
       Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -195,7 +195,7 @@ fun TerminalScreen(
               fontFamily = FontFamily.Monospace,
               fontSize = 12.sp,
               lineHeight = 18.sp,
-              color = Color(0xFFDCDFE4)
+              color = MaterialTheme.colorScheme.onSurface
             )
           }
         }
