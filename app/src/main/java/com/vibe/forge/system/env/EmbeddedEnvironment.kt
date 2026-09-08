@@ -41,7 +41,7 @@ object EmbeddedEnvironment {
             }
             val json = conn.inputStream.bufferedReader().readText()
             conn.disconnect()
-            Regex("\"browser_download_url\"\s*:\s*\"([^\"]*bootstrap-aarch64\.zip)\"")
+            Regex("\"browser_download_url\"\\s*:\\s*\"([^\"]*bootstrap-aarch64\\.zip)\"")
                 .find(json)?.groupValues?.get(1)
                 ?: BOOTSTRAP_FALLBACK_URL
         } catch (t: Throwable) {
