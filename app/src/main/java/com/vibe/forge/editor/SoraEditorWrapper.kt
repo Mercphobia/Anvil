@@ -8,15 +8,17 @@ import androidx.compose.ui.viewinterop.AndroidView
 import io.github.rosemoe.sora.langs.textmate.TextMateColorScheme
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
-import org.eclipse.tm4e.core.registry.IThemeSource
+
+/** Editor text size in sp — sora's default (~20sp) is far too big on phones. */
+private const val EDITOR_TEXT_SIZE_SP = 13f
 
 /**
  * Compose wrapper around sora-editor with TextMate syntax highlighting.
  *
- * Base editor colors (background, gutter, line numbers) follow the active
- * Material 3 theme; token colors (keywords, strings, comments, ...) come
- * from the bundled Quiet Light TextMate theme via [TextMateLanguages].
- * Highlighting is best-effort: any failure falls back to plain text.
+ * Everything is dynamic: token colors are generated from the active
+ * Material 3 color scheme (see [DynamicTextMateTheme]), so the editor
+ * follows dark/light mode and wallpaper dynamic color. Highlighting is
+ * best-effort — any failure falls back to plain text with theme colors.
  */
 @Composable
 fun SoraEditorWrapper(
@@ -26,20 +28,14 @@ fun SoraEditorWrapper(
     readOnly: Boolean = false,
     fileName: String? = null
 ) {
-    val background = MaterialTheme.colorScheme.surfaceContainerLowest.toArgb()
-    val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
-    val lineNumber = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
-    val gutterBg = MaterialTheme.colorScheme.surfaceContainerLow.toArgb()
-    val keyword = MaterialTheme.colorScheme.primary.toArgb()
-    val comment = MaterialTheme.colorScheme.outline.toArgb()
-    val stringColor = MaterialTheme.colorScheme.tertiary.toArgb()
+    val colorScheme = MaterialTheme.colorScheme
 
     AndroidView(
         modifier = modifier,
         factory = { context ->
             CodeEditor(context).apply {
-                applyHighlighting(this, context, fileName, background, textColor,
-                    lineNumber, gutterBg, keyword, comment, stringColor)
+                setTextSize(EDITOR_TEXT_SIZE_SP)
+                typefaceText = android.graphics.Typeface.MONOSPACE
                 setText(text)
                 editable = !readOnly
                 subscribeAlways(io.github.rosemoe.sora.event.ContentChangeEvent::class.java) {
@@ -48,8 +44,8 @@ fun SoraEditorWrapper(
             }
         },
         update = { editor ->
-            applyHighlighting(editor, editor.context, fileName, background, textColor,
-                lineNumber, gutterBg, keyword, comment, stringColor)
+            applyLanguage(editor, fileName)
+            applyColors(editor, colorScheme)
             val current = editor.text.toString()
             if (current != text) {
                 editor.setText(text)
@@ -58,47 +54,34 @@ fun SoraEditorWrapper(
     )
 }
 
-private fun applyHighlighting(
-    editor: CodeEditor,
-    context: android.content.Context,
-    fileName: String?,
-    background: Int,
-    textColor: Int,
-    lineNumber: Int,
-    gutterBg: Int,
-    keyword: Int,
-    comment: Int,
-    stringColor: Int
-) {
-    // 1. Language by file extension (null = plain text fallback)
+private fun applyLanguage(editor: CodeEditor, fileName: String?) {
     try {
-        val language = TextMateLanguages.languageFor(context, fileName)
+        val language = TextMateLanguages.languageFor(editor.context, fileName)
         if (language != null && editor.editorLanguage !== language) {
             editor.setEditorLanguage(language)
         }
     } catch (t: Throwable) {
         // keep whatever language is set
     }
+}
 
-    // 2. Colors: TextMate theme for tokens, Material scheme for the chrome
+private fun applyColors(
+    editor: CodeEditor,
+    colorScheme: androidx.compose.material3.ColorScheme
+) {
+    val background = colorScheme.surfaceContainerLowest.toArgb()
+    val textColor = colorScheme.onSurface.toArgb()
+    val lineNumber = colorScheme.onSurfaceVariant.toArgb()
+    val gutterBg = colorScheme.surfaceContainerLow.toArgb()
     try {
-        val scheme = TextMateColorScheme.create(
-            IThemeSource.fromInputStream(
-                context.assets.open("textmate/quietlight.json"),
-                "quietlight.json",
-                null
-            )
-        )
-        // Overwrite chrome colors with the app theme so the editor still
-        // matches the rest of the UI (dark/light, dynamic color).
+        val scheme = TextMateColorScheme.create(DynamicTextMateTheme.build(colorScheme))
         scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, background)
         scheme.setColor(EditorColorScheme.LINE_NUMBER, lineNumber)
         scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, gutterBg)
         scheme.setColor(EditorColorScheme.LINE_DIVIDER, gutterBg)
         editor.colorScheme = scheme
     } catch (t: Throwable) {
-        applyFallbackScheme(editor, background, textColor, lineNumber,
-            gutterBg, keyword, comment, stringColor)
+        applyFallbackScheme(editor, background, textColor, lineNumber, gutterBg)
     }
 }
 
@@ -107,10 +90,7 @@ private fun applyFallbackScheme(
     background: Int,
     textColor: Int,
     lineNumber: Int,
-    gutterBg: Int,
-    keyword: Int,
-    comment: Int,
-    stringColor: Int
+    gutterBg: Int
 ) {
     try {
         val scheme = editor.colorScheme
@@ -118,9 +98,6 @@ private fun applyFallbackScheme(
         scheme.setColor(EditorColorScheme.TEXT_NORMAL, textColor)
         scheme.setColor(EditorColorScheme.LINE_NUMBER, lineNumber)
         scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, gutterBg)
-        scheme.setColor(EditorColorScheme.KEYWORD, keyword)
-        scheme.setColor(EditorColorScheme.COMMENT, comment)
-        scheme.setColor(EditorColorScheme.LITERAL, stringColor)
     } catch (t: Throwable) {
         // theming is best-effort
     }

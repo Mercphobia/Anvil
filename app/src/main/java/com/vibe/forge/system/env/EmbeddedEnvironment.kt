@@ -56,12 +56,26 @@ object EmbeddedEnvironment {
     fun bashPath(context: Context) = File(usrDir(context), "bin/bash")
     fun shPath(context: Context) = File(usrDir(context), "bin/sh")
 
-    /** True when a usable shell exists (follows symlinks, checks executability). */
+    /**
+     * True when a usable shell exists. Existence/executability is checked on
+     * the given path itself — File.exists() already follows symlinks, and a
+     * relative symlink (bin/sh -> dash) resolves against its own directory.
+     * NOTE: do NOT use canonicalFile here: canonicalPath on Android resolves
+     * against the *process* working directory, which breaks relative links
+     * and can throw on dangling ones.
+     */
     private fun shellUsable(f: File): Boolean {
         return try {
-            // canonicalFile resolves the relative symlinks created from SYMLINKS.txt
-            val c = f.canonicalFile
-            c.exists() && c.isFile && c.canExecute()
+            f.exists() && f.isFile && f.canExecute()
+        } catch (t: Throwable) {
+            false
+        }
+    }
+
+    /** True when [f] exists but its (symlink) target cannot be resolved. */
+    private fun isBrokenLink(f: File): Boolean {
+        return try {
+            !f.exists() && android.system.Os.lstat(f.absolutePath) != null
         } catch (t: Throwable) {
             false
         }
@@ -81,18 +95,31 @@ object EmbeddedEnvironment {
         onProgress: (String) -> Unit
     ): SetupReport = withContext(Dispatchers.IO) {
         try {
-            val alreadyInstalled = isInstalled(context)
-            val symlinksFile = File(usrDir(context), "SYMLINKS.txt")
-            // If a previous (pre-symlink-fix) extraction left files but no links,
-            // rebuild the links instead of downloading again.
-            if (alreadyInstalled && symlinksFile.exists() &&
-                !try { shPath(context).canonicalFile.exists() } catch (t: Throwable) { true }
-            ) {
-                onProgress("repairing symlinks...")
-                createSymlinks(usrDir(context), onProgress)
+            // Repair passes BEFORE the isInstalled() early-return:
+            //  - bash/sh physically present but not executable (partial extract)
+            //  - sh is a broken symlink (target extracted later / bad target)
+            //  - a previous (pre-symlink-fix) extraction never built the links
+            val usr = usrDir(context)
+            val bash = bashPath(context)
+            val sh = shPath(context)
+            val needsRepair = isBrokenLink(sh) || isBrokenLink(bash) ||
+                (bash.exists() && !bash.canExecute()) ||
+                (sh.exists() && !sh.canExecute()) ||
+                (File(usr, "SYMLINKS.txt").exists() && !sh.exists())
+            if (needsRepair) {
+                onProgress("repairing environment...")
+                repairPermissions(usr)
+                createSymlinks(usr, onProgress)
             }
             if (isInstalled(context)) {
                 return@withContext SetupReport(true, "environment ready")
+            }
+
+            // If setup previously failed, the earlier extraction may be
+            // incomplete in ways repair cannot fix (missing files). Start
+            // the fresh download from a clean slate.
+            if (usrDir(context).exists()) {
+                usrDir(context).deleteRecursively()
             }
 
             val zipFile = File(context.cacheDir, "bootstrap.zip.part")
@@ -157,7 +184,7 @@ object EmbeddedEnvironment {
             SetupReport(
                 ok,
                 if (ok) "environment ready ($extracted files, $linked links)"
-                else "extraction incomplete - no usable shell (bash/sh missing after symlink creation)"
+                else "extraction incomplete - no usable shell " + diagnose(context)
             )
         } catch (t: Throwable) {
             SetupReport(false, "setup failed: ${t.message}")
@@ -198,6 +225,41 @@ object EmbeddedEnvironment {
         val sh = shPath(context)
         if (shellUsable(sh)) return sh.absolutePath
         return "/system/bin/sh"
+    }
+
+    /**
+     * Human-readable state of the shell binaries, appended to the setup error
+     * message so bootstrap failures can be diagnosed from the UI log alone.
+     */
+    private fun diagnose(context: Context): String {
+        fun state(f: File): String = try {
+            val lst = try { android.system.Os.lstat(f.absolutePath) != null } catch (t: Throwable) { false }
+            "(exists=${f.exists()} exec=${f.canExecute()} lstat=$lst)"
+        } catch (t: Throwable) {
+            "(error)"
+        }
+        return "[bash${state(bashPath(context))} sh${state(shPath(context))}]"
+    }
+
+    /**
+     * Recursively ensure everything under usr/bin, usr/libexec and usr/lib/bash
+     * is executable. Extraction best-effort error handling can leave some
+     * binaries without the exec bit, which makes an otherwise-complete
+     * environment report "no usable shell".
+     */
+    private fun repairPermissions(usr: File) {
+        listOf(File(usr, "bin"), File(usr, "libexec"), File(usr, "lib/bash")).forEach { dir ->
+            dir.walkTopDown().forEach { f ->
+                if (f.isFile) {
+                    try {
+                        f.setExecutable(true, false)
+                        f.setReadable(true, false)
+                    } catch (t: Throwable) {
+                        // best-effort
+                    }
+                }
+            }
+        }
     }
 
     /**
