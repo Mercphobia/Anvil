@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibe.forge.agent.memory.MemoryStore
 import com.vibe.forge.agent.tools.BuildTools
+import com.vibe.forge.agent.tools.GitTools
 import com.vibe.forge.agent.tools.MockupTools
+import com.vibe.forge.vcs.GitCredentialStore
+import com.vibe.forge.vcs.GitRepoManager
 import com.vibe.forge.agent.tools.FileTools
 import com.vibe.forge.agent.tools.MemoryTools
 import com.vibe.forge.agent.tools.ToolRegistry
@@ -195,6 +198,11 @@ class AgentSession(
                 "preview_mockup" -> {
                     val xml = input.get("xml_content")?.asString ?: ""
                     mockupTools.previewMockup(xml)
+                }
+                "get_diff" -> {
+                    val ctx = appContext ?: return "error: no context"
+                    val token = GitCredentialStore.token(ctx)
+                    GitTools(GitRepoManager(workspaceRoot, token)).getDiff()
                 }
                 "search_history" -> {
                     val query = input.get("query")?.asString ?: ""

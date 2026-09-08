@@ -53,5 +53,6 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("io.github.Rosemoe.sora-editor:editor:0.23.4")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:6.8.0.202311291450-r")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

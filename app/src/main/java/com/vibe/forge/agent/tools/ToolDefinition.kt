@@ -102,9 +102,16 @@ object ToolRegistry {
         required = listOf("xml_content")
     )
 
+    val getDiff = ToolDefinition(
+        name = "get_diff",
+        description = "Get the diff of all changes in the working copy vs HEAD. Read-only.",
+        properties = emptyMap(),
+        required = emptyList()
+    )
+
     val phase2Tools = listOf(
         listFiles, readFile, writeFile, runBuild,
-        editLayoutXml, editKotlinLogic, previewMockup,
+        editLayoutXml, editKotlinLogic, previewMockup, getDiff,
         searchHistory, updateMemory
     )
 
