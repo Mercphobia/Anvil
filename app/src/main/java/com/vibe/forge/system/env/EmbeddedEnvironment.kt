@@ -132,7 +132,6 @@ object EmbeddedEnvironment {
             onProgress("extracting...")
             val env = envDir(context)
             env.mkdirs()
-            val usr = usrDir(context)
             usr.mkdirs()
 
             var extracted = 0
