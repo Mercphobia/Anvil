@@ -10,51 +10,106 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.vibe.forge.agent.AgentSession
+import com.vibe.forge.agent.ProviderConfigStore
 import com.vibe.forge.ui.components.ChatBubble
 import com.vibe.forge.ui.components.ChatMessage
 import com.vibe.forge.ui.components.ChatRole
+import com.vibe.forge.ui.components.ProviderSettingsDialog
+import java.io.File
 
-/**
- * Phase 1: static chat UI only. Agent loop arrives in Phase 2.
- */
 @Composable
 fun ChatScreen() {
-    var input by remember { mutableStateOf("") }
-    val messages = remember {
+    val context = LocalContext.current
+    var config by remember { mutableStateOf(ProviderConfigStore.load(context)) }
+    var showSettings by remember { mutableStateOf(false) }
+    var session by remember(config) {
         mutableStateOf(
-            listOf(
-                ChatMessage(ChatRole.AGENT, "Welcome to Vibe Forge. Describe the app you want to build, or the SystemUI change you want to design."),
-                ChatMessage(ChatRole.USER, "Make the quick settings panel dark blue."),
-                ChatMessage(ChatRole.AGENT, "Phase 1 placeholder - the agent loop goes live in Phase 2.")
+            AgentSession(
+                config = config,
+                workspaceRoot = File(context.filesDir, "workspace")
             )
         )
     }
+    val steps by session.steps.collectAsState()
+    val busy by session.busy.collectAsState()
+    var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    LaunchedEffect(messages.value.size) {
-        if (messages.value.isNotEmpty()) {
-            listState.animateScrollToItem(messages.value.size - 1)
-        }
+    LaunchedEffect(steps.size) {
+        if (steps.isNotEmpty()) listState.animateScrollToItem(steps.size - 1)
+    }
+
+    if (showSettings) {
+        ProviderSettingsDialog(
+            initial = config,
+            onSave = { newConfig ->
+                ProviderConfigStore.save(context, newConfig)
+                config = newConfig
+                showSettings = false
+            },
+            onDismiss = { showSettings = false }
+        )
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+        // Top bar: mode + provider info + settings
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = session.mode == AgentSession.Mode.MODE_A,
+                onClick = { session.mode = AgentSession.Mode.MODE_A },
+                label = { Text("App Builder") }
+            )
+            FilterChip(
+                selected = session.mode == AgentSession.Mode.MODE_B,
+                onClick = { session.mode = AgentSession.Mode.MODE_B },
+                label = { Text("AOSP Assist") }
+            )
+            TextButton(onClick = { showSettings = true }) {
+                Text(config.provider.displayName.split(" ").first())
+            }
+        }
+
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxWidth().weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(messages.value) { msg ->
-                ChatBubble(msg)
+            items(steps) { step ->
+                when (step.kind) {
+                    AgentSession.Step.Kind.USER ->
+                        ChatBubble(ChatMessage(ChatRole.USER, step.text))
+                    AgentSession.Step.Kind.AGENT_TEXT ->
+                        ChatBubble(ChatMessage(ChatRole.AGENT, step.text))
+                    AgentSession.Step.Kind.TOOL_CALL ->
+                        StepLine("> tool: " + step.text, MaterialTheme.colorScheme.primary)
+                    AgentSession.Step.Kind.TOOL_RESULT ->
+                        StepLine(step.text, MaterialTheme.colorScheme.onSurfaceVariant)
+                    AgentSession.Step.Kind.ERROR ->
+                        StepLine("error: " + step.text, MaterialTheme.colorScheme.error)
+                    AgentSession.Step.Kind.INFO ->
+                        StepLine(step.text, MaterialTheme.colorScheme.secondary)
+                }
             }
         }
 
@@ -63,21 +118,39 @@ fun ChatScreen() {
                 value = input,
                 onValueChange = { input = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Describe your task...") },
-                singleLine = true
+                placeholder = {
+                    Text(
+                        if (config.isUsable()) "Describe your task..."
+                        else "Set API key first (tap provider name)"
+                    )
+                },
+                singleLine = true,
+                enabled = !busy
             )
             Button(
                 onClick = {
                     val text = input.trim()
                     if (text.isNotEmpty()) {
-                        messages.value = messages.value + ChatMessage(ChatRole.USER, text)
+                        session.send(text)
                         input = ""
                     }
                 },
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp),
+                enabled = !busy && config.isUsable()
             ) {
-                Text("Send")
+                Text(if (busy) "..." else "Send")
             }
         }
     }
+}
+
+@Composable
+private fun StepLine(text: String, color: androidx.compose.ui.graphics.Color) {
+    Text(
+        text,
+        color = color,
+        fontFamily = FontFamily.Monospace,
+        fontSize = 11.sp,
+        modifier = Modifier.padding(start = 8.dp)
+    )
 }
