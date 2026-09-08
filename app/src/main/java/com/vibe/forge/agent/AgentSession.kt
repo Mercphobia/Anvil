@@ -82,7 +82,9 @@ class AgentSession(
         val skillsSection = SkillLoader.renderPromptSection(selected)
         val modeDesc = when (mode) {
             Mode.MODE_A -> "MODE_A (App Builder): generate simple Java single-Activity Android apps compiled on-device."
-            Mode.MODE_B -> "MODE_B (AOSP Design Assist): help edit AOSP SystemUI sources with preview; builds happen off-device."
+            Mode.MODE_B -> "MODE_B (AOSP Design Assist): help edit AOSP SystemUI sources with preview; builds happen off-device. " +
+                "Mandatory flow for edits: list_files -> read_file (logic AND its layout pair) -> edit -> preview_mockup for visual changes -> get_diff -> tell the user to review and press the commit button. " +
+                "Never edit without reading the real file first."
         }
         return "You are Vibe Forge, an on-device Android development agent. " +
                 modeDesc + " " +
