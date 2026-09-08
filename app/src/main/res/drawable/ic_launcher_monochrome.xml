@@ -7,16 +7,16 @@
 
     <!-- V body -->
     <path
-        android:fillColor="#4F8CFF"
+        android:fillColor="#FFFFFF"
         android:pathData="M30,30 L46,30 L54,58 L62,30 L78,30 L60,78 L48,78 Z" />
 
     <!-- forge spark / accent slash -->
     <path
-        android:fillColor="#7C5CFF"
+        android:fillColor="#FFFFFF"
         android:pathData="M62,52 L74,52 L68,66 L56,66 Z" />
 
     <!-- base anvil line -->
     <path
-        android:fillColor="#9BA0A8"
+        android:fillColor="#FFFFFF"
         android:pathData="M34,82 L74,82 L74,87 L34,87 Z" />
 </vector>

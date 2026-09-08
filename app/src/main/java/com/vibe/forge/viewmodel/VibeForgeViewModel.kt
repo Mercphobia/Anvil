@@ -202,12 +202,7 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
 
   // Terminal State
   private val _terminalLogs = MutableStateFlow(
-    """
-    VibeForge On-Device Terminal [AArch64 / Linux 6.1]
-    Working directory: /data/user/0/com.vibe.forge/workspace
-    Type 'help' or tap a command template below.
-    vibeforge@android:~$ 
-    """.trimIndent()
+    com.vibe.forge.system.env.ForgeBanner.render(app.applicationContext)
   )
   val terminalLogs: StateFlow<String> = _terminalLogs.asStateFlow()
 
