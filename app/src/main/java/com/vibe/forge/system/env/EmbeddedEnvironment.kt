@@ -23,9 +23,31 @@ import java.util.zip.ZipFile
  */
 object EmbeddedEnvironment {
 
-    private const val BOOTSTRAP_URL =
-        "https://github.com/termux/termux-packages/releases/download/bootstrap-2025.09.07-r1/bootstrap-aarch64.zip"
+    private const val BOOTSTRAP_API =
+        "https://api.github.com/repos/termux/termux-packages/releases?per_page=20"
+    private const val BOOTSTRAP_FALLBACK_URL =
+        "https://github.com/termux/termux-packages/releases/download/bootstrap-2026.09.06-r1%2Bapt.android-7/bootstrap-aarch64.zip"
     private const val TERMUX_PREFIX = "/data/data/com.termux/files/usr"
+
+    /** Resolve the newest bootstrap-aarch64.zip URL from the releases API. */
+    private fun resolveBootstrapUrl(): String {
+        return try {
+            val conn = java.net.URL(BOOTSTRAP_API).openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 15000
+            conn.readTimeout = 15000
+            if (conn.responseCode !in 200..299) {
+                conn.disconnect()
+                return BOOTSTRAP_FALLBACK_URL
+            }
+            val json = conn.inputStream.bufferedReader().readText()
+            conn.disconnect()
+            Regex("\"browser_download_url\"\s*:\s*\"([^\"]*bootstrap-aarch64\.zip)\"")
+                .find(json)?.groupValues?.get(1)
+                ?: BOOTSTRAP_FALLBACK_URL
+        } catch (t: Throwable) {
+            BOOTSTRAP_FALLBACK_URL
+        }
+    }
 
     fun envDir(context: Context) = File(context.filesDir, "env")
     fun usrDir(context: Context) = File(envDir(context), "usr")
@@ -52,8 +74,9 @@ object EmbeddedEnvironment {
             }
 
             val zipFile = File(context.cacheDir, "bootstrap.zip.part")
+            val url = resolveBootstrapUrl()
             onProgress("downloading bootstrap (~30MB)...")
-            if (!download(BOOTSTRAP_URL, zipFile, onProgress)) {
+            if (!download(url, zipFile, onProgress)) {
                 return@withContext SetupReport(false, "bootstrap download failed")
             }
 
@@ -136,13 +159,18 @@ object EmbeddedEnvironment {
         return env
     }
 
-    /** Shell binary to invoke, with graceful fallback to system sh. */
+    /**
+     * Shell binary to invoke, with graceful fallback.
+     * "sh" without a path is resolved through the process PATH lookup,
+     * which is more reliable than hardcoding /system/bin/sh (not always
+     * executable for third-party apps on modern Android).
+     */
     fun shellBinary(context: Context): String {
         val bash = bashPath(context)
-        if (bash.exists()) return bash.absolutePath
+        if (bash.exists() && bash.canExecute()) return bash.absolutePath
         val sh = shPath(context)
-        if (sh.exists()) return sh.absolutePath
-        return "/system/bin/sh"
+        if (sh.exists() && sh.canExecute()) return sh.absolutePath
+        return "sh"
     }
 
     /**

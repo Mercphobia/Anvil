@@ -188,14 +188,16 @@ fun TerminalScreen(
             .padding(14.dp)
             .verticalScroll(scrollState)
         ) {
-          // Terminal Output Text
-          Text(
-            text = terminalLogs,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-            lineHeight = 18.sp,
-            color = Color(0xFFDCDFE4)
-          )
+          // Terminal Output Text (selectable for copy)
+          androidx.compose.foundation.text.selection.SelectionContainer {
+            Text(
+              text = terminalLogs,
+              fontFamily = FontFamily.Monospace,
+              fontSize = 12.sp,
+              lineHeight = 18.sp,
+              color = Color(0xFFDCDFE4)
+            )
+          }
         }
 
         if (isRunning) {
