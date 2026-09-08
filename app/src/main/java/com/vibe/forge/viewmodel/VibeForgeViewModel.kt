@@ -18,7 +18,60 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-class VibeForgeViewModel : ViewModel() {
+class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
+
+  // ------------------------------------------------------------------
+  // Real engine bridge (agent session, git, build, terminal)
+  // ------------------------------------------------------------------
+
+  private val workspaceRoot: java.io.File
+    get() = java.io.File(app.filesDir, "workspace")
+
+  private var agentSession: com.vibe.forge.agent.AgentSession? = null
+
+  private fun session(): com.vibe.forge.agent.AgentSession {
+      val existing = agentSession
+      if (existing != null) return existing
+      val config = com.vibe.forge.agent.ProviderConfigStore.load(app)
+      val created = com.vibe.forge.agent.AgentSession(
+          config = config,
+          workspaceRoot = workspaceRoot,
+          appContext = app.applicationContext
+      )
+      created.mode = when (_activeMode.value) {
+          com.vibe.forge.model.AgentMode.MODE_A -> com.vibe.forge.agent.AgentSession.Mode.MODE_A
+          com.vibe.forge.model.AgentMode.MODE_B -> com.vibe.forge.agent.AgentSession.Mode.MODE_B
+      }
+      viewModelScope.launch {
+          created.steps.collect { engineSteps ->
+              _steps.value = engineSteps.map { s ->
+                  com.vibe.forge.model.AgentStep(
+                      id = java.util.UUID.randomUUID().toString(),
+                      kind = when (s.kind) {
+                          com.vibe.forge.agent.AgentSession.Step.Kind.USER -> com.vibe.forge.model.StepKind.USER
+                          com.vibe.forge.agent.AgentSession.Step.Kind.AGENT_TEXT -> com.vibe.forge.model.StepKind.AGENT_TEXT
+                          com.vibe.forge.agent.AgentSession.Step.Kind.TOOL_CALL -> com.vibe.forge.model.StepKind.TOOL_CALL
+                          com.vibe.forge.agent.AgentSession.Step.Kind.TOOL_RESULT -> com.vibe.forge.model.StepKind.TOOL_RESULT
+                          com.vibe.forge.agent.AgentSession.Step.Kind.ERROR -> com.vibe.forge.model.StepKind.ERROR
+                          com.vibe.forge.agent.AgentSession.Step.Kind.INFO -> com.vibe.forge.model.StepKind.INFO
+                      },
+                      text = s.text,
+                      timestamp = ""
+                  )
+              }
+          }
+      }
+      viewModelScope.launch {
+          created.busy.collect { _isBusy.value = it }
+      }
+      viewModelScope.launch {
+          created.pendingMemoryEntry.collect { entry ->
+              _pendingMemory.value = entry
+          }
+      }
+      agentSession = created
+      return created
+  }
 
   // Navigation / Welcome state
   private val _showWelcome = MutableStateFlow(false)
