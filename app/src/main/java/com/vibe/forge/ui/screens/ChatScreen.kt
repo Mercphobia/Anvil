@@ -51,6 +51,7 @@ fun ChatScreen() {
     }
     val steps by session.steps.collectAsState()
     val busy by session.busy.collectAsState()
+    val pendingMemory by session.pendingMemoryEntry.collectAsState()
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
@@ -119,6 +120,40 @@ fun ChatScreen() {
                         StepLine("error: " + step.text, MaterialTheme.colorScheme.error)
                     AgentSession.Step.Kind.INFO ->
                         StepLine(step.text, MaterialTheme.colorScheme.secondary)
+                }
+            }
+        }
+
+        pendingMemory?.let { entry ->
+            androidx.compose.material3.Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        "Save to project memory?",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        entry.take(120),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { session.dismissMemoryEntry() }) {
+                            Text("Dismiss")
+                        }
+                        Button(
+                            onClick = { session.confirmMemoryEntry() },
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Text("Save")
+                        }
+                    }
                 }
             }
         }

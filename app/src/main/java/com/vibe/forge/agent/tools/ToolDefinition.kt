@@ -37,7 +37,26 @@ object ToolRegistry {
         required = listOf("paths")
     )
 
-    val phase2Tools = listOf(listFiles, readFile)
+    val searchHistory = ToolDefinition(
+        name = "search_history",
+        description = "Query the project's change/decision history. Only call when the user explicitly asks to see history.",
+        properties = mapOf(
+            "query" to ToolParam("string", "Search query")
+        ),
+        required = listOf("query")
+    )
+
+    val updateMemory = ToolDefinition(
+        name = "update_memory",
+        description = "Add or update a concise entry in the project memory (decisions, conventions, gotchas).",
+        properties = mapOf(
+            "entry" to ToolParam("string", "One-line memory entry"),
+            "is_new_entry" to ToolParam("boolean", "True if this is a brand-new entry (requires user confirmation)")
+        ),
+        required = listOf("entry", "is_new_entry")
+    )
+
+    val phase2Tools = listOf(listFiles, readFile, searchHistory, updateMemory)
 
     fun byName(name: String): ToolDefinition? = phase2Tools.firstOrNull { it.name == name }
 }

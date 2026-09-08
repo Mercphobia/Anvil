@@ -2,7 +2,9 @@ package com.vibe.forge.agent
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vibe.forge.agent.memory.MemoryStore
 import com.vibe.forge.agent.tools.FileTools
+import com.vibe.forge.agent.tools.MemoryTools
 import com.vibe.forge.agent.tools.ToolRegistry
 import com.google.gson.JsonObject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +34,13 @@ class AgentSession(
     }
 
     private val fileTools = FileTools(workspaceRoot)
+    private val memoryStore = MemoryStore(workspaceRoot)
+    private val memoryTools = MemoryTools(memoryStore)
     private val client = LlmClient(config)
+
+    /** Pending memory entries awaiting one-time user confirmation. */
+    private val _pendingMemoryEntry = MutableStateFlow<String?>(null)
+    val pendingMemoryEntry: StateFlow<String?> = _pendingMemoryEntry.asStateFlow()
 
     private val _steps = MutableStateFlow<List<Step>>(emptyList())
     val steps: StateFlow<List<Step>> = _steps.asStateFlow()
@@ -73,7 +81,14 @@ class AgentSession(
                 modeDesc + " " +
                 "Use the provided tools to inspect the workspace before answering. " +
                 "Be concise. Never fabricate file contents - read them first." +
-                skillsSection
+                skillsSection +
+                memorySection()
+    }
+
+    private suspend fun memorySection(): String {
+        val memory = memoryStore.readMemory()
+        return if (memory.isBlank()) ""
+        else "\n\nProject memory (follow these decisions/conventions):\n" + memory.trim()
     }
 
     fun send(userText: String) {
@@ -147,6 +162,21 @@ class AgentSession(
                     if (paths.isEmpty()) "error: paths required"
                     else fileTools.readFiles(paths)
                 }
+                "search_history" -> {
+                    val query = input.get("query")?.asString ?: ""
+                    memoryTools.searchHistory(query)
+                }
+                "update_memory" -> {
+                    val entry = input.get("entry")?.asString ?: ""
+                    val isNew = input.get("is_new_entry")?.asBoolean ?: true
+                    if (isNew) {
+                        // New entries require explicit user confirmation first
+                        _pendingMemoryEntry.value = entry
+                        "pending: entry requires user confirmation before writing"
+                    } else {
+                        memoryTools.updateMemory(entry)
+                    }
+                }
                 else -> "error: unknown tool: $name"
             }
         } catch (t: Throwable) {
@@ -164,6 +194,23 @@ class AgentSession(
 
     private fun append(step: Step) {
         _steps.value = _steps.value + step
+    }
+
+    /** User confirmed the pending memory entry - write it now. */
+    fun confirmMemoryEntry() {
+        val entry = _pendingMemoryEntry.value ?: return
+        _pendingMemoryEntry.value = null
+        viewModelScope.launch {
+            val result = memoryTools.updateMemory(entry)
+            append(Step(Step.Kind.INFO, "memory saved: " + entry.take(80) + " [" + result + "]"))
+        }
+    }
+
+    /** User rejected the pending memory entry. */
+    fun dismissMemoryEntry() {
+        val entry = _pendingMemoryEntry.value ?: return
+        _pendingMemoryEntry.value = null
+        append(Step(Step.Kind.INFO, "memory entry dismissed: " + entry.take(80)))
     }
 
     fun clear() {
