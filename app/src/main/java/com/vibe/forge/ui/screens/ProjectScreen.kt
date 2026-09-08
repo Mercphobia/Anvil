@@ -329,10 +329,11 @@ fun ProjectScreen(
           )
         }
 
-        // Code editor (sora-editor: real gutter, scrolling, monospace)
+        // Code editor (sora-editor: real gutter, scrolling, monospace, TextMate highlighting)
         com.vibe.forge.editor.SoraEditorWrapper(
           text = editorContent,
           onTextChanged = { viewModel.updateEditorContent(it) },
+          fileName = selectedFile?.name,
           modifier = Modifier
             .fillMaxSize()
             .testTag("code_editor_field")

@@ -1,6 +1,7 @@
 package com.vibe.forge.system.env
 
 import android.content.Context
+import android.system.Os
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -55,8 +56,19 @@ object EmbeddedEnvironment {
     fun bashPath(context: Context) = File(usrDir(context), "bin/bash")
     fun shPath(context: Context) = File(usrDir(context), "bin/sh")
 
+    /** True when a usable shell exists (follows symlinks, checks executability). */
+    private fun shellUsable(f: File): Boolean {
+        return try {
+            // canonicalFile resolves the relative symlinks created from SYMLINKS.txt
+            val c = f.canonicalFile
+            c.exists() && c.isFile && c.canExecute()
+        } catch (t: Throwable) {
+            false
+        }
+    }
+
     fun isInstalled(context: Context): Boolean {
-        return bashPath(context).exists() || shPath(context).exists()
+        return shellUsable(bashPath(context)) || shellUsable(shPath(context))
     }
 
     data class SetupReport(
@@ -69,6 +81,16 @@ object EmbeddedEnvironment {
         onProgress: (String) -> Unit
     ): SetupReport = withContext(Dispatchers.IO) {
         try {
+            val alreadyInstalled = isInstalled(context)
+            val symlinksFile = File(usrDir(context), "SYMLINKS.txt")
+            // If a previous (pre-symlink-fix) extraction left files but no links,
+            // rebuild the links instead of downloading again.
+            if (alreadyInstalled && symlinksFile.exists() &&
+                !try { shPath(context).canonicalFile.exists() } catch (t: Throwable) { true }
+            ) {
+                onProgress("repairing symlinks...")
+                createSymlinks(usrDir(context), onProgress)
+            }
             if (isInstalled(context)) {
                 return@withContext SetupReport(true, "environment ready")
             }
@@ -117,19 +139,25 @@ object EmbeddedEnvironment {
 
             zipFile.delete()
 
+            // Bootstrap zips ship symlinks as SYMLINKS.txt (target←relative/link/path)
+            // because ZIP cannot store them. Recreate them — this is where bin/sh
+            // (→ dash) and friends come from.
+            onProgress("creating symlinks ($extracted files)...")
+            val linked = createSymlinks(usr, onProgress)
+
             // Create home + tmp
             homeDir(context).mkdirs()
             File(usr, "tmp").mkdirs()
 
             // Remap prefix: create symlinks where possible, otherwise rely on env vars.
             // Many bootstrap tools read PREFIX from environment; we always set it.
-            onProgress("prefix remap ($extracted files)")
+            onProgress("prefix remap ($extracted files, $linked links)")
 
             val ok = isInstalled(context)
             SetupReport(
                 ok,
-                if (ok) "environment ready ($extracted files)"
-                else "extraction incomplete - bash not found"
+                if (ok) "environment ready ($extracted files, $linked links)"
+                else "extraction incomplete - no usable shell (bash/sh missing after symlink creation)"
             )
         } catch (t: Throwable) {
             SetupReport(false, "setup failed: ${t.message}")
@@ -161,16 +189,95 @@ object EmbeddedEnvironment {
 
     /**
      * Shell binary to invoke, with graceful fallback.
-     * "sh" without a path is resolved through the process PATH lookup,
-     * which is more reliable than hardcoding /system/bin/sh (not always
-     * executable for third-party apps on modern Android).
+     * Java's ProcessBuilder does NOT do PATH lookup, so the last resort is an
+     * absolute /system/bin/sh — a bare "sh" string fails with ENOENT (error=2).
      */
     fun shellBinary(context: Context): String {
         val bash = bashPath(context)
-        if (bash.exists() && bash.canExecute()) return bash.absolutePath
+        if (shellUsable(bash)) return bash.absolutePath
         val sh = shPath(context)
-        if (sh.exists() && sh.canExecute()) return sh.absolutePath
-        return "sh"
+        if (shellUsable(sh)) return sh.absolutePath
+        return "/system/bin/sh"
+    }
+
+    /**
+     * Recreate the symlinks listed in the bootstrap's SYMLINKS.txt.
+     *
+     * Termux bootstrap zips cannot store real symlinks; instead the first entry
+     * is SYMLINKS.txt with one mapping per line:
+     *
+     *     <target>←<relative/link/path>
+     *
+     * e.g. "dash←./bin/sh" means usr/bin/sh -> dash.
+     *
+     * The link path may itself be absolute (old Termux prefix
+     * /data/data/com.termux/files/usr/...) — those are rewritten to our prefix.
+     * If symlink creation fails (filesystem restriction), we fall back to
+     * copying the resolved target file so tools still work.
+     *
+     * @return number of links successfully created
+     */
+    private fun createSymlinks(usr: File, onProgress: (String) -> Unit): Int {
+        val listFile = File(usr, "SYMLINKS.txt")
+        if (!listFile.exists()) return 0
+
+        var created = 0
+        listFile.readLines().forEach { raw ->
+            val line = raw.trim()
+            if (line.isEmpty()) return@forEach
+            val sep = line.indexOf('←')
+            if (sep <= 0) return@forEach
+            val target = line.substring(0, sep).trim()
+            var linkPath = line.substring(sep + 1).trim()
+            if (linkPath.isEmpty()) return@forEach
+
+            // Normalize: strip leading "./"; rewrite the old Termux absolute
+            // prefix (and any /data/data/*/files/usr style prefix) to ours.
+            linkPath = linkPath.removePrefix("./")
+            val usrAbs = usr.absolutePath
+            linkPath = when {
+                linkPath.startsWith(usrAbs) -> linkPath.removePrefix(usrAbs).removePrefix("/")
+                linkPath.startsWith(TERMUX_PREFIX) ->
+                    linkPath.removePrefix(TERMUX_PREFIX).removePrefix("/")
+                linkPath.startsWith("/data/data/") && linkPath.contains("/files/usr/") ->
+                    linkPath.substringAfter("/files/usr/")
+                else -> linkPath.removePrefix("/")
+            }
+            if (linkPath.isEmpty() || linkPath == "SYMLINKS.txt") return@forEach
+
+            val linkFile = File(usr, linkPath)
+            try {
+                linkFile.parentFile?.mkdirs()
+                if (linkFile.exists() || android.system.Os.lstat(linkFile.absolutePath) != null) {
+                    linkFile.delete()
+                }
+            } catch (t: Throwable) {
+                // lstat throws when the path doesn't exist — that's fine
+            }
+
+            try {
+                Os.symlink(target, linkFile.absolutePath)
+                created++
+            } catch (t: Throwable) {
+                // Fallback: copy the resolved target so the tool still exists.
+                try {
+                    val resolved = File(linkFile.parentFile, target).canonicalFile
+                    if (resolved.exists() && resolved.isFile) {
+                        resolved.inputStream().use { input ->
+                            linkFile.outputStream().use { output -> input.copyTo(output) }
+                        }
+                        if (linkPath.contains("/bin/") || linkPath.contains("/libexec/")) {
+                            linkFile.setExecutable(true, false)
+                            linkFile.setReadable(true, false)
+                        }
+                        created++
+                    }
+                } catch (t2: Throwable) {
+                    // give up on this one link
+                }
+            }
+        }
+        return created
     }
 
     /**
