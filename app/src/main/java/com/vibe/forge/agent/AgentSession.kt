@@ -82,6 +82,20 @@ class AgentSession(
         }
     }
 
+    private var soulText: String? = null
+
+    private suspend fun soulSection(): String {
+        val ctx = appContext ?: return ""
+        if (soulText == null) {
+            soulText = try {
+                ctx.assets.open("agent/SOUL.md").bufferedReader().readText()
+            } catch (t: Throwable) {
+                ""
+            }
+        }
+        return if (soulText.isNullOrBlank()) "" else soulText + "\n\n"
+    }
+
     private suspend fun systemPrompt(instruction: String): String {
         ensureSkillsLoaded()
         val selected = SkillLoader.select(availableSkills, mode, instruction)
@@ -93,7 +107,8 @@ class AgentSession(
                 "Mandatory flow for edits: list_files -> read_file (logic AND its layout pair) -> edit -> preview_mockup for visual changes -> get_diff -> tell the user to review and press the commit button. " +
                 "Never edit without reading the real file first."
         }
-        return "You are Vibe Forge, an on-device Android development agent. " +
+        return soulSection() +
+                "You are Vibe Forge, an on-device Android development agent. " +
                 modeDesc + " " +
                 "Use the provided tools to inspect the workspace before answering. " +
                 "Be concise. Never fabricate file contents - read them first. " +
