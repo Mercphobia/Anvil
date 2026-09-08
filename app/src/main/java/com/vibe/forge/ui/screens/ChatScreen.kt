@@ -90,6 +90,7 @@ fun ChatScreen(
   val activeMode by viewModel.activeMode.collectAsState()
   val providerConfig by viewModel.providerConfig.collectAsState()
   val pendingMemory by viewModel.pendingMemory.collectAsState()
+  val pendingSkillProposal by viewModel.pendingSkillProposal.collectAsState()
 
   var inputText by remember { mutableStateOf("") }
   var showAttachMenu by remember { mutableStateOf(false) }
@@ -246,6 +247,61 @@ fun ChatScreen(
                   style = MaterialTheme.typography.bodySmall,
                   color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Skill Update Approval Pill if pending
+    AnimatedVisibility(
+      visible = pendingSkillProposal != null,
+      enter = fadeIn(),
+      exit = fadeOut()
+    ) {
+      pendingSkillProposal?.let { proposal ->
+        Surface(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+          shape = RoundedCornerShape(16.dp),
+          color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+          Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Icon(
+                imageVector = Icons.Filled.AutoAwesome,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text(
+                text = "Update Skill: " + proposal.slug,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+              )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = proposal.reason,
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.End
+            ) {
+              TextButton(onClick = { viewModel.dismissSkillProposal() }) {
+                Text("Abaikan", fontSize = 12.sp)
+              }
+              Spacer(modifier = Modifier.width(4.dp))
+              Button(
+                onClick = { viewModel.confirmSkillProposal() },
+                shape = RoundedCornerShape(8.dp)
+              ) {
+                Text("Setujui", fontSize = 12.sp)
               }
             }
           }

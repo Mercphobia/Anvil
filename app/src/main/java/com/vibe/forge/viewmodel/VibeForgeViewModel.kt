@@ -69,6 +69,11 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
               _pendingMemory.value = entry
           }
       }
+      viewModelScope.launch {
+          created.pendingSkillProposal.collect { proposal ->
+              _pendingSkillProposal.value = proposal
+          }
+      }
       agentSession = created
       return created
   }
@@ -121,6 +126,11 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
   val isBusy: StateFlow<Boolean> = _isBusy.asStateFlow()
 
   private val _pendingMemory = MutableStateFlow<String?>(null)
+
+  private val _pendingSkillProposal =
+      MutableStateFlow<com.vibe.forge.agent.SelfImprovement.SkillProposal?>(null)
+  val pendingSkillProposal: StateFlow<com.vibe.forge.agent.SelfImprovement.SkillProposal?> =
+      _pendingSkillProposal.asStateFlow()
   val pendingMemory: StateFlow<String?> = _pendingMemory.asStateFlow()
 
   // Project Workspace State
@@ -548,6 +558,16 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
       )
     }
     _pendingMemory.value = null
+  }
+
+  fun confirmSkillProposal() {
+    agentSession?.confirmSkillProposal()
+    _pendingSkillProposal.value = null
+  }
+
+  fun dismissSkillProposal() {
+    agentSession?.dismissSkillProposal()
+    _pendingSkillProposal.value = null
   }
 
   fun dismissMemory() {

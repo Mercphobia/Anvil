@@ -53,6 +53,11 @@ class AgentSession(
     private val _pendingMemoryEntry = MutableStateFlow<String?>(null)
     val pendingMemoryEntry: StateFlow<String?> = _pendingMemoryEntry.asStateFlow()
 
+    /** Pending skill-update proposals awaiting user approval. */
+    private val _pendingSkillProposal = MutableStateFlow<SelfImprovement.SkillProposal?>(null)
+    val pendingSkillProposal: StateFlow<SelfImprovement.SkillProposal?> =
+        _pendingSkillProposal.asStateFlow()
+
     private val _steps = MutableStateFlow<List<Step>>(emptyList())
     val steps: StateFlow<List<Step>> = _steps.asStateFlow()
 
@@ -336,6 +341,18 @@ class AgentSession(
                     val path = input.get("path")?.asString ?: ""
                     undoTools.undoLastChange(path)
                 }
+                "propose_skill_update" -> {
+                    val slug = input.get("slug")?.asString ?: ""
+                    val newContent = input.get("new_content")?.asString ?: ""
+                    val reason = input.get("reason")?.asString ?: ""
+                    if (slug.isBlank() || newContent.isBlank()) {
+                        "error: slug and new_content required"
+                    } else {
+                        _pendingSkillProposal.value =
+                            SelfImprovement.SkillProposal(slug, newContent, reason)
+                        "pending: skill update requires user approval"
+                    }
+                }
                 "search_history" -> {
                     val query = input.get("query")?.asString ?: ""
                     memoryTools.searchHistory(query)
@@ -368,6 +385,26 @@ class AgentSession(
 
     private fun append(step: Step) {
         _steps.value = _steps.value + step
+    }
+
+    /** User approved the pending skill update - apply it now. */
+    fun confirmSkillProposal() {
+        val proposal = _pendingSkillProposal.value ?: return
+        _pendingSkillProposal.value = null
+        val ctx = appContext ?: return
+        viewModelScope.launch {
+            val result = SelfImprovement.applyProposal(ctx, proposal)
+            append(Step(Step.Kind.INFO, result))
+            // Force skill reload next prompt
+            skillsSeeded = false
+        }
+    }
+
+    /** User rejected the pending skill update. */
+    fun dismissSkillProposal() {
+        val proposal = _pendingSkillProposal.value ?: return
+        _pendingSkillProposal.value = null
+        append(Step(Step.Kind.INFO, "skill update dismissed: " + proposal.slug))
     }
 
     /** User confirmed the pending memory entry - write it now. */

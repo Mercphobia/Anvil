@@ -134,11 +134,22 @@ object ToolRegistry {
         required = listOf("path")
     )
 
+    val proposeSkillUpdate = ToolDefinition(
+        name = "propose_skill_update",
+        description = "Propose an improvement to one of the agent's own skills. The user must approve before it is applied.",
+        properties = mapOf(
+            "slug" to ToolParam("string", "Skill slug (e.g. android-app-builder)"),
+            "new_content" to ToolParam("string", "Full new SKILL.md content"),
+            "reason" to ToolParam("string", "Why this improvement helps")
+        ),
+        required = listOf("slug", "new_content", "reason")
+    )
+
     val phase2Tools = listOf(
         listFiles, readFile, writeFile, runBuild,
         editLayoutXml, editKotlinLogic, previewMockup, getDiff,
         searchInProject, getBuildErrors, undoLastChange,
-        searchHistory, updateMemory
+        searchHistory, updateMemory, proposeSkillUpdate
     )
 
     fun byName(name: String): ToolDefinition? = phase2Tools.firstOrNull { it.name == name }
