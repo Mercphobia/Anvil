@@ -792,13 +792,11 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
           _bootstrapDone.value = true
           return@launch
         }
-        val result = com.vibe.forge.system.env.EmbeddedEnvironment.install(app.applicationContext) { line ->
+        val report = com.vibe.forge.system.env.EmbeddedEnvironment.setup(app.applicationContext) { line ->
           _bootstrapLog.value += line + "\n"
         }
-        _bootstrapLog.value += result + "\n"
-        _bootstrapDone.value = result.contains("ready", ignoreCase = true) ||
-                               result.contains("done", ignoreCase = true) ||
-                               result.contains("installed", ignoreCase = true)
+        _bootstrapLog.value += report.message + "\n"
+        _bootstrapDone.value = report.success
       } catch (t: Throwable) {
         _bootstrapLog.value += "failed: " + (t.message ?: t.toString()) + "\n"
         _bootstrapDone.value = false
