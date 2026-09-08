@@ -18,7 +18,8 @@ import java.io.File
  */
 class AgentSession(
     private val config: ProviderConfig,
-    workspaceRoot: File
+    workspaceRoot: File,
+    private val appContext: android.content.Context? = null
 ) : ViewModel() {
 
     enum class Mode { MODE_A, MODE_B }
@@ -41,9 +42,29 @@ class AgentSession(
 
     private val history = mutableListOf<LlmClient.Message>()
 
+    private var availableSkills: List<SkillLoader.Skill> = emptyList()
+    private var skillsSeeded = false
+
     var mode: Mode = Mode.MODE_A
 
-    private fun systemPrompt(): String {
+    /** Last skills loaded into the prompt - exposed for the debug panel. */
+    var lastLoadedSkills: List<String> = emptyList()
+        private set
+
+    private suspend fun ensureSkillsLoaded() {
+        val ctx = appContext ?: return
+        if (!skillsSeeded) {
+            SkillLoader.seedUserSkills(ctx)
+            availableSkills = SkillLoader.discover(ctx)
+            skillsSeeded = true
+        }
+    }
+
+    private suspend fun systemPrompt(instruction: String): String {
+        ensureSkillsLoaded()
+        val selected = SkillLoader.select(availableSkills, mode, instruction)
+        lastLoadedSkills = selected.map { it.slug }
+        val skillsSection = SkillLoader.renderPromptSection(selected)
         val modeDesc = when (mode) {
             Mode.MODE_A -> "MODE_A (App Builder): generate simple Java single-Activity Android apps compiled on-device."
             Mode.MODE_B -> "MODE_B (AOSP Design Assist): help edit AOSP SystemUI sources with preview; builds happen off-device."
@@ -51,7 +72,8 @@ class AgentSession(
         return "You are Vibe Forge, an on-device Android development agent. " +
                 modeDesc + " " +
                 "Use the provided tools to inspect the workspace before answering. " +
-                "Be concise. Never fabricate file contents - read them first."
+                "Be concise. Never fabricate file contents - read them first." +
+                skillsSection
     }
 
     fun send(userText: String) {
@@ -59,6 +81,7 @@ class AgentSession(
         _busy.value = true
         append(Step(Step.Kind.USER, userText))
         history += LlmClient.Message.user(userText)
+        currentInstruction = userText
 
         viewModelScope.launch {
             try {
@@ -71,10 +94,12 @@ class AgentSession(
         }
     }
 
+    private var currentInstruction: String = ""
+
     private suspend fun runLoop() {
         val maxRounds = 6
         repeat(maxRounds) { round ->
-            val result = client.send(systemPrompt(), history, ToolRegistry.phase2Tools)
+            val result = client.send(systemPrompt(currentInstruction), history, ToolRegistry.phase2Tools)
             val response = result.getOrElse { e ->
                 append(Step(Step.Kind.ERROR, e.message ?: "request failed"))
                 return

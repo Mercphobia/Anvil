@@ -44,7 +44,8 @@ fun ChatScreen() {
         mutableStateOf(
             AgentSession(
                 config = config,
-                workspaceRoot = File(context.filesDir, "workspace")
+                workspaceRoot = File(context.filesDir, "workspace"),
+                appContext = context.applicationContext
             )
         )
     }
@@ -88,6 +89,15 @@ fun ChatScreen() {
             TextButton(onClick = { showSettings = true }) {
                 Text(config.provider.displayName.split(" ").first())
             }
+        }
+
+        if (session.lastLoadedSkills.isNotEmpty()) {
+            Text(
+                "skills: " + session.lastLoadedSkills.joinToString(", "),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
         }
 
         LazyColumn(
