@@ -23,9 +23,13 @@ jobs:
       - name: Build debug APK
         run: |
           echo "starting gradle build..."
-          sh gradlew :app:assembleDebug --console=plain --stacktrace --no-daemon -Dorg.gradle.jvmargs="-Xmx3g" 2>&1 | tee build.log | tail -80
+          sh gradlew :app:assembleDebug --console=plain --stacktrace --no-daemon -Dorg.gradle.jvmargs="-Xmx3g" 2>&1 | tee build.log
           EXIT=${PIPESTATUS[0]}
           echo "gradle exit code: $EXIT"
+          if [ $EXIT -ne 0 ]; then
+            echo "===== error lines from build.log ====="
+            grep -E "^e: |error:|FAILED|What went wrong" build.log | head -60
+          fi
           exit $EXIT
 
       - name: Upload build log
