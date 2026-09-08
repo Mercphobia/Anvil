@@ -1,0 +1,99 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Centered strictly inside 66dp safe zone (21 to 87) -->
+
+    <!-- Anvil Base / Pedestal -->
+    <path
+        android:fillColor="#343842"
+        android:pathData="M38,76 L70,76 L74,82 L34,82 Z" />
+
+    <!-- Anvil Waist -->
+    <path
+        android:fillColor="#474C58"
+        android:pathData="M44,64 L64,64 L68,76 L40,76 Z" />
+
+    <!-- Main Anvil Body & Horn -->
+    <!-- Left horn tapers to 28,52; Flat top from 42,46 to 78,46; Drop heel to 76,64 -->
+    <path
+        android:pathData="M27,51 C32,51 38,50 42,46 L78,46 C80,46 81,48 80,50 L76,64 L44,64 C42,64 36,61 30,56 C27,53 26,51 27,51 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="26"
+                android:startY="46"
+                android:endX="80"
+                android:endY="64"
+                android:type="linear">
+                <item android:color="#ECEFF4" android:offset="0.0" />
+                <item android:color="#C5CBD6" android:offset="0.5" />
+                <item android:color="#8892A4" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Hot Molten Metal Plate on top of Anvil (Glowing Orange/Gold) -->
+    <path
+        android:pathData="M46,45 L68,45 C69,45 70,46 70,47 L68,49 L48,49 L46,47 C46,46 46,45 46,45 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="46"
+                android:startY="45"
+                android:endX="70"
+                android:endY="49"
+                android:type="linear">
+                <item android:color="#FFF176" android:offset="0.0" />
+                <item android:color="#FF9800" android:offset="0.6" />
+                <item android:color="#FF5722" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Forge Hammer Handle (Angled from top right) -->
+    <path
+        android:fillColor="#8D6E63"
+        android:pathData="M62,37 L78,21 L82,25 L66,41 Z" />
+
+    <!-- Forge Hammer Head Striking Down -->
+    <path
+        android:pathData="M52,38 L66,24 L72,30 L58,44 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="52"
+                android:startY="24"
+                android:endX="72"
+                android:endY="44"
+                android:type="linear">
+                <item android:color="#E0E0E0" android:offset="0.0" />
+                <item android:color="#78909C" android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Impact Spark Cluster (Forge Embers & AI Sparks) -->
+    <!-- Primary impact flash -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,42 L55,40 L57,41 L55.5,43 L57,45 L55,44 L54,46 L53.5,44 L51,44 L53,43 L52,41 L53.5,42 Z" />
+
+    <!-- High energy spark flying top-left -->
+    <path
+        android:fillColor="#FFD54F"
+        android:pathData="M42,35 L44,38 L41,39 L43,41 L40,40 L38,42 L39,39 L36,38 L39,37 L38,34 L41,36 Z" />
+
+    <!-- Floating forge embers -->
+    <path
+        android:fillColor="#FF7043"
+        android:pathData="M48,27 A2.5,2.5 0 1,1 43,27 A2.5,2.5 0 1,1 48,27" />
+    <path
+        android:fillColor="#FFCA28"
+        android:pathData="M36,29 A1.5,1.5 0 1,1 33,29 A1.5,1.5 0 1,1 36,29" />
+    <path
+        android:fillColor="#FFAB91"
+        android:pathData="M64,18 A1.5,1.5 0 1,1 61,18 A1.5,1.5 0 1,1 64,18" />
+    <path
+        android:fillColor="#FFE082"
+        android:pathData="M56,22 A2,2 0 1,1 52,22 A2,2 0 1,1 56,22" />
+</vector>

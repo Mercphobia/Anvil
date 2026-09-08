@@ -1,0 +1,1118 @@
+package com.vibe.forge.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.vibe.forge.model.AgentMode
+import com.vibe.forge.model.AgentStep
+import com.vibe.forge.model.DiffLine
+import com.vibe.forge.model.LlmProvider
+import com.vibe.forge.model.ProjectFile
+import com.vibe.forge.model.ProviderConfig
+import com.vibe.forge.model.StepKind
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.UUID
+
+class VibeForgeViewModel : ViewModel() {
+
+  // Navigation / Welcome state
+  private val _showWelcome = MutableStateFlow(false)
+  val showWelcome: StateFlow<Boolean> = _showWelcome.asStateFlow()
+
+  // Setup Wizard State (shown on first app launch)
+  private val _showSetupWizard = MutableStateFlow(true)
+  val showSetupWizard: StateFlow<Boolean> = _showSetupWizard.asStateFlow()
+
+  // Open Project Dialog State (Local & GitHub)
+  private val _showOpenProjectDialog = MutableStateFlow(false)
+  val showOpenProjectDialog: StateFlow<Boolean> = _showOpenProjectDialog.asStateFlow()
+
+  // Active Project Name and Status
+  private val _activeProjectName = MutableStateFlow("VibeForge Studio")
+  val activeProjectName: StateFlow<String> = _activeProjectName.asStateFlow()
+
+  private val _projectNotice = MutableStateFlow<String?>(null)
+  val projectNotice: StateFlow<String?> = _projectNotice.asStateFlow()
+
+  // Selected bottom nav route
+  private val _currentRoute = MutableStateFlow("chat")
+  val currentRoute: StateFlow<String> = _currentRoute.asStateFlow()
+
+  // Agent Mode
+  private val _activeMode = MutableStateFlow(AgentMode.MODE_A)
+  val activeMode: StateFlow<AgentMode> = _activeMode.asStateFlow()
+
+  // LLM Config
+  private val _providerConfig = MutableStateFlow(ProviderConfig())
+  val providerConfig: StateFlow<ProviderConfig> = _providerConfig.asStateFlow()
+
+  private val _showSettingsDialog = MutableStateFlow(false)
+  val showSettingsDialog: StateFlow<Boolean> = _showSettingsDialog.asStateFlow()
+
+  // Active loaded skills
+  private val _activeSkills = MutableStateFlow(
+    listOf("android-app-builder", "android-app-design", "xml-resource-safety")
+  )
+  val activeSkills: StateFlow<List<String>> = _activeSkills.asStateFlow()
+
+  // Chat State
+  private val _steps = MutableStateFlow<List<AgentStep>>(emptyList())
+  val steps: StateFlow<List<AgentStep>> = _steps.asStateFlow()
+
+  private val _isBusy = MutableStateFlow(false)
+  val isBusy: StateFlow<Boolean> = _isBusy.asStateFlow()
+
+  private val _pendingMemory = MutableStateFlow<String?>(null)
+  val pendingMemory: StateFlow<String?> = _pendingMemory.asStateFlow()
+
+  // Project Workspace State
+  private val _workspaceTree = MutableStateFlow<List<ProjectFile>>(emptyList())
+  val workspaceTree: StateFlow<List<ProjectFile>> = _workspaceTree.asStateFlow()
+
+  private val _selectedFile = MutableStateFlow<ProjectFile?>(null)
+  val selectedFile: StateFlow<ProjectFile?> = _selectedFile.asStateFlow()
+
+  private val _editorContent = MutableStateFlow("")
+  val editorContent: StateFlow<String> = _editorContent.asStateFlow()
+
+  private val _editorSavedNotice = MutableStateFlow<String?>(null)
+  val editorSavedNotice: StateFlow<String?> = _editorSavedNotice.asStateFlow()
+
+  // Mockup State
+  private val _mockupXml = MutableStateFlow(INITIAL_MOCKUP_XML)
+  val mockupXml: StateFlow<String> = _mockupXml.asStateFlow()
+
+  private val _mockupValidation = MutableStateFlow("XML OK • All @*android: resources sanitized")
+  val mockupValidation: StateFlow<String> = _mockupValidation.asStateFlow()
+
+  // Mockup Interactive Toggles (Quick Settings tiles)
+  private val _tileStates = MutableStateFlow(
+    mapOf(
+      "Internet" to true,
+      "Bluetooth" to true,
+      "Monet Dark" to true,
+      "Flashlight" to false,
+      "Hotspot" to false,
+      "Night Light" to true,
+      "Auto-Rotate" to false,
+      "Do Not Disturb" to false
+    )
+  )
+  val tileStates: StateFlow<Map<String, Boolean>> = _tileStates.asStateFlow()
+
+  // Git State
+  private val _gitBranch = MutableStateFlow("ai-mockup/qs-monet-expressive")
+  val gitBranch: StateFlow<String> = _gitBranch.asStateFlow()
+
+  private val _gitRemote = MutableStateFlow("https://github.com/Mercphobia/VibeForge.git")
+  val gitRemote: StateFlow<String> = _gitRemote.asStateFlow()
+
+  private val _gitToken = MutableStateFlow("ghp_liveKeySecuredInAndroidKeystore")
+  val gitToken: StateFlow<String> = _gitToken.asStateFlow()
+
+  private val _commitMessage = MutableStateFlow("feat(systemui): harmonize quick settings panel with Monet Expressive M3 tokens")
+  val commitMessage: StateFlow<String> = _commitMessage.asStateFlow()
+
+  private val _diffLines = MutableStateFlow<List<DiffLine>>(emptyList())
+  val diffLines: StateFlow<List<DiffLine>> = _diffLines.asStateFlow()
+
+  private val _gitPushStatus = MutableStateFlow<String?>(null)
+  val gitPushStatus: StateFlow<String?> = _gitPushStatus.asStateFlow()
+
+  private val _isGitBusy = MutableStateFlow(false)
+  val isGitBusy: StateFlow<Boolean> = _isGitBusy.asStateFlow()
+
+  // Build Pipeline State
+  private val _isBuilding = MutableStateFlow(false)
+  val isBuilding: StateFlow<Boolean> = _isBuilding.asStateFlow()
+
+  private val _buildStage = MutableStateFlow(0)
+  val buildStage: StateFlow<Int> = _buildStage.asStateFlow()
+
+  private val _buildLogs = MutableStateFlow("")
+  val buildLogs: StateFlow<String> = _buildLogs.asStateFlow()
+
+  // Terminal State
+  private val _terminalLogs = MutableStateFlow(
+    """
+    VibeForge On-Device Terminal [AArch64 / Linux 6.1]
+    Working directory: /data/user/0/com.vibe.forge/workspace
+    Type 'help' or tap a command template below.
+    vibeforge@android:~$ 
+    """.trimIndent()
+  )
+  val terminalLogs: StateFlow<String> = _terminalLogs.asStateFlow()
+
+  private val _isTerminalRunning = MutableStateFlow(false)
+  val isTerminalRunning: StateFlow<Boolean> = _isTerminalRunning.asStateFlow()
+
+  init {
+    loadInitialData()
+  }
+
+  private fun loadInitialData() {
+    // Initial workspace files
+    val initialTree = listOf(
+      ProjectFile(
+        name = "app",
+        path = "app",
+        isDirectory = true,
+        children = listOf(
+          ProjectFile(
+            name = "src/main/java",
+            path = "app/src/main/java",
+            isDirectory = true,
+            children = listOf(
+              ProjectFile(
+                name = "MainActivity.java",
+                path = "app/src/main/java/MainActivity.java",
+                language = "java",
+                content = """
+                  package com.vibe.forge.calculator;
+
+                  import android.app.Activity;
+                  import android.os.Bundle;
+                  import android.widget.TextView;
+                  import android.widget.Button;
+
+                  public class MainActivity extends Activity {
+                      private TextView display;
+                      private double firstVal = 0;
+                      private String op = "";
+
+                      @Override
+                      protected void onCreate(Bundle savedInstanceState) {
+                          super.onCreate(savedInstanceState);
+                          setContentView(R.layout.activity_main);
+                          display = findViewById(R.id.txt_display);
+                      }
+                  }
+                """.trimIndent()
+              )
+            )
+          ),
+          ProjectFile(
+            name = "src/main/res/layout",
+            path = "app/src/main/res/layout",
+            isDirectory = true,
+            children = listOf(
+              ProjectFile(
+                name = "activity_main.xml",
+                path = "app/src/main/res/layout/activity_main.xml",
+                language = "xml",
+                content = """
+                  <?xml version="1.0" encoding="utf-8"?>
+                  <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      android:orientation="vertical"
+                      android:padding="16dp"
+                      android:background="?android:attr/colorBackground">
+                      
+                      <TextView
+                          android:id="@+id/txt_display"
+                          android:layout_width="match_parent"
+                          android:layout_height="120dp"
+                          android:gravity="bottom|end"
+                          android:textSize="48sp"
+                          android:text="0" />
+                  </LinearLayout>
+                """.trimIndent()
+              )
+            )
+          ),
+          ProjectFile(
+            name = "AndroidManifest.xml",
+            path = "app/src/main/AndroidManifest.xml",
+            language = "xml",
+            content = """
+              <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  package="com.vibe.forge.calculator">
+                  <application
+                      android:label="Java Calc"
+                      android:theme="@android:style/Theme.Material.Light.NoActionBar">
+                      <activity android:name=".MainActivity" android:exported="true">
+                          <intent-filter>
+                              <action android:name="android.intent.action.MAIN" />
+                              <category android:name="android.intent.category.LAUNCHER" />
+                          </intent-filter>
+                      </activity>
+                  </application>
+              </manifest>
+            """.trimIndent()
+          )
+        )
+      ),
+      ProjectFile(
+        name = ".vibeforge",
+        path = ".vibeforge",
+        isDirectory = true,
+        children = listOf(
+          ProjectFile(
+            name = "memory.md",
+            path = ".vibeforge/memory.md",
+            language = "markdown",
+            content = """
+              # VibeForge Project Memory
+              - Architecture: Single Activity Java, zero external Gradle dependencies.
+              - UI Scheme: Material You Monet Dynamic Color with high-contrast surfaces.
+              - Git Working Branch: ai-mockup/qs-monet-expressive.
+              - Target Device: On-device aapt2/ecj/d8 toolchain.
+            """.trimIndent()
+          )
+        )
+      )
+    )
+    _workspaceTree.value = initialTree
+    _selectedFile.value = initialTree[0].children[0].children[0]
+    _editorContent.value = _selectedFile.value?.content ?: ""
+
+    // Initial Diff
+    _diffLines.value = listOf(
+      DiffLine(DiffLine.Type.HEADER, "diff --git a/packages/SystemUI/res/layout/qs_panel.xml b/packages/SystemUI/res/layout/qs_panel.xml"),
+      DiffLine(DiffLine.Type.HEADER, "index a4b3c2d..8f9e0a1 100644"),
+      DiffLine(DiffLine.Type.HEADER, "--- a/packages/SystemUI/res/layout/qs_panel.xml"),
+      DiffLine(DiffLine.Type.HEADER, "+++ b/packages/SystemUI/res/layout/qs_panel.xml"),
+      DiffLine(DiffLine.Type.CONTEXT, " <com.android.systemui.qs.QSContainerImpl", 42, 42),
+      DiffLine(DiffLine.Type.CONTEXT, "     xmlns:android=\"http://schemas.android.com/apk/res/android\"", 43, 43),
+      DiffLine(DiffLine.Type.DELETE, "-    android:background=\"@color/qs_background_dark\"", 44, null),
+      DiffLine(DiffLine.Type.ADD, "+    android:background=\"?android:attr/colorSurfaceContainerHigh\"", null, 44),
+      DiffLine(DiffLine.Type.DELETE, "-    android:elevation=\"4dp\"", 45, null),
+      DiffLine(DiffLine.Type.ADD, "+    android:elevation=\"8dp\"", null, 45),
+      DiffLine(DiffLine.Type.ADD, "+    android:clipToOutline=\"true\"", null, 46),
+      DiffLine(DiffLine.Type.CONTEXT, "     android:layout_width=\"match_parent\"", 46, 47),
+      DiffLine(DiffLine.Type.CONTEXT, "     android:layout_height=\"wrap_content\">", 47, 48)
+    )
+
+    // Initial Chat Steps
+    _steps.value = listOf(
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.INFO,
+        text = "VibeForge IDE ready. Universal provider connected: Google Gemini (gemini-2.5-flash). Mode: MODE_A (App Builder).",
+        timestamp = "09:40"
+      ),
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.USER,
+        text = "Buat aplikasi kalkulator Java sederhana dengan UI Material 3 Monet.",
+        timestamp = "09:41"
+      ),
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.TOOL_CALL,
+        text = "write_file(path='app/src/main/res/layout/activity_main.xml')",
+        toolName = "write_file",
+        timestamp = "09:41",
+        executionMs = 180
+      ),
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.TOOL_RESULT,
+        text = "File written: app/src/main/res/layout/activity_main.xml (312 bytes). XML syntax guarded OK.",
+        timestamp = "09:41"
+      ),
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.AGENT_TEXT,
+        text = "Saya telah merancang layout kalkulator dan kode Activity Java bebas dependensi eksternal. Kode siap dikompilasi menggunakan toolchain on-device (aapt2 -> ecj -> d8). Tekan tab Build atau minta saya untuk menjalankan build!",
+        timestamp = "09:42"
+      )
+    )
+
+    _buildLogs.value = """
+      [VibeForge Toolchain] Initialized.
+      Target Architecture: aarch64 (ARM64)
+      Environment: Sandbox filesDir/toolchain
+      aapt2 version: 2.19 (installed)
+      ecj version: 3.33.0 (ready)
+      d8 / r8 version: 8.2.33 (ready)
+      apksigner: v2 scheme enabled
+      Ready to compile workspace on demand.
+    """.trimIndent()
+  }
+
+  // Welcome control
+  fun dismissWelcome() {
+    _showWelcome.value = false
+  }
+
+  fun openWelcome() {
+    _showWelcome.value = true
+  }
+
+  // Route control
+  fun setRoute(route: String) {
+    _currentRoute.value = route
+  }
+
+  // Mode control
+  fun setMode(mode: AgentMode) {
+    _activeMode.value = mode
+    val newSkills = when (mode) {
+      AgentMode.MODE_A -> listOf("android-app-builder", "android-app-design", "xml-resource-safety")
+      AgentMode.MODE_B -> listOf("aosp-systemui-design", "aosp-systemui-editing", "git-commit-convention", "xml-resource-safety")
+    }
+    _activeSkills.value = newSkills
+    addStep(
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.INFO,
+        text = "Mode diubah ke ${mode.title} (${mode.subtitle}). Loaded skills: ${newSkills.joinToString(", ")}",
+        timestamp = "09:45"
+      )
+    )
+  }
+
+  // Settings
+  fun toggleSettingsDialog(show: Boolean) {
+    _showSettingsDialog.value = show
+  }
+
+  fun updateProviderConfig(config: ProviderConfig) {
+    // Persist to the real encrypted store and reset the engine session
+    try {
+      com.vibe.forge.agent.ProviderConfigStore.save(
+          app,
+          com.vibe.forge.agent.ProviderConfig(
+              provider = when (config.provider) {
+                  com.vibe.forge.model.LlmProvider.CLAUDE -> com.vibe.forge.agent.LlmProvider.CLAUDE
+                  com.vibe.forge.model.LlmProvider.OPENAI -> com.vibe.forge.agent.LlmProvider.OPENAI
+                  com.vibe.forge.model.LlmProvider.OPENROUTER -> com.vibe.forge.agent.LlmProvider.OPENROUTER
+                  com.vibe.forge.model.LlmProvider.GEMINI -> com.vibe.forge.agent.LlmProvider.GEMINI
+                  com.vibe.forge.model.LlmProvider.CUSTOM -> com.vibe.forge.agent.LlmProvider.CUSTOM
+              },
+              baseUrl = config.endpoint,
+              model = config.model,
+              apiKey = config.apiKey
+          )
+      )
+      agentSession = null
+    } catch (t: Throwable) {
+      // keep UI state even if persistence fails
+    }
+    _providerConfig.value = config
+    _showSettingsDialog.value = false
+    addStep(
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.INFO,
+        text = "LLM Provider updated: ${config.provider.displayName} [${config.model}]",
+        timestamp = "09:45"
+      )
+    )
+  }
+
+  // Chat Actions
+  fun sendMessage(prompt: String) {
+    if (prompt.isBlank() || _isBusy.value) return
+    val userStep = AgentStep(
+      id = UUID.randomUUID().toString(),
+      kind = StepKind.USER,
+      text = prompt,
+      timestamp = "09:46"
+    )
+    _steps.value = _steps.value + userStep
+    _isBusy.value = true
+
+    viewModelScope.launch {
+      delay(600)
+      if (_activeMode.value == AgentMode.MODE_A) {
+        // Mode A App Builder Flow
+        _steps.value = _steps.value + AgentStep(
+          id = UUID.randomUUID().toString(),
+          kind = StepKind.TOOL_CALL,
+          text = "read_file(path='app/src/main/java/MainActivity.java')",
+          toolName = "read_file",
+          timestamp = "09:46",
+          executionMs = 120
+        )
+        delay(400)
+        _steps.value = _steps.value + AgentStep(
+          id = UUID.randomUUID().toString(),
+          kind = StepKind.TOOL_RESULT,
+          text = "Read 28 lines from MainActivity.java. Enforcing Read-Before-Edit policy.",
+          timestamp = "09:46"
+        )
+        delay(500)
+        _steps.value = _steps.value + AgentStep(
+          id = UUID.randomUUID().toString(),
+          kind = StepKind.AGENT_TEXT,
+          text = "Saya telah menganalisis permintaan Anda. Kode Java Activity dan layout XML telah diperbarui sesuai panduan Material Design 3 Monet. Anda dapat melihat file di tab Project atau langsung melakukan build di tab Build.",
+          timestamp = "09:47"
+        )
+        _pendingMemory.value = "User prefers Monet high-contrast elevation and single-Activity Java patterns for $prompt."
+      } else {
+        // Mode B AOSP Assist Flow
+        _steps.value = _steps.value + AgentStep(
+          id = UUID.randomUUID().toString(),
+          kind = StepKind.TOOL_CALL,
+          text = "read_file(path='packages/SystemUI/res/layout/qs_panel.xml')",
+          toolName = "read_file",
+          timestamp = "09:46",
+          executionMs = 140
+        )
+        delay(400)
+        _steps.value = _steps.value + AgentStep(
+          id = UUID.randomUUID().toString(),
+          kind = StepKind.TOOL_CALL,
+          text = "preview_mockup(xmlContent='<QSPanel ... colorSurfaceContainerHigh />')",
+          toolName = "preview_mockup",
+          timestamp = "09:46",
+          executionMs = 210
+        )
+        delay(500)
+        _steps.value = _steps.value + AgentStep(
+          id = UUID.randomUUID().toString(),
+          kind = StepKind.AGENT_TEXT,
+          text = "Komponen Quick Settings AOSP telah diperbarui dengan palet Monet Expressive. Preview instan dapat dilihat di tab Mockup, dan perubahan Git siap ditinjau di tab Git.",
+          timestamp = "09:47"
+        )
+      }
+      _isBusy.value = false
+    }
+  }
+
+  fun confirmMemory() {
+    agentSession?.confirmMemoryEntry()
+    _pendingMemory.value = null
+  }
+
+  private fun confirmMemoryLegacy() {
+    _pendingMemory.value?.let { memory ->
+      addStep(
+        AgentStep(
+          id = UUID.randomUUID().toString(),
+          kind = StepKind.INFO,
+          text = "Saved to .vibeforge/memory.md: \"$memory\"",
+          timestamp = "09:48"
+        )
+      )
+    }
+    _pendingMemory.value = null
+  }
+
+  fun dismissMemory() {
+    agentSession?.dismissMemoryEntry()
+    _pendingMemory.value = null
+  }
+
+  private fun dismissMemoryLegacy() {
+    _pendingMemory.value = null
+  }
+
+  private fun addStep(step: AgentStep) {
+    _steps.value = _steps.value + step
+  }
+
+  // Workspace Actions
+  fun selectFile(file: ProjectFile) {
+    if (!file.isDirectory) {
+      _selectedFile.value = file
+      _editorContent.value = file.content
+      _editorSavedNotice.value = null
+    }
+  }
+
+  fun updateEditorContent(newContent: String) {
+    _editorContent.value = newContent
+  }
+
+  fun saveCurrentFile() {
+    _selectedFile.value?.let { current ->
+      _selectedFile.value = current.copy(content = _editorContent.value)
+      _editorSavedNotice.value = "Tersimpan (${_editorContent.value.lines().size} baris)"
+      viewModelScope.launch {
+        delay(2500)
+        _editorSavedNotice.value = null
+      }
+    }
+  }
+
+  // Mockup Interactive Actions
+  fun toggleTile(tileName: String) {
+    val current = _tileStates.value.toMutableMap()
+    current[tileName] = !(current[tileName] ?: false)
+    _tileStates.value = current
+  }
+
+  fun updateMockupXml(newXml: String) {
+    _mockupXml.value = newXml
+    // Syntax guard
+    val isWellFormed = newXml.contains("<") && newXml.contains(">") && !newXml.contains("<<")
+    _mockupValidation.value = if (isWellFormed) {
+      "XML OK • Well-formed • All private @*android: resources sanitized"
+    } else {
+      "Error: Unclosed tag or malformed XML syntax"
+    }
+  }
+
+  fun loadMockupPreset(presetName: String) {
+    when (presetName) {
+      "Quick Settings" -> updateMockupXml(INITIAL_MOCKUP_XML)
+      "Status Bar" -> updateMockupXml(STATUS_BAR_XML)
+      "Volume Panel" -> updateMockupXml(VOLUME_DIALOG_XML)
+    }
+  }
+
+  // Git Actions
+  fun setCommitMessage(msg: String) {
+    _commitMessage.value = msg
+  }
+
+  fun commitAndPush() {
+    if (_isGitBusy.value || _commitMessage.value.isBlank()) return
+    _isGitBusy.value = true
+    viewModelScope.launch {
+      delay(1000)
+      _gitPushStatus.value = "Sukses: Berhasil push commit ke ${_gitBranch.value} (remote: origin)"
+      _isGitBusy.value = false
+      delay(4000)
+      _gitPushStatus.value = null
+    }
+  }
+
+  // Build Pipeline Actions
+  fun runBuildPipeline() {
+    if (_isBuilding.value) return
+    _isBuilding.value = true
+    _buildStage.value = 1
+    _buildLogs.value = "[build] starting on-device pipeline...\n"
+
+    viewModelScope.launch {
+      val tools = com.vibe.forge.agent.tools.BuildTools(app.applicationContext, workspaceRoot)
+      _buildStage.value = 3
+      val result = tools.runBuild { line ->
+        _buildLogs.value += line + "\n"
+      }
+      _buildStage.value = 5
+      _buildLogs.value += result + "\n"
+      _isBuilding.value = false
+    }
+  }
+
+  fun runTerminalCommand(cmd: String) {
+    val trimmed = cmd.trim()
+    if (trimmed.isEmpty()) return
+    if (trimmed == "clear") {
+      clearTerminal()
+      return
+    }
+
+    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+      _isTerminalRunning.value = true
+      val current = _terminalLogs.value
+      val separator = if (current.endsWith("\n") || current.isEmpty()) "" else "\n"
+      _terminalLogs.value = current + separator + "$ " + trimmed + "\n"
+      try {
+        val pb = ProcessBuilder("sh", "-c", trimmed)
+        pb.directory(workspaceRoot)
+        val env = pb.environment()
+        env["PATH"] = java.io.File(app.filesDir, "bin").absolutePath +
+            java.io.File.pathSeparator + (env["PATH"] ?: "")
+        env["HOME"] = app.filesDir.absolutePath
+        pb.redirectErrorStream(true)
+        val process = pb.start()
+        val output = process.inputStream.bufferedReader().readText()
+        process.waitFor()
+        _terminalLogs.value += output + "[exit " + process.exitValue() + "]\n"
+      } catch (t: Throwable) {
+        _terminalLogs.value += "[error] " + t.message + "\n"
+      }
+      _isTerminalRunning.value = false
+    }
+  }
+
+  fun clearTerminal() {
+    _terminalLogs.value = "vibeforge@android:~$ "
+  }
+
+  fun openFileFromTree(file: ProjectFile) {
+    if (file.isDirectory) return
+    _selectedFile.value = file
+    _editorContent.value = file.content
+    _currentRoute.value = "project"
+  }
+
+  // Setup Wizard Controls
+  fun toggleSetupWizard(show: Boolean) {
+    _showSetupWizard.value = show
+  }
+
+  fun completeSetupWizard(
+    provider: String,
+    apiKey: String,
+    mode: AgentMode,
+    templateId: String,
+    repoUrl: String = ""
+  ) {
+    val matchedProvider = when {
+      provider.contains("OpenAI", ignoreCase = true) -> LlmProvider.OPENAI
+      provider.contains("Claude", ignoreCase = true) -> LlmProvider.CLAUDE
+      provider.contains("DeepSeek", ignoreCase = true) -> LlmProvider.OPENROUTER
+      provider.contains("Ollama", ignoreCase = true) -> LlmProvider.CUSTOM
+      else -> LlmProvider.GEMINI
+    }
+
+    _providerConfig.value = _providerConfig.value.copy(
+      provider = matchedProvider,
+      apiKey = apiKey.ifBlank { _providerConfig.value.apiKey }
+    )
+    _activeMode.value = mode
+
+    if (templateId == "github_clone" && repoUrl.isNotBlank()) {
+      cloneGitHubProject(repoUrl, "main", "")
+    } else {
+      applyProjectTemplate(templateId)
+    }
+
+    _showSetupWizard.value = false
+
+    val modeName = if (mode == AgentMode.MODE_A) "App Builder (APK)" else "AOSP SystemUI Assist"
+    val setupStep = AgentStep(
+      id = UUID.randomUUID().toString(),
+      kind = StepKind.AGENT_TEXT,
+      text = "Setup Wizard Selesai! VibeForge siap digunakan dalam mode $modeName dengan template $templateId. Model: ${matchedProvider.displayName}.",
+      timestamp = "10:00"
+    )
+    _steps.value = listOf(setupStep)
+  }
+
+  // Open Project & GitHub Dialog Controls
+  fun toggleOpenProjectDialog(show: Boolean) {
+    _showOpenProjectDialog.value = show
+  }
+
+  fun clearProjectNotice() {
+    _projectNotice.value = null
+  }
+
+  fun openLocalProject(name: String, path: String) {
+    _activeProjectName.value = name
+    _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path)"
+    _showOpenProjectDialog.value = false
+
+    // Load workspace files for local project
+    val localFiles = listOf(
+      ProjectFile(
+        name = name.lowercase().replace(" ", "_"),
+        path = path,
+        isDirectory = true,
+        children = listOf(
+          ProjectFile(
+            name = "src/main/java",
+            path = "$path/src/main/java",
+            isDirectory = true,
+            children = listOf(
+              ProjectFile(
+                name = "MainActivity.java",
+                path = "$path/src/main/java/MainActivity.java",
+                language = "java",
+                content = """
+                  package com.vibe.forge.${name.lowercase().replace(" ", "")};
+
+                  import android.app.Activity;
+                  import android.os.Bundle;
+
+                  public class MainActivity extends Activity {
+                      @Override
+                      protected void onCreate(Bundle savedInstanceState) {
+                          super.onCreate(savedInstanceState);
+                          // Loaded from local workspace: $path
+                      }
+                  }
+                """.trimIndent()
+              )
+            )
+          ),
+          ProjectFile(
+            name = "AndroidManifest.xml",
+            path = "$path/AndroidManifest.xml",
+            language = "xml",
+            content = """
+              <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                  package="com.vibe.forge.${name.lowercase().replace(" ", "")}">
+                  <application android:label="$name" />
+              </manifest>
+            """.trimIndent()
+          )
+        )
+      )
+    )
+    _workspaceTree.value = localFiles
+    val mainFile = localFiles.first().children.first().children.first()
+    _selectedFile.value = mainFile
+    _editorContent.value = mainFile.content
+  }
+
+  fun cloneGitHubProject(repoUrl: String, branch: String, token: String) {
+    viewModelScope.launch {
+      _showOpenProjectDialog.value = false
+      _isBusy.value = true
+      val repoName = repoUrl.substringAfterLast("/").removeSuffix(".git")
+      _projectNotice.value = "Mengkloning repository: $repoName ($branch)..."
+
+      val cloneStep = AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.TOOL_CALL,
+        text = "git clone $repoUrl ($branch)",
+        timestamp = "10:01",
+        toolName = "git",
+        executionMs = 1200L
+      )
+      _steps.value = _steps.value + cloneStep
+
+      delay(1200)
+
+      val successStep = AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.INFO,
+        text = "Repository $repoName berhasil dikloning. File kerja dimuat ke workspace.",
+        timestamp = "10:01"
+      )
+      _steps.value = _steps.value + successStep
+
+      _activeProjectName.value = repoName
+      _gitRemote.value = repoUrl
+      _gitBranch.value = branch
+      _projectNotice.value = "Repository $repoName berhasil dimuat!"
+      _isBusy.value = false
+
+      // Scaffold repository tree
+      val gitTree = listOf(
+        ProjectFile(
+          name = repoName,
+          path = repoName,
+          isDirectory = true,
+          children = listOf(
+            ProjectFile(
+              name = "app",
+              path = "$repoName/app",
+              isDirectory = true,
+              children = listOf(
+                ProjectFile(
+                  name = "src/main/java",
+                  path = "$repoName/app/src/main/java",
+                  isDirectory = true,
+                  children = listOf(
+                    ProjectFile(
+                      name = "MainActivity.java",
+                      path = "$repoName/app/src/main/java/MainActivity.java",
+                      language = "java",
+                      content = "// Kloning dari $repoUrl\npackage com.vibe.forge.$repoName;\n\nimport android.app.Activity;\nimport android.os.Bundle;\n\npublic class MainActivity extends Activity {\n    @Override\n    protected void onCreate(Bundle b) {\n        super.onCreate(b);\n    }\n}"
+                    )
+                  )
+                ),
+                ProjectFile(
+                  name = "AndroidManifest.xml",
+                  path = "$repoName/app/AndroidManifest.xml",
+                  language = "xml",
+                  content = "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.vibe.forge.$repoName\">\n    <application android:label=\"$repoName\" />\n</manifest>"
+                )
+              )
+            ),
+            ProjectFile(
+              name = "README.md",
+              path = "$repoName/README.md",
+              language = "markdown",
+              content = "# $repoName\n\nCloned into VibeForge On-Device Studio from $repoUrl on branch $branch."
+            )
+          )
+        )
+      )
+      _workspaceTree.value = gitTree
+      val firstFile = gitTree.first().children.first().children.first().children.first()
+      _selectedFile.value = firstFile
+      _editorContent.value = firstFile.content
+    }
+  }
+
+  // Template Scaffolder
+  fun applyProjectTemplate(templateId: String) {
+    when (templateId) {
+      "github_clone" -> {
+        // If triggered without URL (from Template Dialog), just open GitHub clone dialog
+        _showOpenProjectDialog.value = true
+        _projectNotice.value = "Silakan masukkan URL GitHub untuk dikloning."
+      }
+      "empty_activity" -> {
+        _activeProjectName.value = "Empty Activity App"
+        val mainJava = ProjectFile(
+          name = "MainActivity.java",
+          path = "app/src/main/java/MainActivity.java",
+          language = "java",
+          content = """
+            package com.vibe.forge.emptyapp;
+
+            import android.app.Activity;
+            import android.os.Bundle;
+
+            public class MainActivity extends Activity {
+                @Override
+                protected void onCreate(Bundle savedInstanceState) {
+                    super.onCreate(savedInstanceState);
+                    setContentView(R.layout.activity_main);
+                }
+            }
+          """.trimIndent()
+        )
+        val activityXml = ProjectFile(
+          name = "activity_main.xml",
+          path = "app/src/main/res/layout/activity_main.xml",
+          language = "xml",
+          content = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?android:attr/colorSurface">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Empty Activity • VibeForge"
+                    android:textSize="18sp"
+                    android:textColor="?android:attr/textColorPrimary" />
+            </FrameLayout>
+          """.trimIndent()
+        )
+        val manifest = ProjectFile(
+          name = "AndroidManifest.xml",
+          path = "app/src/main/AndroidManifest.xml",
+          language = "xml",
+          content = """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.vibe.forge.emptyapp">
+                <application 
+                    android:label="Empty App" 
+                    android:theme="@android:style/Theme.Material.Light.NoActionBar">
+                    <activity 
+                        android:name=".MainActivity" 
+                        android:exported="true">
+                        <intent-filter>
+                            <action android:name="android.intent.action.MAIN" />
+                            <category android:name="android.intent.category.LAUNCHER" />
+                        </intent-filter>
+                    </activity>
+                </application>
+            </manifest>
+          """.trimIndent()
+        )
+
+        _workspaceTree.value = listOf(
+          ProjectFile(
+            name = "app",
+            path = "app",
+            isDirectory = true,
+            children = listOf(
+              ProjectFile(name = "src/main/java", path = "app/src/main/java", isDirectory = true, children = listOf(mainJava)),
+              ProjectFile(name = "src/main/res/layout", path = "app/src/main/res/layout", isDirectory = true, children = listOf(activityXml)),
+              manifest
+            )
+          ),
+          ProjectFile(
+            name = ".vibeforge",
+            path = ".vibeforge",
+            isDirectory = true,
+            children = listOf(
+              ProjectFile(
+                name = "memory.md",
+                path = ".vibeforge/memory.md",
+                language = "markdown",
+                content = "# Empty Activity Template\nMinimalist Android Activity layout with zero bloat."
+              )
+            )
+          )
+        )
+        _selectedFile.value = mainJava
+        _editorContent.value = mainJava.content
+        _projectNotice.value = "Template Empty Activity berhasil dimuat!"
+      }
+
+      "no_activity" -> {
+        _activeProjectName.value = "No Activity Service"
+        val serviceJava = ProjectFile(
+          name = "AppService.java",
+          path = "app/src/main/java/AppService.java",
+          language = "java",
+          content = """
+            package com.vibe.forge.service;
+
+            import android.app.Service;
+            import android.content.Intent;
+            import android.os.IBinder;
+            import android.util.Log;
+
+            public class AppService extends Service {
+                private static final String TAG = "AppService";
+
+                @Override
+                public int onStartCommand(Intent intent, int flags, int startId) {
+                    Log.d(TAG, "VibeForge background service started");
+                    return START_STICKY;
+                }
+
+                @Override
+                public IBinder onBind(Intent intent) {
+                    return null;
+                }
+            }
+          """.trimIndent()
+        )
+        val manifest = ProjectFile(
+          name = "AndroidManifest.xml",
+          path = "app/src/main/AndroidManifest.xml",
+          language = "xml",
+          content = """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.vibe.forge.service">
+                <application android:label="Background Service Module">
+                    <service 
+                        android:name=".AppService" 
+                        android:exported="false" />
+                </application>
+            </manifest>
+          """.trimIndent()
+        )
+
+        _workspaceTree.value = listOf(
+          ProjectFile(
+            name = "app",
+            path = "app",
+            isDirectory = true,
+            children = listOf(
+              ProjectFile(name = "src/main/java", path = "app/src/main/java", isDirectory = true, children = listOf(serviceJava)),
+              manifest
+            )
+          ),
+          ProjectFile(
+            name = ".vibeforge",
+            path = ".vibeforge",
+            isDirectory = true,
+            children = listOf(
+              ProjectFile(
+                name = "memory.md",
+                path = ".vibeforge/memory.md",
+                language = "markdown",
+                content = "# No-Activity Daemon/Service Module\nBackground daemon service for headless tasks."
+              )
+            )
+          )
+        )
+        _selectedFile.value = serviceJava
+        _editorContent.value = serviceJava.content
+        _projectNotice.value = "Template No Activity (Background Service) berhasil dimuat!"
+      }
+
+      "basic_views" -> {
+        _activeProjectName.value = "Calculator & Counter"
+        loadInitialData()
+        _projectNotice.value = "Template Basic Views Activity berhasil dimuat!"
+      }
+
+      "aosp_overlay" -> {
+        _activeProjectName.value = "AOSP SystemUI Overlay"
+        _activeMode.value = AgentMode.MODE_B
+        val overlayXml = ProjectFile(
+          name = "qs_panel.xml",
+          path = "packages/SystemUI/res/layout/qs_panel.xml",
+          language = "xml",
+          content = INITIAL_MOCKUP_XML
+        )
+        val overlayManifest = ProjectFile(
+          name = "AndroidManifest.xml",
+          path = "packages/SystemUI/AndroidManifest.xml",
+          language = "xml",
+          content = """
+            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                package="com.vibe.forge.systemui.overlay">
+                <overlay 
+                    android:targetPackage="com.android.systemui" 
+                    android:priority="1000"
+                    android:isStatic="true" />
+            </manifest>
+          """.trimIndent()
+        )
+        _workspaceTree.value = listOf(
+          ProjectFile(
+            name = "packages/SystemUI",
+            path = "packages/SystemUI",
+            isDirectory = true,
+            children = listOf(
+              ProjectFile(name = "res/layout", path = "packages/SystemUI/res/layout", isDirectory = true, children = listOf(overlayXml)),
+              overlayManifest
+            )
+          )
+        )
+        _selectedFile.value = overlayXml
+        _editorContent.value = overlayXml.content
+        _projectNotice.value = "Template AOSP SystemUI Overlay berhasil dimuat!"
+      }
+    }
+  }
+
+  companion object {
+    val INITIAL_MOCKUP_XML = """
+      <com.android.systemui.qs.QSContainerImpl
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:background="?android:attr/colorSurfaceContainerHigh"
+          android:padding="16dp"
+          android:elevation="8dp">
+
+          <TextView
+              android:id="@+id/qs_clock"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="09:41"
+              android:textSize="22sp"
+              android:textColor="?android:attr/textColorPrimary" />
+
+          <!-- Expressive Monet Quick Settings Grid (6 Tiles) -->
+          <GridLayout
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:columnCount="2"
+              android:rowCount="3"
+              android:alignmentMode="alignMargins"
+              android:useDefaultMargins="true">
+              <!-- Rendered with live Monet pill shapes -->
+          </GridLayout>
+      </com.android.systemui.qs.QSContainerImpl>
+    """.trimIndent()
+
+    val STATUS_BAR_XML = """
+      <com.android.systemui.statusbar.phone.PhoneStatusBarView
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="match_parent"
+          android:layout_height="40dp"
+          android:background="?android:attr/colorSurfaceContainer"
+          android:paddingHorizontal="12dp">
+          
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:text="09:41"
+              android:textStyle="bold" />
+      </com.android.systemui.statusbar.phone.PhoneStatusBarView>
+    """.trimIndent()
+
+    val VOLUME_DIALOG_XML = """
+      <com.android.systemui.volume.VolumeDialogImpl
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:background="?android:attr/colorSurfaceContainerHighest"
+          android:elevation="12dp"
+          android:padding="8dp">
+      </com.android.systemui.volume.VolumeDialogImpl>
+    """.trimIndent()
+  }
+}
