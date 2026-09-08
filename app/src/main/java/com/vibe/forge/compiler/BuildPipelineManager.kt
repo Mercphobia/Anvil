@@ -35,7 +35,7 @@ object BuildPipelineManager {
         onLog: (String) -> Unit
     ): BuildResult = withContext(Dispatchers.IO) {
         val log = StringBuilder()
-        fun emit(line: String) {
+        val emit: (String) -> Unit = { line ->
             log.append(line).append("\n")
             onLog(line)
         }
