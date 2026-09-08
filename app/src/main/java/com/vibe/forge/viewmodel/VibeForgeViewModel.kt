@@ -18,6 +18,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+/** Fullscreen onboarding wizard steps. */
+enum class WizardStep { WELCOME, BOOTSTRAP, AI_ASSISTANT, PROJECT_SOURCE, TEMPLATE }
+
+/** How the user wants to start their project in the wizard. */
+enum class ProjectSource { NEW, LOCAL, CLONE }
+
 class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
 
   // ------------------------------------------------------------------
@@ -709,6 +715,134 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
   // Setup Wizard Controls
   fun toggleSetupWizard(show: Boolean) {
     _showSetupWizard.value = show
+  }
+
+  // ---------- Fullscreen onboarding wizard state ----------
+
+  private val _wizardStep = MutableStateFlow(WizardStep.WELCOME)
+  val wizardStep: StateFlow<WizardStep> = _wizardStep.asStateFlow()
+
+  private val _wizardProjectSource = MutableStateFlow(ProjectSource.NEW)
+  val wizardProjectSource: StateFlow<ProjectSource> = _wizardProjectSource.asStateFlow()
+
+  private val _bootstrapLog = MutableStateFlow("")
+  val bootstrapLog: StateFlow<String> = _bootstrapLog.asStateFlow()
+
+  private val _bootstrapRunning = MutableStateFlow(false)
+  val bootstrapRunning: StateFlow<Boolean> = _bootstrapRunning.asStateFlow()
+
+  private val _bootstrapDone = MutableStateFlow(false)
+  val bootstrapDone: StateFlow<Boolean> = _bootstrapDone.asStateFlow()
+
+  private var wizardProvider: LlmProvider? = null
+  private var wizardApiKey: String = ""
+  private var wizardLocalPath: String = ""
+  private var wizardRepoUrl: String = ""
+
+  fun advanceWizard() {
+    _wizardStep.value = when (_wizardStep.value) {
+      WizardStep.WELCOME -> WizardStep.BOOTSTRAP
+      WizardStep.BOOTSTRAP -> WizardStep.AI_ASSISTANT
+      WizardStep.AI_ASSISTANT -> WizardStep.PROJECT_SOURCE
+      WizardStep.PROJECT_SOURCE -> WizardStep.TEMPLATE
+      WizardStep.TEMPLATE -> WizardStep.TEMPLATE // finished via finishWizard
+    }
+  }
+
+  fun backWizard() {
+    _wizardStep.value = when (_wizardStep.value) {
+      WizardStep.WELCOME -> WizardStep.WELCOME
+      WizardStep.BOOTSTRAP -> WizardStep.WELCOME
+      WizardStep.AI_ASSISTANT -> WizardStep.BOOTSTRAP
+      WizardStep.PROJECT_SOURCE -> WizardStep.AI_ASSISTANT
+      WizardStep.TEMPLATE -> WizardStep.PROJECT_SOURCE
+    }
+  }
+
+  fun selectWizardProvider(provider: LlmProvider) {
+    wizardProvider = provider
+    _providerConfig.value = _providerConfig.value.copy(provider = provider)
+  }
+
+  fun setWizardApiKey(key: String) {
+    wizardApiKey = key
+  }
+
+  fun setWizardProjectSource(source: ProjectSource) {
+    _wizardProjectSource.value = source
+  }
+
+  fun setWizardLocalPath(path: String) {
+    wizardLocalPath = path
+  }
+
+  fun setWizardRepoUrl(url: String) {
+    wizardRepoUrl = url
+  }
+
+  /** Auto-runs on the bootstrap step: installs the embedded terminal env once. */
+  fun startBootstrap() {
+    if (_bootstrapRunning.value || _bootstrapDone.value) return
+    _bootstrapRunning.value = true
+    viewModelScope.launch {
+      try {
+        val already = com.vibe.forge.system.env.EmbeddedEnvironment.isInstalled(app.applicationContext)
+        if (already) {
+          _bootstrapLog.value = "environment already installed, skipping download.\n"
+          _bootstrapDone.value = true
+          return@launch
+        }
+        val result = com.vibe.forge.system.env.EmbeddedEnvironment.install(app.applicationContext) { line ->
+          _bootstrapLog.value += line + "\n"
+        }
+        _bootstrapLog.value += result + "\n"
+        _bootstrapDone.value = result.contains("ready", ignoreCase = true) ||
+                               result.contains("done", ignoreCase = true) ||
+                               result.contains("installed", ignoreCase = true)
+      } catch (t: Throwable) {
+        _bootstrapLog.value += "failed: " + (t.message ?: t.toString()) + "\n"
+        _bootstrapDone.value = false
+      } finally {
+        _bootstrapRunning.value = false
+      }
+    }
+  }
+
+  /** Final wizard step: apply provider + project choice, then close onboarding. */
+  fun finishWizard(templateId: String) {
+    // Apply provider/api key through the real encrypted store path
+    val provider = wizardProvider ?: _providerConfig.value.provider
+    _providerConfig.value = _providerConfig.value.copy(
+      provider = provider,
+      apiKey = if (wizardApiKey.isNotBlank()) wizardApiKey else _providerConfig.value.apiKey
+    )
+    updateProviderConfig(_providerConfig.value)
+
+    when (_wizardProjectSource.value) {
+      ProjectSource.NEW -> applyProjectTemplate(templateId)
+      ProjectSource.LOCAL -> {
+        val name = wizardLocalPath.ifBlank { "workspace" }
+        openLocalProject(name, name)
+      }
+      ProjectSource.CLONE -> {
+        if (wizardRepoUrl.isNotBlank()) {
+          cloneGitHubProject(wizardRepoUrl, "main", "")
+        } else {
+          applyProjectTemplate(templateId)
+        }
+      }
+    }
+
+    _showSetupWizard.value = false
+
+    _steps.value = listOf(
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.AGENT_TEXT,
+        text = "Setup complete. VibeForge is ready - assistant: ${provider.displayName}.",
+        timestamp = "10:00"
+      )
+    )
   }
 
   fun completeSetupWizard(

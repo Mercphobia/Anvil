@@ -112,12 +112,8 @@ fun MainScaffold(viewModel: VibeForgeViewModel) {
   )
 
   if (showSetupWizard) {
-    SetupWizardDialog(
-      onDismiss = { viewModel.toggleSetupWizard(false) },
-      onComplete = { provider, apiKey, mode, template, repoUrl ->
-        viewModel.completeSetupWizard(provider, apiKey, mode, template, repoUrl)
-      }
-    )
+    com.vibe.forge.ui.onboarding.OnboardingFlow(viewModel = viewModel)
+    return
   }
 
   if (showSettingsDialog) {
