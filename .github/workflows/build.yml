@@ -24,7 +24,12 @@ jobs:
         run: |
           sh gradlew :app:assembleDebug --console=plain --stacktrace > build.log 2>&1
           EXIT=$?
-          tail -50 build.log
+          if [ -s build.log ]; then
+            tail -80 build.log
+          else
+            echo "build.log was empty; running gradle without redirection to capture error"
+            sh gradlew :app:assembleDebug --console=plain --stacktrace || true
+          fi
           exit $EXIT
 
       - name: Upload build log
