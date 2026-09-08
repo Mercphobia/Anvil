@@ -313,58 +313,30 @@ fun ProjectScreen(
             text = "${selectedFile?.path ?: "file"} • ${editorContent.lines().size} lines",
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
           )
           Text(
-            text = "UTF-8 • Java/XML Engine",
+            text = "UTF-8 • Java/XML",
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            maxLines = 1,
+            softWrap = false,
+            modifier = Modifier.padding(start = 8.dp)
           )
         }
 
-        // Code Editor Text Area with line numbers simulation
-        Row(modifier = Modifier.fillMaxSize()) {
-          // Line numbers gutter
-          val lineCount = editorContent.lines().size.coerceAtLeast(1)
-          Column(
-            modifier = Modifier
-              .background(MaterialTheme.colorScheme.surfaceContainerLow)
-              .fillMaxHeight()
-              .padding(horizontal = 8.dp, vertical = 12.dp)
-          ) {
-            for (i in 1..lineCount.coerceAtMost(50)) {
-              Text(
-                text = "$i",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-                lineHeight = 20.sp
-              )
-            }
-          }
-
-          // Editable code
-          OutlinedTextField(
-            value = editorContent,
-            onValueChange = { viewModel.updateEditorContent(it) },
-            modifier = Modifier
-              .fillMaxSize()
-              .testTag("code_editor_field"),
-            textStyle = TextStyle(
-              fontFamily = FontFamily.Monospace,
-              fontSize = 12.sp,
-              lineHeight = 20.sp,
-              color = MaterialTheme.colorScheme.onSurface
-            ),
-            colors = OutlinedTextFieldDefaults.colors(
-              focusedBorderColor = Color.Transparent,
-              unfocusedBorderColor = Color.Transparent,
-              focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-              unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-            )
-          )
-        }
+        // Code editor (sora-editor: real gutter, scrolling, monospace)
+        com.vibe.forge.editor.SoraEditorWrapper(
+          text = editorContent,
+          onTextChanged = { viewModel.updateEditorContent(it) },
+          modifier = Modifier
+            .fillMaxSize()
+            .testTag("code_editor_field")
+        )
       }
     }
   }
