@@ -73,7 +73,40 @@ object ToolRegistry {
         required = emptyList()
     )
 
-    val phase2Tools = listOf(listFiles, readFile, writeFile, runBuild, searchHistory, updateMemory)
+    val editLayoutXml = ToolDefinition(
+        name = "edit_layout_xml",
+        description = "Edit an AOSP layout XML file. read_file MUST have been called on this file earlier in the session.",
+        properties = mapOf(
+            "path" to ToolParam("string", "File path"),
+            "new_content" to ToolParam("string", "Full new file content")
+        ),
+        required = listOf("path", "new_content")
+    )
+
+    val editKotlinLogic = ToolDefinition(
+        name = "edit_kotlin_logic",
+        description = "Edit an AOSP Kotlin/Java logic file. read_file MUST have been called on this file earlier in the session.",
+        properties = mapOf(
+            "path" to ToolParam("string", "File path"),
+            "new_content" to ToolParam("string", "Full new file content")
+        ),
+        required = listOf("path", "new_content")
+    )
+
+    val previewMockup = ToolDefinition(
+        name = "preview_mockup",
+        description = "Render an XML layout string in the on-device mockup preview",
+        properties = mapOf(
+            "xml_content" to ToolParam("string", "Raw layout XML")
+        ),
+        required = listOf("xml_content")
+    )
+
+    val phase2Tools = listOf(
+        listFiles, readFile, writeFile, runBuild,
+        editLayoutXml, editKotlinLogic, previewMockup,
+        searchHistory, updateMemory
+    )
 
     fun byName(name: String): ToolDefinition? = phase2Tools.firstOrNull { it.name == name }
 }

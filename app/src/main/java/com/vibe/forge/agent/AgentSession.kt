@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vibe.forge.agent.memory.MemoryStore
 import com.vibe.forge.agent.tools.BuildTools
+import com.vibe.forge.agent.tools.MockupTools
 import com.vibe.forge.agent.tools.FileTools
 import com.vibe.forge.agent.tools.MemoryTools
 import com.vibe.forge.agent.tools.ToolRegistry
@@ -38,6 +39,7 @@ class AgentSession(
     private val memoryStore = MemoryStore(workspaceRoot)
     private val memoryTools = MemoryTools(memoryStore)
     private var buildTools: BuildTools? = null
+    private val mockupTools = MockupTools(workspaceRoot)
     private val client = LlmClient(config)
 
     /** Pending memory entries awaiting one-time user confirmation. */
@@ -161,8 +163,12 @@ class AgentSession(
                 "read_file" -> {
                     val paths = input.getAsJsonArray("paths")
                         ?.map { it.asString } ?: emptyList()
-                    if (paths.isEmpty()) "error: paths required"
-                    else fileTools.readFiles(paths)
+                    if (paths.isEmpty()) {
+                        "error: paths required"
+                    } else {
+                        paths.forEach { mockupTools.markRead(it) }
+                        fileTools.readFiles(paths)
+                    }
                 }
                 "write_file" -> {
                     val path = input.get("path")?.asString ?: ""
@@ -175,6 +181,20 @@ class AgentSession(
                         buildTools = BuildTools(ctx, workspaceRoot)
                     }
                     buildTools!!.runBuild { line -> append(Step(Step.Kind.TOOL_RESULT, line.take(300))) }
+                }
+                "edit_layout_xml" -> {
+                    val path = input.get("path")?.asString ?: ""
+                    val newContent = input.get("new_content")?.asString ?: ""
+                    mockupTools.editLayoutXml(path, newContent)
+                }
+                "edit_kotlin_logic" -> {
+                    val path = input.get("path")?.asString ?: ""
+                    val newContent = input.get("new_content")?.asString ?: ""
+                    mockupTools.editKotlinLogic(path, newContent)
+                }
+                "preview_mockup" -> {
+                    val xml = input.get("xml_content")?.asString ?: ""
+                    mockupTools.previewMockup(xml)
                 }
                 "search_history" -> {
                     val query = input.get("query")?.asString ?: ""
