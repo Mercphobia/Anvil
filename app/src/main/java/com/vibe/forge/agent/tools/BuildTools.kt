@@ -16,6 +16,10 @@ class BuildTools(
     private val projectDir: File
 ) {
 
+    /** Structured errors from the most recent build, read by the agent session. */
+    var lastErrors: List<BuildPipelineManager.BuildError> = emptyList()
+        private set
+
     suspend fun runBuild(onLog: (String) -> Unit): String = withContext(Dispatchers.IO) {
         try {
             if (!ToolchainManager.isReady(context)) {
@@ -32,6 +36,7 @@ class BuildTools(
                 .takeIf { it.exists() }
 
             val result = BuildPipelineManager.build(context, projectDir, androidJar, onLog)
+            lastErrors = result.errors
             if (result.success && result.apk != null) {
                 BuildPipelineManager.installApk(context, result.apk)
                 "build success: " + result.apk.absolutePath

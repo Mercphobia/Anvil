@@ -45,6 +45,8 @@ class AgentSession(
     private var buildTools: BuildTools? = null
     private val mockupTools = MockupTools(workspaceRoot)
     private val undoTools = UndoTools(workspaceRoot)
+    private val conversationStore = ConversationStore(workspaceRoot)
+    private var historyLoaded = false
     private val client = LlmClient(config)
 
     /** Pending memory entries awaiting one-time user confirmation. */
@@ -65,6 +67,7 @@ class AgentSession(
     var mode: Mode = Mode.MODE_A
 
     private var lastBuildErrors: List<com.vibe.forge.compiler.BuildPipelineManager.BuildError> = emptyList()
+    private var buildRetryCount = 0
 
     /** Last skills loaded into the prompt - exposed for the debug panel. */
     var lastLoadedSkills: List<String> = emptyList()
@@ -115,12 +118,28 @@ class AgentSession(
 
         viewModelScope.launch {
             try {
+                ensureHistoryLoaded()
                 runLoop()
+                conversationStore.save(history)
             } catch (t: Throwable) {
                 append(Step(Step.Kind.ERROR, "session error: " + (t.message ?: "unknown")))
             } finally {
                 _busy.value = false
             }
+        }
+    }
+
+    private suspend fun ensureHistoryLoaded() {
+        if (historyLoaded) return
+        historyLoaded = true
+        val persisted = conversationStore.load()
+        if (persisted.isNotEmpty() && history.size <= 1) {
+            // Restore older messages but keep the one just added
+            val current = history.lastOrNull()
+            history.clear()
+            history += persisted
+            current?.let { history += it }
+            append(Step(Step.Kind.INFO, "restored " + persisted.size + " messages from previous session"))
         }
     }
 
@@ -145,6 +164,16 @@ class AgentSession(
 
             texts.forEach { append(Step(Step.Kind.AGENT_TEXT, it.text)) }
 
+            // Auto-continue when the response was cut off by the token cap
+            if (response.stopReason == "max_tokens" || response.stopReason == "length") {
+                append(Step(Step.Kind.INFO, "response truncated - continuing..."))
+                history += LlmClient.Message.user(
+                    "Your previous response was cut off by the token limit. " +
+                            "Continue exactly where you stopped, without repeating."
+                )
+                return@repeat
+            }
+
             if (toolCalls.isEmpty()) {
                 // No more tool calls: conversation round complete
                 return
@@ -160,8 +189,47 @@ class AgentSession(
                 resultBlocks += LlmClient.ContentBlock.ToolResult(call.id, output)
             }
             history += LlmClient.Message("user", resultBlocks)
+
+            // Build self-correction: if run_build just failed with structured
+            // errors, nudge the agent to fix them (bounded by Phase-10 limit)
+            val buildFailed = toolCalls.any { it.call.name == "run_build" } &&
+                    resultBlocks.any { it is LlmClient.ContentBlock.ToolResult &&
+                            it.content.startsWith("build failed") }
+            if (buildFailed) {
+                buildRetryCount++
+                if (buildRetryCount <= 3) {
+                    append(Step(Step.Kind.INFO,
+                        "build failed - agent will attempt fix (" + buildRetryCount + "/3)"))
+                    val errors = lastBuildErrors.take(8).joinToString("\n") {
+                        "${it.file}:${it.line} ${it.message}"
+                    }
+                    history += LlmClient.Message.user(
+                        "The build failed with these structured errors:\n" + errors +
+                                "\nRead the affected files, fix the root cause (not just symptoms), " +
+                                "then run_build again. Attempt " + buildRetryCount + " of 3."
+                    )
+                } else {
+                    append(Step(Step.Kind.ERROR,
+                        "build still failing after 3 attempts - needs your help"))
+                    buildRetryCount = 0
+                    return
+                }
+            } else if (toolCalls.any { it.call.name == "run_build" }) {
+                buildRetryCount = 0
+            }
         }
         append(Step(Step.Kind.INFO, "max tool rounds reached"))
+    }
+
+    /** Trim old history to stay within context limits, keeping system-relevant tail. */
+    private fun trimHistoryForContext() {
+        val maxMessages = 40
+        if (history.size <= maxMessages) return
+        // Keep the first user instruction (anchors the task) + recent messages
+        val first = history.take(1)
+        val tail = history.takeLast(maxMessages - 1)
+        history.clear()
+        history += first + tail
     }
 
     /** Retry LLM calls with exponential backoff (network/rate-limit failures). */
@@ -173,6 +241,7 @@ class AgentSession(
                 append(Step(Step.Kind.INFO, "retrying request (attempt " + (attempt + 1) + ")..."))
                 kotlinx.coroutines.delay(delays[attempt])
             }
+            trimHistoryForContext()
             val result = client.send(systemPrompt(currentInstruction), history, ToolRegistry.phase2Tools)
             if (result.isSuccess) return result
             lastError = result.exceptionOrNull()
@@ -216,6 +285,7 @@ class AgentSession(
                     val result = buildTools!!.runBuild { line ->
                         append(Step(Step.Kind.TOOL_RESULT, line.take(300)))
                     }
+                    lastBuildErrors = buildTools!!.lastErrors
                     result
                 }
                 "edit_layout_xml" -> {
@@ -305,5 +375,10 @@ class AgentSession(
     fun clear() {
         history.clear()
         _steps.value = emptyList()
+        buildRetryCount = 0
+        lastBuildErrors = emptyList()
+        viewModelScope.launch {
+            conversationStore.clear()
+        }
     }
 }
