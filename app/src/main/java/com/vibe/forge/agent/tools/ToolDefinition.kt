@@ -145,10 +145,20 @@ object ToolRegistry {
         required = listOf("slug", "new_content", "reason")
     )
 
+    val runTerminal = ToolDefinition(
+        name = "run_terminal",
+        description = "Run a shell command inside the embedded environment, working directory = project workspace. Unix tools available (bash, coreutils, grep, find, sed, tar).",
+        properties = mapOf(
+            "command" to ToolParam("string", "Shell command to execute"),
+            "timeout_seconds" to ToolParam("number", "Optional timeout (default 60)")
+        ),
+        required = listOf("command")
+    )
+
     val phase2Tools = listOf(
         listFiles, readFile, writeFile, runBuild,
         editLayoutXml, editKotlinLogic, previewMockup, getDiff,
-        searchInProject, getBuildErrors, undoLastChange,
+        searchInProject, getBuildErrors, undoLastChange, runTerminal,
         searchHistory, updateMemory, proposeSkillUpdate
     )
 

@@ -35,6 +35,9 @@ Adaptive Material 3 shell: NavigationRail on wide screens, bottom navigation on 
 - **Git integration**: JGit clone/branch/diff/commit/push to working branches (`ai-mockup/<slug>`) - never main/master. Commit is gated by an explicit UI button.
 - **On-device toolchain**: aapt2 (ARM64), ecj, d8 (r8), apksigner downloaded on demand into the private sandbox.
 - **Sandboxed terminal**: shell execution inside the app workspace with sandboxed PATH.
+- **Embedded Unix environment**: official aarch64 bootstrap (bash + coreutils: grep, find, sed, awk, tar, curl) extracted into the private sandbox on first terminal use - full Termux-style shell without requiring the Termux app. Package manager intentionally disabled; extra .deb packages can be installed manually into the same prefix.
+- **Agent identity (SOUL.md)**: permanent identity/working-style document loaded into every system prompt, above the dynamic skills.
+- **Self-improvement**: the agent can propose updates to its own skills; every proposal requires explicit user approval and keeps a .bak backup for instant revert.
 
 ## Demo scenarios
 

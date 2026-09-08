@@ -214,11 +214,20 @@ class LlmClient(private val config: ProviderConfig) {
         }
 
         val headers = mutableMapOf("content-type" to "application/json")
-        if (config.provider == LlmProvider.OPENROUTER) {
-            headers["Authorization"] = "Bearer " + config.apiKey
-            headers["HTTP-Referer"] = "https://vibe.forge"
-        } else {
-            headers["Authorization"] = "Bearer " + config.apiKey
+        headers["Authorization"] = "Bearer " + config.apiKey
+        when (config.provider) {
+            LlmProvider.OPENROUTER -> {
+                headers["HTTP-Referer"] = "https://vibe.forge"
+                headers["X-Title"] = "Vibe Forge"
+            }
+            LlmProvider.OPENAI -> {
+                // Support OPENAI_ORGANIZATION env-style override via baseUrl suffix is
+                // unnecessary; leave standard. Custom endpoints set their own base URL.
+            }
+            else -> {
+                // CUSTOM: allow extra headers via "headers;k=v;k2=v2" suffix in apiKey field? No -
+                // keep key clean. Custom endpoints that need extra headers can be added here later.
+            }
         }
 
         val url = config.baseUrl.trimEnd('/') + "/chat/completions"
@@ -375,7 +384,14 @@ class LlmClient(private val config: ProviderConfig) {
             val stream = if (code in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.readText() ?: ""
             if (code !in 200..299) {
-                throw Exception("HTTP $code: ${text.take(400)}")
+                val hint = when (code) {
+                    401 -> "invalid or missing API key"
+                    403 -> "access denied - check key permissions/region"
+                    404 -> "wrong endpoint or model name"
+                    429 -> "rate limited - slow down"
+                    else -> "request failed"
+                }
+                throw Exception("HTTP $code ($hint): ${text.take(300)}")
             }
             text
         } finally {

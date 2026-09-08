@@ -6,6 +6,7 @@ import com.vibe.forge.agent.memory.MemoryStore
 import com.vibe.forge.agent.tools.BuildTools
 import com.vibe.forge.agent.tools.GitTools
 import com.vibe.forge.agent.tools.MockupTools
+import com.vibe.forge.agent.tools.TerminalTools
 import com.vibe.forge.agent.tools.UndoTools
 import com.vibe.forge.vcs.GitCredentialStore
 import com.vibe.forge.vcs.GitRepoManager
@@ -45,6 +46,7 @@ class AgentSession(
     private var buildTools: BuildTools? = null
     private val mockupTools = MockupTools(workspaceRoot)
     private val undoTools = UndoTools(workspaceRoot)
+    private var terminalTools: TerminalTools? = null
     private val conversationStore = ConversationStore(workspaceRoot)
     private var historyLoaded = false
     private val client = LlmClient(config)
@@ -336,6 +338,15 @@ class AgentSession(
                     else lastBuildErrors.joinToString("\n") {
                         "${it.file}:${it.line} ${it.message}"
                     }
+                }
+                "run_terminal" -> {
+                    val ctx = appContext ?: return "error: no context"
+                    if (terminalTools == null) {
+                        terminalTools = TerminalTools(ctx, workspaceRoot)
+                    }
+                    val cmd = input.get("command")?.asString ?: ""
+                    val timeout = input.get("timeout_seconds")?.asInt ?: 60
+                    terminalTools!!.run(cmd, timeout)
                 }
                 "undo_last_change" -> {
                     val path = input.get("path")?.asString ?: ""

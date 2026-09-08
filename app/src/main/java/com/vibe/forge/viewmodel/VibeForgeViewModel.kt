@@ -677,26 +677,25 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
       return
     }
 
-    viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+    viewModelScope.launch {
       _isTerminalRunning.value = true
       val current = _terminalLogs.value
       val separator = if (current.endsWith("\n") || current.isEmpty()) "" else "\n"
       _terminalLogs.value = current + separator + "$ " + trimmed + "\n"
-      try {
-        val pb = ProcessBuilder("sh", "-c", trimmed)
-        pb.directory(workspaceRoot)
-        val env = pb.environment()
-        env["PATH"] = java.io.File(app.filesDir, "bin").absolutePath +
-            java.io.File.pathSeparator + (env["PATH"] ?: "")
-        env["HOME"] = app.filesDir.absolutePath
-        pb.redirectErrorStream(true)
-        val process = pb.start()
-        val output = process.inputStream.bufferedReader().readText()
-        process.waitFor()
-        _terminalLogs.value += output + "[exit " + process.exitValue() + "]\n"
-      } catch (t: Throwable) {
-        _terminalLogs.value += "[error] " + t.message + "\n"
+
+      val tools = com.vibe.forge.agent.tools.TerminalTools(
+          app.applicationContext, workspaceRoot
+      )
+      // First run installs the embedded environment if missing
+      val envMsg = tools.ensureEnvironment { line ->
+        _terminalLogs.value += "[env] " + line + "\n"
       }
+      if (envMsg != "environment ready") {
+        _terminalLogs.value += "[env] " + envMsg + "\n"
+      }
+
+      val output = tools.run(trimmed)
+      _terminalLogs.value += output + "\n"
       _isTerminalRunning.value = false
     }
   }
