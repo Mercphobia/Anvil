@@ -36,7 +36,15 @@ object TextMateLanguages {
         "sh" to "source.shell",
         "bash" to "source.shell",
         "md" to "text.html.markdown",
-        "markdown" to "text.html.markdown"
+        "markdown" to "text.html.markdown",
+        // universal languages
+        "js" to "source.js", "jsx" to "source.js", "mjs" to "source.js", "cjs" to "source.js",
+        "ts" to "source.ts", "tsx" to "source.tsx",
+        "rs" to "source.rust",
+        "go" to "source.go",
+        "c" to "source.c", "h" to "source.c",
+        "cpp" to "source.cpp", "cc" to "source.cpp", "cxx" to "source.cpp",
+        "hpp" to "source.cpp", "hh" to "source.cpp"
     )
 
     /** scope name -> grammar asset file (without asset root). */
@@ -47,7 +55,14 @@ object TextMateLanguages {
         "source.python" to "python.json",
         "source.json" to "json.json",
         "source.shell" to "shell.json",
-        "text.html.markdown" to "markdown.json"
+        "text.html.markdown" to "markdown.json",
+        "source.js" to "javascript.json",
+        "source.ts" to "typescript.json",
+        "source.tsx" to "typescript.json",
+        "source.rust" to "rust.json",
+        "source.go" to "go.json",
+        "source.c" to "c.json",
+        "source.cpp" to "cpp.json"
     )
 
     @Volatile
