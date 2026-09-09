@@ -20,6 +20,25 @@ class BuildTools(
     var lastErrors: List<BuildPipelineManager.BuildError> = emptyList()
         private set
 
+    /**
+     * Dispatch by project type: ANDROID runs the native in-process pipeline;
+     * everything else runs the generic shell pipeline (via TerminalTools,
+     * which is user-approval gated).
+     */
+    suspend fun runProjectBuild(
+        projectType: dev.anvil.ade.model.ProjectType,
+        onLog: (String) -> Unit
+    ): String = withContext(Dispatchers.IO) {
+        if (projectType == dev.anvil.ade.model.ProjectType.ANDROID) {
+            runBuild(onLog)
+        } else {
+            val config = dev.anvil.ade.workspace.WorkspaceConfig.load(projectDir)
+            val result = GenericBuildRunner.run(context, projectDir, config, onLog)
+            if (result.success) "build success (${projectType.displayName})"
+            else "build failed: " + result.errors.take(5).joinToString("; ")
+        }
+    }
+
     suspend fun runBuild(onLog: (String) -> Unit): String = withContext(Dispatchers.IO) {
         try {
             if (!ToolchainManager.isReady(context)) {
