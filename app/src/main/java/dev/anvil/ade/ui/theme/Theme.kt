@@ -1,98 +1,95 @@
 package dev.anvil.ade.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
-private val MonetDarkColorScheme = darkColorScheme(
-  primary = MonetPrimaryDark,
-  onPrimary = MonetOnPrimaryDark,
-  primaryContainer = MonetPrimaryContainerDark,
-  onPrimaryContainer = MonetOnPrimaryContainerDark,
-  secondary = MonetSecondaryDark,
-  onSecondary = MonetOnSecondaryDark,
-  secondaryContainer = MonetSecondaryContainerDark,
-  onSecondaryContainer = MonetOnSecondaryContainerDark,
-  tertiary = MonetTertiaryDark,
-  onTertiary = MonetOnTertiaryDark,
-  tertiaryContainer = MonetTertiaryContainerDark,
-  onTertiaryContainer = MonetOnTertiaryContainerDark,
-  error = MonetErrorDark,
-  onError = MonetOnErrorDark,
-  errorContainer = MonetErrorContainerDark,
-  onErrorContainer = MonetOnErrorContainerDark,
-  background = MonetBackgroundDark,
-  onBackground = MonetOnBackgroundDark,
-  surface = MonetSurfaceDark,
-  onSurface = MonetOnSurfaceDark,
-  surfaceVariant = MonetSurfaceVariantDark,
-  onSurfaceVariant = MonetOnSurfaceVariantDark,
-  outline = MonetOutlineDark,
-  outlineVariant = MonetOutlineVariantDark,
-  surfaceContainerLowest = MonetSurfaceContainerLowestDark,
-  surfaceContainerLow = MonetSurfaceContainerLowDark,
-  surfaceContainer = MonetSurfaceContainerDark,
-  surfaceContainerHigh = MonetSurfaceContainerHighDark,
-  surfaceContainerHighest = MonetSurfaceContainerHighestDark,
+/**
+ * Vercel Geist dark scheme: near-black #0A0A0A canvas, #EDEDED ink,
+ * single blue accent #0070F3. Depth via 1px outlineVariant borders,
+ * never elevation.
+ */
+private val VercelDarkColorScheme = darkColorScheme(
+  primary = Color(VercelBlue),
+  onPrimary = Color(VcOnErrorDark),
+  primaryContainer = Color(0xFF0070F3),
+  onPrimaryContainer = Color(0xFFEDEDED),
+  secondary = Color(0xFFA1A1A1),
+  onSecondary = Color(VcBackgroundDark),
+  secondaryContainer = Color(0xFF1A1A1A),
+  onSecondaryContainer = Color(0xFFEDEDED),
+  tertiary = Color(0xFFA1A1A1),
+  onTertiary = Color(VcBackgroundDark),
+  tertiaryContainer = Color(0xFF1A1A1A),
+  onTertiaryContainer = Color(0xFFEDEDED),
+  error = Color(VcErrorDark),
+  onError = Color(VcOnErrorDark),
+  errorContainer = Color(0xFF331111),
+  onErrorContainer = Color(0xFFFF5B4F),
+  background = Color(VcBackgroundDark),
+  onBackground = Color(VcOnBackgroundDark),
+  surface = Color(VcSurfaceDark),
+  onSurface = Color(VcOnSurfaceDark),
+  surfaceVariant = Color(VcSurfaceVariantDark),
+  onSurfaceVariant = Color(VcOnSurfaceVariantDark),
+  outline = Color(VcOutlineDark),
+  outlineVariant = Color(VcOutlineVariantDark),
+  surfaceContainerLowest = Color(VcSurfaceLowestDark),
+  surfaceContainerLow = Color(VcSurfaceLowDark),
+  surfaceContainer = Color(VcSurfaceContainerDark),
+  surfaceContainerHigh = Color(VcSurfaceHighDark),
+  surfaceContainerHighest = Color(VcSurfaceHighestDark),
 )
 
-private val MonetLightColorScheme = lightColorScheme(
-  primary = MonetPrimaryLight,
-  onPrimary = MonetOnPrimaryLight,
-  primaryContainer = MonetPrimaryContainerLight,
-  onPrimaryContainer = MonetOnPrimaryContainerLight,
-  secondary = MonetSecondaryLight,
-  onSecondary = MonetOnSecondaryLight,
-  secondaryContainer = MonetSecondaryContainerLight,
-  onSecondaryContainer = MonetOnSecondaryContainerLight,
-  tertiary = MonetTertiaryLight,
-  onTertiary = MonetOnTertiaryLight,
-  tertiaryContainer = MonetTertiaryContainerLight,
-  onTertiaryContainer = MonetOnTertiaryContainerLight,
-  error = MonetErrorLight,
-  onError = MonetOnErrorLight,
-  errorContainer = MonetErrorContainerLight,
-  onErrorContainer = MonetOnErrorContainerLight,
-  background = MonetBackgroundLight,
-  onBackground = MonetOnBackgroundLight,
-  surface = MonetSurfaceLight,
-  onSurface = MonetOnSurfaceLight,
-  surfaceVariant = MonetSurfaceVariantLight,
-  onSurfaceVariant = MonetOnSurfaceVariantLight,
-  outline = MonetOutlineLight,
-  outlineVariant = MonetOutlineVariantLight,
-  surfaceContainerLowest = MonetSurfaceContainerLowestLight,
-  surfaceContainerLow = MonetSurfaceContainerLowLight,
-  surfaceContainer = MonetSurfaceContainerLight,
-  surfaceContainerHigh = MonetSurfaceContainerHighLight,
-  surfaceContainerHighest = MonetSurfaceContainerHighestLight,
+/**
+ * Vercel Geist light scheme: pure white canvas, #171717 ink,
+ * single blue accent. Micro-warmth: #171717 not #000000.
+ */
+private val VercelLightColorScheme = lightColorScheme(
+  primary = Color(VercelBlue),
+  onPrimary = Color(VcOnErrorLight),
+  primaryContainer = Color(0xFFEBF5FF),
+  onPrimaryContainer = Color(0xFF0068D6),
+  secondary = Color(0xFF666666),
+  onSecondary = Color(VcBackgroundLight),
+  secondaryContainer = Color(0xFFFAFAFA),
+  onSecondaryContainer = Color(0xFF171717),
+  tertiary = Color(0xFF666666),
+  onTertiary = Color(VcBackgroundLight),
+  tertiaryContainer = Color(0xFFFAFAFA),
+  onTertiaryContainer = Color(0xFF171717),
+  error = Color(VcErrorLight),
+  onError = Color(VcOnErrorLight),
+  errorContainer = Color(0xFFFFEBEB),
+  onErrorContainer = Color(0xFFCC0000),
+  background = Color(VcBackgroundLight),
+  onBackground = Color(VcOnBackgroundLight),
+  surface = Color(VcSurfaceLight),
+  onSurface = Color(VcOnSurfaceLight),
+  surfaceVariant = Color(VcSurfaceVariantLight),
+  onSurfaceVariant = Color(VcOnSurfaceVariantLight),
+  outline = Color(VcOutlineLight),
+  outlineVariant = Color(VcOutlineVariantLight),
+  surfaceContainerLowest = Color(VcSurfaceLowestLight),
+  surfaceContainerLow = Color(VcSurfaceLowLight),
+  surfaceContainer = Color(VcSurfaceContainerLight),
+  surfaceContainerHigh = Color(VcSurfaceHighLight),
+  surfaceContainerHighest = Color(VcSurfaceHighestLight),
 )
 
 @Composable
 fun AnvilTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
-  // Monet Dynamic Color support on Android 12+ (API 31+)
-  dynamicColor: Boolean = true,
   content: @Composable () -> Unit,
 ) {
-  val colorScheme = when {
-    dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-      val context = LocalContext.current
-      if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    }
-    darkTheme -> MonetDarkColorScheme
-    else -> MonetLightColorScheme
-  }
+  val colorScheme = if (darkTheme) VercelDarkColorScheme else VercelLightColorScheme
 
   MaterialTheme(
     colorScheme = colorScheme,
-    typography = ExpressiveTypography,
+    typography = AnvilTypography,
     content = content,
   )
 }

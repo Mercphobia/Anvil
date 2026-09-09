@@ -98,7 +98,7 @@ private fun applyColors(
         val themeModel = io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel(
             themeSource, DYNAMIC_THEME_NAME
         ).apply {
-            isDark = isDark
+            this.isDark = isDark
         }
         themeRegistry.loadTheme(themeModel)
         themeRegistry.setTheme(DYNAMIC_THEME_NAME)
@@ -121,7 +121,7 @@ private fun applyColors(
         editor.colorScheme = scheme
     } catch (t: Throwable) {
         lastAppliedColorKey = null // allow retry on next pass
-        applyFallbackScheme(editor, background, textColor, lineNumber, gutterBg)
+        applyFallbackScheme(editor, background, textColor, lineNumber, gutterBg, dividerColor)
     }
 }
 
@@ -136,7 +136,8 @@ private fun applyFallbackScheme(
     background: Int,
     textColor: Int,
     lineNumber: Int,
-    gutterBg: Int
+    gutterBg: Int,
+    dividerColor: Int
 ) {
     try {
         val scheme = editor.colorScheme
