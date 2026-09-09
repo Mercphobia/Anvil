@@ -1,22 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-
-    <!-- V body -->
-    <path
-        android:fillColor="#4F8CFF"
-        android:pathData="M30,30 L46,30 L54,58 L62,30 L78,30 L60,78 L48,78 Z" />
-
-    <!-- forge spark / accent slash -->
-    <path
-        android:fillColor="#7C5CFF"
-        android:pathData="M62,52 L74,52 L68,66 L56,66 Z" />
-
-    <!-- base anvil line -->
-    <path
-        android:fillColor="#9BA0A8"
-        android:pathData="M34,82 L74,82 L74,87 L34,87 Z" />
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Monochrome geometric anvil (horn left, heel right, waist, base) -->
+    <group android:scaleX="0.62" android:scaleY="0.62" android:pivotX="54" android:pivotY="54">
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M22,38 L58,38 L58,32 C58,29 60,27 63,27 L86,27 C89,27 90,30 88,32 L74,46 L26,46 C23,46 21,44 21,41 C21,39 21,38 22,38 Z"/>
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M40,48 L68,48 L64,62 L44,62 Z"/>
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M34,64 L74,64 C77,64 79,66 79,69 L79,76 L29,76 L29,69 C29,66 31,64 34,64 Z"/>
+    </group>
 </vector>

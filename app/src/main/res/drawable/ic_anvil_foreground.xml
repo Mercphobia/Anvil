@@ -2,11 +2,15 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Anvil silhouette, monochrome white, geometric: horn + body + waist + base -->
     <group android:scaleX="0.62" android:scaleY="0.62" android:pivotX="54" android:pivotY="54">
+        <!-- top body with horn (left) and heel (right) -->
         <path android:fillColor="#FFFFFFFF"
             android:pathData="M22,38 L58,38 L58,32 C58,29 60,27 63,27 L86,27 C89,27 90,30 88,32 L74,46 L26,46 C23,46 21,44 21,41 C21,39 21,38 22,38 Z"/>
+        <!-- waist -->
         <path android:fillColor="#FFFFFFFF"
             android:pathData="M40,48 L68,48 L64,62 L44,62 Z"/>
+        <!-- base -->
         <path android:fillColor="#FFFFFFFF"
             android:pathData="M34,64 L74,64 C77,64 79,66 79,69 L79,76 L29,76 L29,69 C29,66 31,64 34,64 Z"/>
     </group>

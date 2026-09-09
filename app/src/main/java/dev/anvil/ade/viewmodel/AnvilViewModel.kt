@@ -145,7 +145,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
   // Active loaded skills
   private val _activeSkills = MutableStateFlow(
-    listOf("android-app-builder", "android-app-design", "xml-resource-safety")
+    listOf("anvil-engineering")
   )
   val activeSkills: StateFlow<List<String>> = _activeSkills.asStateFlow()
 
@@ -290,8 +290,8 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   fun setType(type: ProjectType) {
     _activeType.value = type
     val newSkills = when (type) {
-      ProjectType.ANDROID -> listOf("android-app-builder", "android-app-design", "xml-resource-safety")
-      else -> listOf("aosp-systemui-design", "aosp-systemui-editing", "git-commit-convention", "xml-resource-safety")
+      ProjectType.ANDROID -> listOf("anvil-engineering")
+      else -> listOf("anvil-engineering")
     }
     _activeSkills.value = newSkills
     addStep(
