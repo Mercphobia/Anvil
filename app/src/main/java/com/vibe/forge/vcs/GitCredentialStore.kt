@@ -8,6 +8,9 @@ import androidx.security.crypto.MasterKey
  * Stores the Git token encrypted (Android Keystore). Never logged,
  * never included in LLM prompts.
  */
+class SecureStorageUnavailableException(cause: Throwable) :
+    Exception("Secure storage unavailable on this device: ${cause.message}", cause)
+
 object GitCredentialStore {
 
     private const val PREFS = "vibe_forge_git"
@@ -27,7 +30,9 @@ object GitCredentialStore {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
     } catch (t: Throwable) {
-        context.getSharedPreferences(PREFS + "_plain", Context.MODE_PRIVATE)
+        // Do NOT silently fall back to plaintext - throw so the UI can tell
+        // the user explicitly instead of storing the token unencrypted.
+        throw SecureStorageUnavailableException(t)
     }
 
     fun save(context: Context, token: String, remote: String, branch: String) {
