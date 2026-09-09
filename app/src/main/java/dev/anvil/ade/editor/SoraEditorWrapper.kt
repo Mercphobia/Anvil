@@ -102,7 +102,14 @@ private fun applyColors(
         themeRegistry.loadTheme(themeModel)
         themeRegistry.setTheme(DYNAMIC_THEME_NAME)
 
-        val scheme = TextMateColorScheme.create(themeRegistry)
+        // CRITICAL: TextMateColorScheme's constructor only ASSIGNS the theme
+        // model - it does not load colors (rawTheme stays null until
+        // setTheme()/applyDefault() runs). Creating the scheme via the static
+        // factory right after registry.setTheme() misses the theme-change
+        // dispatch, so the scheme would render with fallback flat colors.
+        // Explicitly loading the theme into the scheme instance fixes it.
+        val scheme = TextMateColorScheme.create(themeRegistry, themeModel)
+        scheme.setTheme(themeModel)
         scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, background)
         scheme.setColor(EditorColorScheme.LINE_NUMBER, lineNumber)
         scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, gutterBg)
