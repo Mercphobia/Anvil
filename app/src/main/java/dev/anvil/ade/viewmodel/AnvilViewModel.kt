@@ -197,7 +197,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   val editorSavedNotice: StateFlow<String?> = _editorSavedNotice.asStateFlow()
 
   // Mockup State
-  private val _mockupXml = MutableStateFlow(INITIAL_MOCKUP_XML)
+  private val _mockupXml = MutableStateFlow(dev.anvil.ade.ui.mockup.MockupPresets.INITIAL_MOCKUP_XML)
   val mockupXml: StateFlow<String> = _mockupXml.asStateFlow()
 
   private val _mockupValidation = MutableStateFlow("XML OK • All @*android: resources sanitized")
@@ -264,170 +264,12 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   }
 
   private fun loadInitialData() {
-    // Initial workspace files
-    val initialTree = listOf(
-      ProjectFile(
-        name = "app",
-        path = "app",
-        isDirectory = true,
-        children = listOf(
-          ProjectFile(
-            name = "src/main/java",
-            path = "app/src/main/java",
-            isDirectory = true,
-            children = listOf(
-              ProjectFile(
-                name = "MainActivity.java",
-                path = "app/src/main/java/MainActivity.java",
-                language = "java",
-                content = """
-                  package dev.anvil.ade.calculator;
-
-                  import android.app.Activity;
-                  import android.os.Bundle;
-                  import android.widget.TextView;
-                  import android.widget.Button;
-
-                  public class MainActivity extends Activity {
-                      private TextView display;
-                      private double firstVal = 0;
-                      private String op = "";
-
-                      @Override
-                      protected void onCreate(Bundle savedInstanceState) {
-                          super.onCreate(savedInstanceState);
-                          setContentView(R.layout.activity_main);
-                          display = findViewById(R.id.txt_display);
-                      }
-                  }
-                """.trimIndent()
-              )
-            )
-          ),
-          ProjectFile(
-            name = "src/main/res/layout",
-            path = "app/src/main/res/layout",
-            isDirectory = true,
-            children = listOf(
-              ProjectFile(
-                name = "activity_main.xml",
-                path = "app/src/main/res/layout/activity_main.xml",
-                language = "xml",
-                content = """
-                  <?xml version="1.0" encoding="utf-8"?>
-                  <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                      android:layout_width="match_parent"
-                      android:layout_height="match_parent"
-                      android:orientation="vertical"
-                      android:padding="16dp"
-                      android:background="?android:attr/colorBackground">
-                      
-                      <TextView
-                          android:id="@+id/txt_display"
-                          android:layout_width="match_parent"
-                          android:layout_height="120dp"
-                          android:gravity="bottom|end"
-                          android:textSize="48sp"
-                          android:text="0" />
-                  </LinearLayout>
-                """.trimIndent()
-              )
-            )
-          ),
-          ProjectFile(
-            name = "AndroidManifest.xml",
-            path = "app/src/main/AndroidManifest.xml",
-            language = "xml",
-            content = """
-              <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                  package="dev.anvil.ade.calculator">
-                  <application
-                      android:label="Java Calc"
-                      android:theme="@android:style/Theme.Material.Light.NoActionBar">
-                      <activity android:name=".MainActivity" android:exported="true">
-                          <intent-filter>
-                              <action android:name="android.intent.action.MAIN" />
-                              <category android:name="android.intent.category.LAUNCHER" />
-                          </intent-filter>
-                      </activity>
-                  </application>
-              </manifest>
-            """.trimIndent()
-          )
-        )
-      ),
-      ProjectFile(
-        name = ".anvil",
-        path = ".anvil",
-        isDirectory = true,
-        children = listOf(
-          ProjectFile(
-            name = "memory.md",
-            path = ".anvil/memory.md",
-            language = "markdown",
-            content = """
-              # Anvil Project Memory
-              - Architecture: Single Activity Java, zero external Gradle dependencies.
-              - UI Scheme: Material You Monet Dynamic Color with high-contrast surfaces.
-              - Git Working Branch: ai-mockup/qs-monet-expressive.
-              - Target Device: On-device aapt2/ecj/d8 toolchain.
-            """.trimIndent()
-          )
-        )
-      )
-    )
+    val initialTree = dev.anvil.ade.workspace.DemoWorkspace.initialTree
     _workspaceTree.value = initialTree
     _selectedFile.value = initialTree[0].children[0].children[0]
     _editorContent.value = _selectedFile.value?.content ?: ""
-
-    // Initial Diff
-
-    // Initial Chat Steps
-    _steps.value = listOf(
-      AgentStep(
-        id = UUID.randomUUID().toString(),
-        kind = StepKind.INFO,
-        text = "Anvil IDE ready. Universal provider connected. Project type: ANDROID (App Builder).",
-        timestamp = "09:40"
-      ),
-      AgentStep(
-        id = UUID.randomUUID().toString(),
-        kind = StepKind.USER,
-        text = "Buat aplikasi kalkulator Java sederhana dengan UI Material 3 Monet.",
-        timestamp = "09:41"
-      ),
-      AgentStep(
-        id = UUID.randomUUID().toString(),
-        kind = StepKind.TOOL_CALL,
-        text = "write_file(path='app/src/main/res/layout/activity_main.xml')",
-        toolName = "write_file",
-        timestamp = "09:41",
-        executionMs = 180
-      ),
-      AgentStep(
-        id = UUID.randomUUID().toString(),
-        kind = StepKind.TOOL_RESULT,
-        text = "File written: app/src/main/res/layout/activity_main.xml (312 bytes). XML syntax guarded OK.",
-        timestamp = "09:41"
-      ),
-      AgentStep(
-        id = UUID.randomUUID().toString(),
-        kind = StepKind.AGENT_TEXT,
-        text = "Saya telah merancang layout kalkulator dan kode Activity Java bebas dependensi eksternal. Kode siap dikompilasi menggunakan toolchain on-device (aapt2 -> ecj -> d8). Tekan tab Build atau minta saya untuk menjalankan build!",
-        timestamp = "09:42"
-      )
-    )
-
-    _buildLogs.value = """
-      [Anvil Toolchain] Initialized.
-      Target Architecture: aarch64 (ARM64)
-      Environment: Sandbox filesDir/toolchain
-      aapt2 version: 2.19 (installed)
-      ecj version: 3.33.0 (ready)
-      d8 / r8 version: 8.2.33 (ready)
-      apksigner: v2 scheme enabled
-      Ready to compile workspace on demand.
-    """.trimIndent()
+    _steps.value = dev.anvil.ade.workspace.DemoWorkspace.initialSteps
+    _buildLogs.value = dev.anvil.ade.workspace.DemoWorkspace.initialBuildLogs
   }
 
   // Welcome control
@@ -666,9 +508,9 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
   fun loadMockupPreset(presetName: String) {
     when (presetName) {
-      "Quick Settings" -> updateMockupXml(INITIAL_MOCKUP_XML)
-      "Status Bar" -> updateMockupXml(STATUS_BAR_XML)
-      "Volume Panel" -> updateMockupXml(VOLUME_DIALOG_XML)
+      "Quick Settings" -> updateMockupXml(dev.anvil.ade.ui.mockup.MockupPresets.INITIAL_MOCKUP_XML)
+      "Status Bar" -> updateMockupXml(dev.anvil.ade.ui.mockup.MockupPresets.STATUS_BAR_XML)
+      "Volume Panel" -> updateMockupXml(dev.anvil.ade.ui.mockup.MockupPresets.VOLUME_DIALOG_XML)
     }
   }
 
@@ -1090,285 +932,18 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
   // Template Scaffolder
   fun applyProjectTemplate(templateId: String) {
-    when (templateId) {
-      "github_clone" -> {
-        // If triggered without URL (from Template Dialog), just open GitHub clone dialog
-        _showOpenProjectDialog.value = true
-        _projectNotice.value = "Silakan masukkan URL GitHub untuk dikloning."
-      }
-      "empty_activity" -> {
-        _activeProjectName.value = "Empty Activity App"
-        val mainJava = ProjectFile(
-          name = "MainActivity.java",
-          path = "app/src/main/java/MainActivity.java",
-          language = "java",
-          content = """
-            package dev.anvil.ade.emptyapp;
-
-            import android.app.Activity;
-            import android.os.Bundle;
-
-            public class MainActivity extends Activity {
-                @Override
-                protected void onCreate(Bundle savedInstanceState) {
-                    super.onCreate(savedInstanceState);
-                    setContentView(R.layout.activity_main);
-                }
-            }
-          """.trimIndent()
-        )
-        val activityXml = ProjectFile(
-          name = "activity_main.xml",
-          path = "app/src/main/res/layout/activity_main.xml",
-          language = "xml",
-          content = """
-            <?xml version="1.0" encoding="utf-8"?>
-            <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="?android:attr/colorSurface">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="Empty Activity • Anvil"
-                    android:textSize="18sp"
-                    android:textColor="?android:attr/textColorPrimary" />
-            </FrameLayout>
-          """.trimIndent()
-        )
-        val manifest = ProjectFile(
-          name = "AndroidManifest.xml",
-          path = "app/src/main/AndroidManifest.xml",
-          language = "xml",
-          content = """
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="dev.anvil.ade.emptyapp">
-                <application 
-                    android:label="Empty App" 
-                    android:theme="@android:style/Theme.Material.Light.NoActionBar">
-                    <activity 
-                        android:name=".MainActivity" 
-                        android:exported="true">
-                        <intent-filter>
-                            <action android:name="android.intent.action.MAIN" />
-                            <category android:name="android.intent.category.LAUNCHER" />
-                        </intent-filter>
-                    </activity>
-                </application>
-            </manifest>
-          """.trimIndent()
-        )
-
-        _workspaceTree.value = listOf(
-          ProjectFile(
-            name = "app",
-            path = "app",
-            isDirectory = true,
-            children = listOf(
-              ProjectFile(name = "src/main/java", path = "app/src/main/java", isDirectory = true, children = listOf(mainJava)),
-              ProjectFile(name = "src/main/res/layout", path = "app/src/main/res/layout", isDirectory = true, children = listOf(activityXml)),
-              manifest
-            )
-          ),
-          ProjectFile(
-            name = ".anvil",
-            path = ".anvil",
-            isDirectory = true,
-            children = listOf(
-              ProjectFile(
-                name = "memory.md",
-                path = ".anvil/memory.md",
-                language = "markdown",
-                content = "# Empty Activity Template\nMinimalist Android Activity layout with zero bloat."
-              )
-            )
-          )
-        )
-        _selectedFile.value = mainJava
-        _editorContent.value = mainJava.content
-        _projectNotice.value = "Template Empty Activity berhasil dimuat!"
-      }
-
-      "no_activity" -> {
-        _activeProjectName.value = "No Activity Service"
-        val serviceJava = ProjectFile(
-          name = "AppService.java",
-          path = "app/src/main/java/AppService.java",
-          language = "java",
-          content = """
-            package dev.anvil.ade.service;
-
-            import android.app.Service;
-            import android.content.Intent;
-            import android.os.IBinder;
-            import android.util.Log;
-
-            public class AppService extends Service {
-                private static final String TAG = "AppService";
-
-                @Override
-                public int onStartCommand(Intent intent, int flags, int startId) {
-                    Log.d(TAG, "Anvil background service started");
-                    return START_STICKY;
-                }
-
-                @Override
-                public IBinder onBind(Intent intent) {
-                    return null;
-                }
-            }
-          """.trimIndent()
-        )
-        val manifest = ProjectFile(
-          name = "AndroidManifest.xml",
-          path = "app/src/main/AndroidManifest.xml",
-          language = "xml",
-          content = """
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="dev.anvil.ade.service">
-                <application android:label="Background Service Module">
-                    <service 
-                        android:name=".AppService" 
-                        android:exported="false" />
-                </application>
-            </manifest>
-          """.trimIndent()
-        )
-
-        _workspaceTree.value = listOf(
-          ProjectFile(
-            name = "app",
-            path = "app",
-            isDirectory = true,
-            children = listOf(
-              ProjectFile(name = "src/main/java", path = "app/src/main/java", isDirectory = true, children = listOf(serviceJava)),
-              manifest
-            )
-          ),
-          ProjectFile(
-            name = ".anvil",
-            path = ".anvil",
-            isDirectory = true,
-            children = listOf(
-              ProjectFile(
-                name = "memory.md",
-                path = ".anvil/memory.md",
-                language = "markdown",
-                content = "# No-Activity Daemon/Service Module\nBackground daemon service for headless tasks."
-              )
-            )
-          )
-        )
-        _selectedFile.value = serviceJava
-        _editorContent.value = serviceJava.content
-        _projectNotice.value = "Template No Activity (Background Service) berhasil dimuat!"
-      }
-
-      "basic_views" -> {
-        _activeProjectName.value = "Calculator & Counter"
-        loadInitialData()
-        _projectNotice.value = "Template Basic Views Activity berhasil dimuat!"
-      }
-
-      "aosp_overlay" -> {
-        _activeProjectName.value = "AOSP SystemUI Overlay"
-        _activeType.value = ProjectType.GIT_LINKED_SYSTEM
-        val overlayXml = ProjectFile(
-          name = "qs_panel.xml",
-          path = "packages/SystemUI/res/layout/qs_panel.xml",
-          language = "xml",
-          content = INITIAL_MOCKUP_XML
-        )
-        val overlayManifest = ProjectFile(
-          name = "AndroidManifest.xml",
-          path = "packages/SystemUI/AndroidManifest.xml",
-          language = "xml",
-          content = """
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                package="dev.anvil.ade.systemui.overlay">
-                <overlay 
-                    android:targetPackage="com.android.systemui" 
-                    android:priority="1000"
-                    android:isStatic="true" />
-            </manifest>
-          """.trimIndent()
-        )
-        _workspaceTree.value = listOf(
-          ProjectFile(
-            name = "packages/SystemUI",
-            path = "packages/SystemUI",
-            isDirectory = true,
-            children = listOf(
-              ProjectFile(name = "res/layout", path = "packages/SystemUI/res/layout", isDirectory = true, children = listOf(overlayXml)),
-              overlayManifest
-            )
-          )
-        )
-        _selectedFile.value = overlayXml
-        _editorContent.value = overlayXml.content
-        _projectNotice.value = "Template AOSP SystemUI Overlay berhasil dimuat!"
-      }
+    val result = dev.anvil.ade.workspace.ProjectTemplates.scaffold(templateId) ?: return
+    if (result.wantsCloneDialog) {
+      _showOpenProjectDialog.value = true
+      _projectNotice.value = result.notice
+      return
     }
+    _activeProjectName.value = result.projectName
+    _activeType.value = result.projectType
+    _workspaceTree.value = result.files
+    _selectedFile.value = result.files.firstOrNull()
+    _editorContent.value = result.files.firstOrNull()?.content ?: ""
+    result.notice?.let { _projectNotice.value = it }
   }
 
-  companion object {
-    val INITIAL_MOCKUP_XML = """
-      <com.android.systemui.qs.QSContainerImpl
-          xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:background="?android:attr/colorSurfaceContainerHigh"
-          android:padding="16dp"
-          android:elevation="8dp">
-
-          <TextView
-              android:id="@+id/qs_clock"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:text="09:41"
-              android:textSize="22sp"
-              android:textColor="?android:attr/textColorPrimary" />
-
-          <!-- Expressive Monet Quick Settings Grid (6 Tiles) -->
-          <GridLayout
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:columnCount="2"
-              android:rowCount="3"
-              android:alignmentMode="alignMargins"
-              android:useDefaultMargins="true">
-              <!-- Rendered with live Monet pill shapes -->
-          </GridLayout>
-      </com.android.systemui.qs.QSContainerImpl>
-    """.trimIndent()
-
-    val STATUS_BAR_XML = """
-      <com.android.systemui.statusbar.phone.PhoneStatusBarView
-          xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="match_parent"
-          android:layout_height="40dp"
-          android:background="?android:attr/colorSurfaceContainer"
-          android:paddingHorizontal="12dp">
-          
-          <TextView
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:text="09:41"
-              android:textStyle="bold" />
-      </com.android.systemui.statusbar.phone.PhoneStatusBarView>
-    """.trimIndent()
-
-    val VOLUME_DIALOG_XML = """
-      <com.android.systemui.volume.VolumeDialogImpl
-          xmlns:android="http://schemas.android.com/apk/res/android"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:background="?android:attr/colorSurfaceContainerHighest"
-          android:elevation="12dp"
-          android:padding="8dp">
-      </com.android.systemui.volume.VolumeDialogImpl>
-    """.trimIndent()
-  }
 }
