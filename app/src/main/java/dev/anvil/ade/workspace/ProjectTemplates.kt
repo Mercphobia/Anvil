@@ -32,7 +32,7 @@ object ProjectTemplates {
     }
 
 
-    private fun empty_activity(): TemplateResult {
+    private fun emptyActivity(): TemplateResult {
         val mainJava = ProjectFile(
           name = "MainActivity.java",
           path = "app/src/main/java/MainActivity.java",
@@ -104,7 +104,7 @@ object ProjectTemplates {
     }
 
 
-    private fun no_activity(): TemplateResult {
+    private fun noActivity(): TemplateResult {
         val serviceJava = ProjectFile(
           name = "AppService.java",
           path = "app/src/main/java/AppService.java",
@@ -157,7 +157,7 @@ object ProjectTemplates {
     }
 
 
-    private fun basic_views(): TemplateResult {
+    private fun basicViews(): TemplateResult {
 
         return TemplateResult(
             projectName = "Calculator & Counter",
@@ -168,12 +168,12 @@ object ProjectTemplates {
     }
 
 
-    private fun aosp_overlay(): TemplateResult {
+    private fun aospOverlay(): TemplateResult {
         val overlayXml = ProjectFile(
           name = "qs_panel.xml",
           path = "packages/SystemUI/res/layout/qs_panel.xml",
           language = "xml",
-          content = INITIAL_MOCKUP_XML
+          content = dev.anvil.ade.ui.mockup.MockupPresets.INITIAL_MOCKUP_XML
         )
         val overlayManifest = ProjectFile(
           name = "AndroidManifest.xml",
