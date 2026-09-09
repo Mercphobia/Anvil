@@ -14,6 +14,7 @@ import dev.anvil.ade.agent.tools.FileTools
 import dev.anvil.ade.agent.tools.MemoryTools
 import dev.anvil.ade.agent.tools.ToolRegistry
 import com.google.gson.JsonObject
+import dev.anvil.ade.model.ProjectType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,8 +31,6 @@ class AgentSession(
     private val workspaceRoot: File,
     private val appContext: android.content.Context? = null
 ) : ViewModel() {
-
-    enum class Mode { MODE_A, MODE_B }
 
     data class Step(
         val kind: Kind,
@@ -80,7 +79,11 @@ class AgentSession(
     private var availableSkills: List<SkillLoader.Skill> = emptyList()
     private var skillsSeeded = false
 
-    var mode: Mode = Mode.MODE_A
+    /**
+     * Active project type (replaces the old Mode enum). Drives skill
+     * selection and the system prompt's domain description.
+     */
+    var projectType: dev.anvil.ade.model.ProjectType = dev.anvil.ade.model.ProjectType.ANDROID
 
     private var lastBuildErrors: List<dev.anvil.ade.compiler.BuildPipelineManager.BuildError> = emptyList()
     private var buildRetryCount = 0
@@ -111,14 +114,20 @@ class AgentSession(
 
     private suspend fun systemPrompt(instruction: String): String {
         ensureSkillsLoaded()
-        val selected = SkillLoader.select(availableSkills, mode, instruction)
+        val selected = SkillLoader.select(availableSkills, projectType, instruction)
         lastLoadedSkills = selected.map { it.slug }
         val skillsSection = SkillLoader.renderPromptSection(selected)
-        val modeDesc = when (mode) {
-            Mode.MODE_A -> "MODE_A (App Builder): generate simple Java single-Activity Android apps compiled on-device."
-            Mode.MODE_B -> "MODE_B (AOSP Design Assist): help edit AOSP SystemUI sources with preview; builds happen off-device. " +
+        val modeDesc = when (projectType) {
+            ProjectType.ANDROID -> "ANDROID (App Builder): generate simple Java single-Activity Android apps compiled on-device."
+            ProjectType.GIT_LINKED_SYSTEM -> "GIT_LINKED_SYSTEM (AOSP Design Assist): help edit AOSP SystemUI sources with preview; builds happen off-device. " +
                 "Mandatory flow for edits: list_files -> read_file (logic AND its layout pair) -> edit -> preview_mockup for visual changes -> get_diff -> tell the user to review and press the commit button. " +
                 "Never edit without reading the real file first."
+            ProjectType.NODE_JS -> "NODE_JS project: use the embedded shell (npm/node). Install deps before running."
+            ProjectType.PYTHON -> "PYTHON project: use the embedded shell (python/pip). Install deps before running."
+            ProjectType.RUST -> "RUST project: use the embedded shell (cargo)."
+            ProjectType.GO -> "GO project: use the embedded shell (go)."
+            ProjectType.C_CPP -> "C/C++ project: use the embedded shell (cmake/make/gcc)."
+            ProjectType.GENERIC -> "GENERIC project: no build system assumed - work directly with files and the embedded shell."
         }
         return soulSection() +
                 "You are Anvil, an on-device agentic development environment. " +

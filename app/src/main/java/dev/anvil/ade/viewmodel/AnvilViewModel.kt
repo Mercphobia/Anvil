@@ -4,7 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.anvil.ade.model.AgentMode
+import dev.anvil.ade.model.ProjectType
+import dev.anvil.ade.workspace.WorkspaceDetector
 import dev.anvil.ade.model.AgentStep
 import dev.anvil.ade.model.DiffLine
 import dev.anvil.ade.model.LlmProvider
@@ -60,10 +61,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
           workspaceRoot = workspaceRoot,
           appContext = app.applicationContext
       )
-      created.mode = when (_activeMode.value) {
-          dev.anvil.ade.model.AgentMode.MODE_A -> dev.anvil.ade.agent.AgentSession.Mode.MODE_A
-          dev.anvil.ade.model.AgentMode.MODE_B -> dev.anvil.ade.agent.AgentSession.Mode.MODE_B
-      }
+      created.projectType = _activeType.value
       viewModelScope.launch {
           created.steps.collect { engineSteps ->
               _steps.value = engineSteps.map { s ->
@@ -134,8 +132,9 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   val currentRoute: StateFlow<String> = _currentRoute.asStateFlow()
 
   // Agent Mode
-  private val _activeMode = MutableStateFlow(AgentMode.MODE_A)
-  val activeMode: StateFlow<AgentMode> = _activeMode.asStateFlow()
+  /** Active project type - auto-detected when a project is opened. */
+  private val _activeType = MutableStateFlow(ProjectType.ANDROID)
+  val activeType: StateFlow<ProjectType> = _activeType.asStateFlow()
 
   // LLM Config
   private val _providerConfig = MutableStateFlow(ProviderConfig())
@@ -388,7 +387,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       AgentStep(
         id = UUID.randomUUID().toString(),
         kind = StepKind.INFO,
-        text = "Anvil IDE ready. Universal provider connected: Google Gemini (gemini-2.5-flash). Mode: MODE_A (App Builder).",
+        text = "Anvil IDE ready. Universal provider connected. Project type: ANDROID (App Builder).",
         timestamp = "09:40"
       ),
       AgentStep(
@@ -446,11 +445,11 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   }
 
   // Mode control
-  fun setMode(mode: AgentMode) {
-    _activeMode.value = mode
+  fun setType(type: ProjectType) {
+    _activeType.value = type
     val newSkills = when (mode) {
-      AgentMode.MODE_A -> listOf("android-app-builder", "android-app-design", "xml-resource-safety")
-      AgentMode.MODE_B -> listOf("aosp-systemui-design", "aosp-systemui-editing", "git-commit-convention", "xml-resource-safety")
+      ProjectType.ANDROID -> listOf("android-app-builder", "android-app-design", "xml-resource-safety")
+      else -> listOf("aosp-systemui-design", "aosp-systemui-editing", "git-commit-convention", "xml-resource-safety")
     }
     _activeSkills.value = newSkills
     addStep(
@@ -522,10 +521,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     // Sync the mode onto the session (it may have changed since creation)
     // and let the real agent loop handle everything: user step, LLM call,
     // tool execution, retry, streaming steps via the session collectors.
-    agentSession?.mode = when (_activeMode.value) {
-      AgentMode.MODE_A -> dev.anvil.ade.agent.AgentSession.Mode.MODE_A
-      AgentMode.MODE_B -> dev.anvil.ade.agent.AgentSession.Mode.MODE_B
-    }
+    agentSession?.projectType = _activeType.value
     session().send(prompt)
   }
 
@@ -607,7 +603,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   fun createSkill(slug: String, description: String) {
     if (slug.isBlank()) return
     viewModelScope.launch {
-      dev.anvil.ade.agent.SkillLoader.create(app, slug, description, "MODE_A, MODE_B")
+      dev.anvil.ade.agent.SkillLoader.create(app, slug, description, "MODE_A, MODE_B, ANDROID, GIT_LINKED_SYSTEM")
       _skillList.value = dev.anvil.ade.agent.SkillLoader.discover(app).map { it.slug }
     }
   }
@@ -936,7 +932,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   fun completeSetupWizard(
     provider: String,
     apiKey: String,
-    mode: AgentMode,
+    mode: ProjectType,
     templateId: String,
     repoUrl: String = ""
   ) {
@@ -952,7 +948,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       provider = matchedProvider,
       apiKey = apiKey.ifBlank { _providerConfig.value.apiKey }
     )
-    _activeMode.value = mode
+    _activeType.value = mode
 
     if (templateId == "github_clone" && repoUrl.isNotBlank()) {
       cloneGitHubProject(repoUrl, "main", "")
@@ -962,7 +958,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
     _showSetupWizard.value = false
 
-    val modeName = if (mode == AgentMode.MODE_A) "App Builder (APK)" else "AOSP SystemUI Assist"
+    val modeName = mode.displayName
     val setupStep = AgentStep(
       id = UUID.randomUUID().toString(),
       kind = StepKind.AGENT_TEXT,
@@ -1026,8 +1022,8 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   }
 
   fun openLocalProject(name: String, path: String) {
-    // Auto-detect: a local project has no Git remote - MODE_A (app builder).
-    _activeMode.value = AgentMode.MODE_A
+    // Project type auto-detected from marker files at the opened root.
+    _activeType.value = WorkspaceDetector.detectType(java.io.File(path))
     val root = java.io.File(path)
     if (!root.exists() || !root.isDirectory) {
       _projectNotice.value = "Error: folder tidak ditemukan di $path"
@@ -1075,14 +1071,15 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       _activeProjectName.value = repoName
       _gitRemote.value = repoUrl
       _gitBranch.value = branch
-      // Auto-detect: a cloned project has a Git remote - MODE_B (AOSP design assist).
-      _activeMode.value = AgentMode.MODE_B
-      _projectNotice.value = "Repository $repoName berhasil dimuat!"
-      _isBusy.value = false
-
       // Build the tree from the REAL cloned directory on disk
       val cloneTargetDir = java.io.File(workspaceRootIfDefault(), repoName)
       switchWorkspaceRoot(cloneTargetDir)
+      // Cloned repo - detect its type from markers (falls back to
+      // GIT_LINKED_SYSTEM for system-style monorepos).
+      _activeType.value = WorkspaceDetector.detectType(cloneTargetDir)
+      _projectNotice.value = "Repository $repoName berhasil dimuat!"
+      _isBusy.value = false
+
       val tree = buildTreeFromDisk(cloneTargetDir)
       _workspaceTree.value = tree
       val firstFile = tree.firstNotNullOfOrNull { findFirstFile(it) }
@@ -1277,7 +1274,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
       "aosp_overlay" -> {
         _activeProjectName.value = "AOSP SystemUI Overlay"
-        _activeMode.value = AgentMode.MODE_B
+        _activeType.value = ProjectType.GIT_LINKED_SYSTEM
         val overlayXml = ProjectFile(
           name = "qs_panel.xml",
           path = "packages/SystemUI/res/layout/qs_panel.xml",

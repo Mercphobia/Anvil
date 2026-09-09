@@ -1,10 +1,5 @@
 package dev.anvil.ade.model
 
-enum class AgentMode(val title: String, val subtitle: String, val badge: String) {
-  MODE_A("App Builder", "Natural Language -> APK On-Device", "APK Builder"),
-  MODE_B("AOSP Assist", "SystemUI Design & Git Working Branch", "AOSP Assist")
-}
-
 enum class LlmProvider(val displayName: String, val defaultModel: String, val defaultEndpoint: String) {
   CLAUDE("Anthropic Claude", "claude-sonnet-4-20250514", "https://api.anthropic.com"),
   OPENAI("OpenAI", "gpt-4o-mini", "https://api.openai.com/v1"),

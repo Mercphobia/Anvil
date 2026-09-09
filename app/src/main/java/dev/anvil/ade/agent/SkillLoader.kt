@@ -128,11 +128,18 @@ object SkillLoader {
      */
     fun select(
         skills: List<Skill>,
-        mode: AgentSession.Mode,
+        projectType: dev.anvil.ade.model.ProjectType,
         instruction: String
     ): List<Skill> {
-        val modeTag = if (mode == AgentSession.Mode.MODE_A) "MODE_A" else "MODE_B"
-        val modeSkills = skills.filter { it.appliesTo.contains(modeTag) }
+        // Type tag matching with legacy compatibility: existing skills carry
+        // MODE_A/MODE_B tags; ANDROID maps to MODE_A, GIT_LINKED_SYSTEM to
+        // MODE_B, other types match their own enum name (PYTHON, NODE_JS, ...).
+        val typeTags = when (projectType) {
+            dev.anvil.ade.model.ProjectType.ANDROID -> listOf("MODE_A", "ANDROID")
+            dev.anvil.ade.model.ProjectType.GIT_LINKED_SYSTEM -> listOf("MODE_B", "GIT_LINKED_SYSTEM", "AOSP")
+            else -> listOf(projectType.name)
+        }
+        val modeSkills = skills.filter { s -> typeTags.any { s.appliesTo.contains(it) } }
         if (modeSkills.isEmpty()) return emptyList()
 
         val lower = instruction.lowercase()

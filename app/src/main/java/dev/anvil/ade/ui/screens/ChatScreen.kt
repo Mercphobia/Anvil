@@ -73,7 +73,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.model.AgentMode
+import dev.anvil.ade.model.ProjectType
 import dev.anvil.ade.model.AgentStep
 import dev.anvil.ade.model.StepKind
 import dev.anvil.ade.viewmodel.AnvilViewModel
@@ -85,7 +85,7 @@ fun ChatScreen(
 ) {
   val steps by viewModel.steps.collectAsState()
   val isBusy by viewModel.isBusy.collectAsState()
-  val activeMode by viewModel.activeMode.collectAsState()
+  val activeType by viewModel.activeType.collectAsState()
   val providerConfig by viewModel.providerConfig.collectAsState()
   val pendingMemory by viewModel.pendingMemory.collectAsState()
   val pendingSkillProposal by viewModel.pendingSkillProposal.collectAsState()
@@ -154,18 +154,18 @@ fun ChatScreen(
       // was opened: local = App Builder, cloned repo = SystemUI)
       Surface(
         shape = RoundedCornerShape(10.dp),
-        color = if (activeMode == AgentMode.MODE_A)
+        color = if (activeType == ProjectType.ANDROID)
           MaterialTheme.colorScheme.primaryContainer
         else
           MaterialTheme.colorScheme.secondaryContainer,
         modifier = Modifier.testTag("mode_indicator")
       ) {
         Text(
-          text = if (activeMode == AgentMode.MODE_A) "App Builder" else "SystemUI",
+          text = if (activeType == ProjectType.ANDROID) "App Builder" else "SystemUI",
           style = MaterialTheme.typography.labelMedium,
           fontWeight = FontWeight.SemiBold,
           fontSize = 11.sp,
-          color = if (activeMode == AgentMode.MODE_A)
+          color = if (activeType == ProjectType.ANDROID)
             MaterialTheme.colorScheme.onPrimaryContainer
           else
             MaterialTheme.colorScheme.onSecondaryContainer,
@@ -184,7 +184,7 @@ fun ChatScreen(
         // Iconic Gemini Empty Greeting State
         GeminiEmptyState(
           onSelectPrompt = { inputText = it },
-          activeMode = activeMode
+          activeType = activeType
         )
       } else {
         LazyColumn(
@@ -479,7 +479,7 @@ fun ChatScreen(
         .padding(horizontal = 16.dp, vertical = 4.dp),
       horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-      val suggestions = if (activeMode == AgentMode.MODE_A) {
+      val suggestions = if (activeType == ProjectType.ANDROID) {
         listOf(
           "Buat kalkulator faktorial",
           "Tambah Empty Activity baru",
@@ -639,7 +639,7 @@ fun ChatScreen(
 @Composable
 private fun GeminiEmptyState(
   onSelectPrompt: (String) -> Unit,
-  activeMode: AgentMode
+  activeType: ProjectType
 ) {
   Column(
     modifier = Modifier
@@ -678,7 +678,7 @@ private fun GeminiEmptyState(
     Spacer(modifier = Modifier.height(12.dp))
 
     Text(
-      text = if (activeMode == AgentMode.MODE_A) {
+      text = if (activeType == ProjectType.ANDROID) {
         "Apa yang ingin Anda bangun hari ini?"
       } else {
         "Desain SystemUI apa yang ingin Anda modifikasi?"
@@ -693,7 +693,7 @@ private fun GeminiEmptyState(
     Spacer(modifier = Modifier.height(24.dp))
 
     // Prompt Card Suggestions
-    val promptCards = if (activeMode == AgentMode.MODE_A) {
+    val promptCards = if (activeType == ProjectType.ANDROID) {
       listOf(
         "Buat Empty Activity dengan Jetpack Compose & Material 3",
         "Bangun aplikasi kalkulator ilmiah sederhana dengan Java",

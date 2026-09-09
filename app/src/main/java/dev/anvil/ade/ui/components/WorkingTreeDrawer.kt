@@ -60,7 +60,7 @@ fun WorkingTreeDrawer(
   val branch by viewModel.gitBranch.collectAsState()
   val workspaceTree by viewModel.workspaceTree.collectAsState()
   val selectedFile by viewModel.selectedFile.collectAsState()
-  val activeMode by viewModel.activeMode.collectAsState()
+  val activeType by viewModel.activeType.collectAsState()
 
   Surface(
     modifier = modifier

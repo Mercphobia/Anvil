@@ -67,7 +67,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.model.AgentMode
+import dev.anvil.ade.model.ProjectType
 import dev.anvil.ade.ui.components.ProviderSettingsDialog
 import dev.anvil.ade.ui.components.WorkingTreeDrawer
 import dev.anvil.ade.ui.screens.BuildScreen
@@ -93,7 +93,7 @@ fun MainScaffold(viewModel: AnvilViewModel) {
   val currentRoute by viewModel.currentRoute.collectAsState()
   val showWelcome by viewModel.showWelcome.collectAsState()
   val showSetupWizard by viewModel.showSetupWizard.collectAsState()
-  val activeMode by viewModel.activeMode.collectAsState()
+  val activeType by viewModel.activeType.collectAsState()
   val providerConfig by viewModel.providerConfig.collectAsState()
   val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
   val showAgentConfig by viewModel.showAgentConfig.collectAsState()
@@ -195,13 +195,13 @@ fun MainScaffold(viewModel: AnvilViewModel) {
                         .size(6.dp)
                         .clip(CircleShape)
                         .background(
-                          if (activeMode == AgentMode.MODE_A) MaterialTheme.colorScheme.primary
+                          if (activeType == ProjectType.ANDROID) MaterialTheme.colorScheme.primary
                           else MaterialTheme.colorScheme.secondary
                         )
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                      text = if (activeMode == AgentMode.MODE_A) "App Builder" else "SystemUI",
+                      text = if (activeType == ProjectType.ANDROID) "App Builder" else "SystemUI",
                       fontSize = 12.sp,
                       fontWeight = FontWeight.Medium,
                       color = MaterialTheme.colorScheme.onSurface
