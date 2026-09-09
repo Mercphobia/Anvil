@@ -444,10 +444,10 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     _currentRoute.value = route
   }
 
-  // Mode control
+  // Project type control
   fun setType(type: ProjectType) {
     _activeType.value = type
-    val newSkills = when (mode) {
+    val newSkills = when (type) {
       ProjectType.ANDROID -> listOf("android-app-builder", "android-app-design", "xml-resource-safety")
       else -> listOf("aosp-systemui-design", "aosp-systemui-editing", "git-commit-convention", "xml-resource-safety")
     }
@@ -456,7 +456,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       AgentStep(
         id = UUID.randomUUID().toString(),
         kind = StepKind.INFO,
-        text = "Mode diubah ke ${mode.title} (${mode.subtitle}). Loaded skills: ${newSkills.joinToString(", ")}",
+        text = "Project type: ${type.displayName}. Loaded skills: ${newSkills.joinToString(", ")}",
         timestamp = "09:45"
       )
     )
