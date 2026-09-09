@@ -36,6 +36,9 @@ object EmbeddedEnvironment {
             val conn = java.net.URL(BOOTSTRAP_API).openConnection() as java.net.HttpURLConnection
             conn.connectTimeout = 15000
             conn.readTimeout = 15000
+            // GitHub API rejects requests without a User-Agent with 403.
+            conn.setRequestProperty("User-Agent", "VibeForge-Android")
+            conn.setRequestProperty("Accept", "application/vnd.github+json")
             if (conn.responseCode !in 200..299) {
                 conn.disconnect()
                 return BOOTSTRAP_FALLBACK_URL
@@ -125,8 +128,9 @@ object EmbeddedEnvironment {
             val zipFile = File(context.cacheDir, "bootstrap.zip.part")
             val url = resolveBootstrapUrl()
             onProgress("downloading bootstrap (~30MB)...")
-            if (!download(url, zipFile, onProgress)) {
-                return@withContext SetupReport(false, "bootstrap download failed")
+            val dlError = download(url, zipFile, onProgress)
+            if (dlError != null) {
+                return@withContext SetupReport(false, "bootstrap download failed: $dlError")
             }
 
             onProgress("extracting...")
@@ -353,8 +357,9 @@ object EmbeddedEnvironment {
         try {
             onProgress("installing ${debFile.name}...")
             // .deb = ar archive containing data.tar.(gz|xz|zst)
+            // ProcessBuilder does NOT do PATH lookup - never pass a bare "sh".
             val process = ProcessBuilder(
-                "sh", "-c",
+                "/system/bin/sh", "-c",
                 "cd ${debFile.parentFile.absolutePath} && " +
                         "ar x ${debFile.absolutePath} && " +
                         "tar -xf data.tar.* -C ${usrDir(context).absolutePath}"
@@ -371,41 +376,49 @@ object EmbeddedEnvironment {
         }
     }
 
-    private fun download(url: String, target: File, onProgress: (String) -> Unit): Boolean {
-        return try {
-            val conn = URL(url).openConnection() as HttpURLConnection
-            conn.connectTimeout = 20000
-            conn.readTimeout = 120000
-            conn.instanceFollowRedirects = true
-            if (conn.responseCode !in 200..299) {
-                conn.disconnect()
-                return false
-            }
-            val total = conn.contentLengthLong
-            conn.inputStream.use { input ->
-                target.outputStream().use { output ->
-                    val buf = ByteArray(65536)
-                    var read: Int
-                    var acc = 0L
-                    var lastPct = -1
-                    while (input.read(buf).also { read = it } != -1) {
-                        output.write(buf, 0, read)
-                        acc += read
-                        if (total > 0) {
-                            val pct = (acc * 100 / total).toInt()
-                            if (pct != lastPct && pct % 20 == 0) {
-                                lastPct = pct
-                                onProgress("download $pct%")
+    private fun download(url: String, target: File, onProgress: (String) -> Unit): String? {
+        // Returns null on success, or an error description on failure.
+        repeat(2) { attempt ->
+            try {
+                val conn = URL(url).openConnection() as HttpURLConnection
+                conn.connectTimeout = 20000
+                conn.readTimeout = 120000
+                conn.instanceFollowRedirects = true
+                // Some CDNs / GitHub redirect targets reject UA-less requests too.
+                conn.setRequestProperty("User-Agent", "VibeForge-Android")
+                val code = conn.responseCode
+                if (code !in 200..299) {
+                    conn.disconnect()
+                    if (attempt == 1) return "HTTP $code from ${url.substringAfter("://").substringBefore("/")}"
+                    return@repeat
+                }
+                val total = conn.contentLengthLong
+                conn.inputStream.use { input ->
+                    target.outputStream().use { output ->
+                        val buf = ByteArray(65536)
+                        var read: Int
+                        var acc = 0L
+                        var lastPct = -1
+                        while (input.read(buf).also { read = it } != -1) {
+                            output.write(buf, 0, read)
+                            acc += read
+                            if (total > 0) {
+                                val pct = (acc * 100 / total).toInt()
+                                if (pct != lastPct && pct % 20 == 0) {
+                                    lastPct = pct
+                                    onProgress("download $pct%")
+                                }
                             }
                         }
                     }
                 }
+                conn.disconnect()
+                return null
+            } catch (t: Throwable) {
+                target.delete()
+                if (attempt == 1) return "${t.javaClass.simpleName}: ${t.message}"
             }
-            conn.disconnect()
-            true
-        } catch (t: Throwable) {
-            target.delete()
-            false
         }
+        return "download failed after retry"
     }
 }
