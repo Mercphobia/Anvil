@@ -11,6 +11,7 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /** Editor text size in sp — sora's default (~20sp) is far too big on phones. */
 private const val EDITOR_TEXT_SIZE_SP = 13f
+private const val DIVIDER_COLOR = 0xFF262A35.toInt()
 
 /**
  * Compose wrapper around sora-editor with TextMate syntax highlighting.
@@ -76,7 +77,7 @@ private fun applyColors(
     val textColor = 0xFFE6E8EE.toInt()
     val lineNumber = 0xFF6B7180.toInt()
     val gutterBg = 0xFF14161D.toInt()
-    val dividerColor = 0xFF262A35.toInt()
+    val dividerColor = DIVIDER_COLOR
 
     // Skip the rebuild when colors have not changed since the last apply -
     // this is what prevents TextMateColorScheme from being recreated (and
@@ -135,7 +136,7 @@ private fun applyFallbackScheme(
         scheme.setColor(EditorColorScheme.TEXT_NORMAL, textColor)
         scheme.setColor(EditorColorScheme.LINE_NUMBER, lineNumber)
         scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, gutterBg)
-        scheme.setColor(EditorColorScheme.LINE_DIVIDER, dividerColor)
+        scheme.setColor(EditorColorScheme.LINE_DIVIDER, DIVIDER_COLOR)
     } catch (t: Throwable) {
         // theming is best-effort
     }
