@@ -527,26 +527,13 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
         if (token.isBlank()) return@launch
         val repoManager = dev.anvil.ade.vcs.GitRepoManager(workspaceRoot, token)
         val raw = repoManager.getDiff()
-        _diffLines.value = parseUnifiedDiff(raw)
+        _diffLines.value = dev.anvil.ade.vcs.DiffParser.parse(raw)
       } catch (t: Throwable) {
         // diff stays as-is on failure
       }
     }
   }
 
-  private fun parseUnifiedDiff(raw: String): List<DiffLine> {
-    if (raw.isBlank() || raw.startsWith("error")) return emptyList()
-    return raw.lineSequence().map { line ->
-      when {
-        line.startsWith("@@") -> DiffLine(DiffLine.Type.HEADER, line)
-        line.startsWith("+") && !line.startsWith("+++") ->
-          DiffLine(DiffLine.Type.ADD, line.removePrefix("+"))
-        line.startsWith("-") && !line.startsWith("---") ->
-          DiffLine(DiffLine.Type.DELETE, line.removePrefix("-"))
-        else -> DiffLine(DiffLine.Type.CONTEXT, line.removePrefix(" "))
-      }
-    }.toList()
-  }
 
   fun commitAndPush() {
     if (_isGitBusy.value || _commitMessage.value.isBlank()) return
@@ -823,45 +810,6 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   /** Walk the real directory and build a ProjectFile tree - replaces the
    *  hardcoded template trees. Large/binary files get a placeholder note
    *  instead of being fully read into memory. */
-  private fun buildTreeFromDisk(root: java.io.File, maxDepth: Int = 6): List<ProjectFile> {
-    fun walk(dir: java.io.File, depth: Int): List<ProjectFile> {
-      if (depth > maxDepth) return emptyList()
-      val entries = dir.listFiles() ?: return emptyList()
-      return entries
-        .sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
-        .mapNotNull { f ->
-          try {
-            if (f.isDirectory) {
-              ProjectFile(
-                name = f.name,
-                path = f.absolutePath,
-                isDirectory = true,
-                children = walk(f, depth + 1)
-              )
-            } else {
-              val text = if (f.length() < 500_000) f.readText()
-              else "[file terlalu besar untuk ditampilkan: ${f.length()} bytes]"
-              ProjectFile(
-                name = f.name,
-                path = f.absolutePath,
-                isDirectory = false,
-                content = text,
-                language = f.extension.ifBlank { "txt" }
-              )
-            }
-          } catch (t: Throwable) { null }
-        }
-    }
-    return walk(root, 0)
-  }
-
-  private fun findFirstFile(node: ProjectFile): ProjectFile? {
-    if (!node.isDirectory) return node
-    for (child in node.children) {
-      findFirstFile(child)?.let { return it }
-    }
-    return null
-  }
 
   fun openLocalProject(name: String, path: String) {
     // Project type auto-detected from marker files at the opened root.
@@ -875,9 +823,9 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     _activeProjectName.value = name
     _showOpenProjectDialog.value = false
 
-    val tree = buildTreeFromDisk(root)
+    val tree = dev.anvil.ade.workspace.WorkspaceTree.buildFromDisk(root)
     _workspaceTree.value = tree
-    val firstFile = tree.firstNotNullOfOrNull { findFirstFile(it) }
+    val firstFile = tree.firstNotNullOfOrNull { dev.anvil.ade.workspace.WorkspaceTree.findFirstFile(it) }
     _selectedFile.value = firstFile
     _editorContent.value = firstFile?.content ?: ""
     _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path) - ${tree.size} item ditemukan"
@@ -922,9 +870,9 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       _projectNotice.value = "Repository $repoName berhasil dimuat!"
       _isBusy.value = false
 
-      val tree = buildTreeFromDisk(cloneTargetDir)
+      val tree = dev.anvil.ade.workspace.WorkspaceTree.buildFromDisk(cloneTargetDir)
       _workspaceTree.value = tree
-      val firstFile = tree.firstNotNullOfOrNull { findFirstFile(it) }
+      val firstFile = tree.firstNotNullOfOrNull { dev.anvil.ade.workspace.WorkspaceTree.findFirstFile(it) }
       _selectedFile.value = firstFile
       _editorContent.value = firstFile?.content ?: ""
     }
