@@ -4,7 +4,7 @@ import dev.anvil.ade.model.DiffLine
 
 /** Parse a unified diff into DiffLine list (pure function). */
 object DiffParser {
-    fun parse(raw: String): List<DiffLine> 
+    fun parse(raw: String): List<DiffLine> {
     if (raw.isBlank() || raw.startsWith("error")) return emptyList()
     return raw.lineSequence().map { line ->
       when {
