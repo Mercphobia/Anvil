@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Preview

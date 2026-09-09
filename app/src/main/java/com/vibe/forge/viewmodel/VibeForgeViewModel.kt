@@ -382,7 +382,6 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
     _editorContent.value = _selectedFile.value?.content ?: ""
 
     // Initial Diff
-    )
 
     // Initial Chat Steps
     _steps.value = listOf(
