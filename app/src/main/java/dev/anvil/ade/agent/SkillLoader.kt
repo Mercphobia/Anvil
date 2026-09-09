@@ -170,10 +170,10 @@ object SkillLoader {
             boosted.any { tag -> skill.slug.contains(tag) }
         }
 
-        // Always include mode-appropriate base skills even without keyword hits
+        // Always include type-appropriate base skills even without keyword hits
         val base = modeSkills.filter { skill ->
-            (modeTag == "MODE_A" && skill.slug == "android-app-builder") ||
-                    (modeTag == "MODE_B" && skill.slug == "aosp-systemui-editing")
+            (projectType == dev.anvil.ade.model.ProjectType.ANDROID && skill.slug == "android-app-builder") ||
+                    (projectType == dev.anvil.ade.model.ProjectType.GIT_LINKED_SYSTEM && skill.slug == "aosp-systemui-editing")
         }
 
         return (base + relevant).distinctBy { it.slug }
