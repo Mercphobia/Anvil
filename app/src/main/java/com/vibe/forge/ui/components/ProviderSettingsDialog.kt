@@ -121,6 +121,7 @@ fun ProviderSettingsDialog(
                 onClick = {
                   selectedProvider = provider
                   model = provider.defaultModel
+                  endpoint = provider.defaultEndpoint
                   expandedProviderMenu = false
                 }
               )

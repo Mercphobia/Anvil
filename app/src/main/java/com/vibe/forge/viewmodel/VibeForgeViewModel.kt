@@ -459,6 +459,16 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
                   com.vibe.forge.model.LlmProvider.OPENAI -> com.vibe.forge.agent.LlmProvider.OPENAI
                   com.vibe.forge.model.LlmProvider.OPENROUTER -> com.vibe.forge.agent.LlmProvider.OPENROUTER
                   com.vibe.forge.model.LlmProvider.GEMINI -> com.vibe.forge.agent.LlmProvider.GEMINI
+                  com.vibe.forge.model.LlmProvider.GROQ -> com.vibe.forge.agent.LlmProvider.GROQ
+                  com.vibe.forge.model.LlmProvider.MISTRAL -> com.vibe.forge.agent.LlmProvider.MISTRAL
+                  com.vibe.forge.model.LlmProvider.DEEPSEEK -> com.vibe.forge.agent.LlmProvider.DEEPSEEK
+                  com.vibe.forge.model.LlmProvider.TOGETHER -> com.vibe.forge.agent.LlmProvider.TOGETHER
+                  com.vibe.forge.model.LlmProvider.FIREWORKS -> com.vibe.forge.agent.LlmProvider.FIREWORKS
+                  com.vibe.forge.model.LlmProvider.AZURE_OPENAI -> com.vibe.forge.agent.LlmProvider.AZURE_OPENAI
+                  com.vibe.forge.model.LlmProvider.OLLAMA -> com.vibe.forge.agent.LlmProvider.OLLAMA
+                  com.vibe.forge.model.LlmProvider.QWEN -> com.vibe.forge.agent.LlmProvider.QWEN
+                  com.vibe.forge.model.LlmProvider.KIMI -> com.vibe.forge.agent.LlmProvider.KIMI
+                  com.vibe.forge.model.LlmProvider.GLM -> com.vibe.forge.agent.LlmProvider.GLM
                   com.vibe.forge.model.LlmProvider.CUSTOM -> com.vibe.forge.agent.LlmProvider.CUSTOM
               },
               baseUrl = config.endpoint,
@@ -467,8 +477,12 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
           )
       )
       agentSession = null
+    } catch (e: com.vibe.forge.agent.SecureProviderStorageUnavailableException) {
+      _projectNotice.value = "Device ini tidak mendukung penyimpanan API key yang aman. Konfigurasi tidak disimpan."
+      return
     } catch (t: Throwable) {
-      // keep UI state even if persistence fails
+      _projectNotice.value = "Gagal menyimpan konfigurasi: ${t.message}"
+      return
     }
     _providerConfig.value = config
     _showSettingsDialog.value = false

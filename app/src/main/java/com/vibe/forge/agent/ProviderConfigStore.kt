@@ -9,6 +9,9 @@ import androidx.security.crypto.MasterKey
  * (AES256 master key in Android Keystore). Keys are never logged and
  * never included in LLM prompts.
  */
+class SecureProviderStorageUnavailableException(cause: Throwable) :
+    Exception("Secure storage unavailable on this device: ${cause.message}", cause)
+
 object ProviderConfigStore {
 
     private const val PREFS = "vibe_forge_providers"
@@ -29,8 +32,9 @@ object ProviderConfigStore {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
     } catch (t: Throwable) {
-        // Fallback to plain prefs on devices without keystore support
-        context.getSharedPreferences(PREFS + "_plain", Context.MODE_PRIVATE)
+        // Do NOT silently fall back to plaintext - throw so the UI can tell
+        // the user explicitly instead of storing the API key unencrypted.
+        throw SecureProviderStorageUnavailableException(t)
     }
 
     fun load(context: Context): ProviderConfig {
