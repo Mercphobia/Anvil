@@ -37,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +69,8 @@ fun GitScreen(
   val remote by viewModel.gitRemote.collectAsState()
   val commitMsg by viewModel.commitMessage.collectAsState()
   val diffLines by viewModel.diffLines.collectAsState()
+
+  LaunchedEffect(Unit) { viewModel.refreshGitDiff() }
   val pushStatus by viewModel.gitPushStatus.collectAsState()
   val isGitBusy by viewModel.isGitBusy.collectAsState()
 
@@ -249,8 +252,10 @@ fun GitScreen(
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.Bold
           )
-          Text(
-            text = "+3 -2 additions/deletions",
+val added = diffLines.count { it.type == DiffLine.Type.ADD }
+          val deleted = diffLines.count { it.type == DiffLine.Type.DELETE }
+                    Text(
+            text = "+$added -$deleted additions/deletions",
             style = MaterialTheme.typography.labelSmall,
             fontFamily = FontFamily.Monospace,
             color = ForgeDiffAddText

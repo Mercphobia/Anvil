@@ -30,8 +30,24 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
   // Real engine bridge (agent session, git, build, terminal)
   // ------------------------------------------------------------------
 
-  private val workspaceRoot: java.io.File
-    get() = java.io.File(app.filesDir, "workspace")
+  // Dynamic workspace root: defaults to the internal folder until a project
+  // is opened; openLocalProject()/cloneGitHubProject() switch it to the real
+  // project location on disk (Option B - edit files where they live).
+  private val _workspaceRoot = MutableStateFlow(java.io.File(app.filesDir, "workspace"))
+  private val workspaceRoot: java.io.File get() = _workspaceRoot.value
+
+  /** Switch the active root and invalidate the old agent session so the next
+   *  session() call rebuilds it against the new root. */
+  /** The default internal workspace folder - where git clones land before
+   *  a project switches the root elsewhere. */
+  private fun workspaceRootIfDefault(): java.io.File =
+    java.io.File(app.filesDir, "workspace")
+
+  private fun switchWorkspaceRoot(newRoot: java.io.File) {
+    newRoot.mkdirs()
+    _workspaceRoot.value = newRoot
+    agentSession = null
+  }
 
   private var agentSession: com.vibe.forge.agent.AgentSession? = null
 
@@ -345,20 +361,6 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
     _editorContent.value = _selectedFile.value?.content ?: ""
 
     // Initial Diff
-    _diffLines.value = listOf(
-      DiffLine(DiffLine.Type.HEADER, "diff --git a/packages/SystemUI/res/layout/qs_panel.xml b/packages/SystemUI/res/layout/qs_panel.xml"),
-      DiffLine(DiffLine.Type.HEADER, "index a4b3c2d..8f9e0a1 100644"),
-      DiffLine(DiffLine.Type.HEADER, "--- a/packages/SystemUI/res/layout/qs_panel.xml"),
-      DiffLine(DiffLine.Type.HEADER, "+++ b/packages/SystemUI/res/layout/qs_panel.xml"),
-      DiffLine(DiffLine.Type.CONTEXT, " <com.android.systemui.qs.QSContainerImpl", 42, 42),
-      DiffLine(DiffLine.Type.CONTEXT, "     xmlns:android=\"http://schemas.android.com/apk/res/android\"", 43, 43),
-      DiffLine(DiffLine.Type.DELETE, "-    android:background=\"@color/qs_background_dark\"", 44, null),
-      DiffLine(DiffLine.Type.ADD, "+    android:background=\"?android:attr/colorSurfaceContainerHigh\"", null, 44),
-      DiffLine(DiffLine.Type.DELETE, "-    android:elevation=\"4dp\"", 45, null),
-      DiffLine(DiffLine.Type.ADD, "+    android:elevation=\"8dp\"", null, 45),
-      DiffLine(DiffLine.Type.ADD, "+    android:clipToOutline=\"true\"", null, 46),
-      DiffLine(DiffLine.Type.CONTEXT, "     android:layout_width=\"match_parent\"", 46, 47),
-      DiffLine(DiffLine.Type.CONTEXT, "     android:layout_height=\"wrap_content\">", 47, 48)
     )
 
     // Initial Chat Steps
@@ -483,89 +485,18 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
   // Chat Actions
   fun sendMessage(prompt: String) {
     if (prompt.isBlank() || _isBusy.value) return
-    val userStep = AgentStep(
-      id = UUID.randomUUID().toString(),
-      kind = StepKind.USER,
-      text = prompt,
-      timestamp = "09:46"
-    )
-    _steps.value = _steps.value + userStep
-    _isBusy.value = true
-
-    viewModelScope.launch {
-      delay(600)
-      if (_activeMode.value == AgentMode.MODE_A) {
-        // Mode A App Builder Flow
-        _steps.value = _steps.value + AgentStep(
-          id = UUID.randomUUID().toString(),
-          kind = StepKind.TOOL_CALL,
-          text = "read_file(path='app/src/main/java/MainActivity.java')",
-          toolName = "read_file",
-          timestamp = "09:46",
-          executionMs = 120
-        )
-        delay(400)
-        _steps.value = _steps.value + AgentStep(
-          id = UUID.randomUUID().toString(),
-          kind = StepKind.TOOL_RESULT,
-          text = "Read 28 lines from MainActivity.java. Enforcing Read-Before-Edit policy.",
-          timestamp = "09:46"
-        )
-        delay(500)
-        _steps.value = _steps.value + AgentStep(
-          id = UUID.randomUUID().toString(),
-          kind = StepKind.AGENT_TEXT,
-          text = "Saya telah menganalisis permintaan Anda. Kode Java Activity dan layout XML telah diperbarui sesuai panduan Material Design 3 Monet. Anda dapat melihat file di tab Project atau langsung melakukan build di tab Build.",
-          timestamp = "09:47"
-        )
-        _pendingMemory.value = "User prefers Monet high-contrast elevation and single-Activity Java patterns for $prompt."
-      } else {
-        // Mode B AOSP Assist Flow
-        _steps.value = _steps.value + AgentStep(
-          id = UUID.randomUUID().toString(),
-          kind = StepKind.TOOL_CALL,
-          text = "read_file(path='packages/SystemUI/res/layout/qs_panel.xml')",
-          toolName = "read_file",
-          timestamp = "09:46",
-          executionMs = 140
-        )
-        delay(400)
-        _steps.value = _steps.value + AgentStep(
-          id = UUID.randomUUID().toString(),
-          kind = StepKind.TOOL_CALL,
-          text = "preview_mockup(xmlContent='<QSPanel ... colorSurfaceContainerHigh />')",
-          toolName = "preview_mockup",
-          timestamp = "09:46",
-          executionMs = 210
-        )
-        delay(500)
-        _steps.value = _steps.value + AgentStep(
-          id = UUID.randomUUID().toString(),
-          kind = StepKind.AGENT_TEXT,
-          text = "Komponen Quick Settings AOSP telah diperbarui dengan palet Monet Expressive. Preview instan dapat dilihat di tab Mockup, dan perubahan Git siap ditinjau di tab Git.",
-          timestamp = "09:47"
-        )
-      }
-      _isBusy.value = false
+    // Sync the mode onto the session (it may have changed since creation)
+    // and let the real agent loop handle everything: user step, LLM call,
+    // tool execution, retry, streaming steps via the session collectors.
+    agentSession?.mode = when (_activeMode.value) {
+      AgentMode.MODE_A -> com.vibe.forge.agent.AgentSession.Mode.MODE_A
+      AgentMode.MODE_B -> com.vibe.forge.agent.AgentSession.Mode.MODE_B
     }
+    session().send(prompt)
   }
 
   fun confirmMemory() {
     agentSession?.confirmMemoryEntry()
-    _pendingMemory.value = null
-  }
-
-  private fun confirmMemoryLegacy() {
-    _pendingMemory.value?.let { memory ->
-      addStep(
-        AgentStep(
-          id = UUID.randomUUID().toString(),
-          kind = StepKind.INFO,
-          text = "Saved to .vibeforge/memory.md: \"$memory\"",
-          timestamp = "09:48"
-        )
-      )
-    }
     _pendingMemory.value = null
   }
 
@@ -594,10 +525,6 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
     _pendingMemory.value = null
   }
 
-  private fun dismissMemoryLegacy() {
-    _pendingMemory.value = null
-  }
-
   private fun addStep(step: AgentStep) {
     _steps.value = _steps.value + step
   }
@@ -617,8 +544,13 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
 
   fun saveCurrentFile() {
     _selectedFile.value?.let { current ->
-      _selectedFile.value = current.copy(content = _editorContent.value)
-      _editorSavedNotice.value = "Tersimpan (${_editorContent.value.lines().size} baris)"
+      try {
+        java.io.File(current.path).writeText(_editorContent.value)
+        _selectedFile.value = current.copy(content = _editorContent.value)
+        _editorSavedNotice.value = "Tersimpan (${_editorContent.value.lines().size} baris)"
+      } catch (t: Throwable) {
+        _editorSavedNotice.value = "Gagal simpan: ${t.message}"
+      }
       viewModelScope.launch {
         delay(2500)
         _editorSavedNotice.value = null
@@ -657,15 +589,63 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
     _commitMessage.value = msg
   }
 
+  /** Load the real unified diff from Git and parse it into DiffLine list. */
+  fun refreshGitDiff() {
+    viewModelScope.launch {
+      try {
+        val token = com.vibe.forge.vcs.GitCredentialStore.token(app.applicationContext)
+        if (token.isBlank()) return@launch
+        val repoManager = com.vibe.forge.vcs.GitRepoManager(workspaceRoot, token)
+        val raw = repoManager.getDiff()
+        _diffLines.value = parseUnifiedDiff(raw)
+      } catch (t: Throwable) {
+        // diff stays as-is on failure
+      }
+    }
+  }
+
+  private fun parseUnifiedDiff(raw: String): List<DiffLine> {
+    if (raw.isBlank() || raw.startsWith("error")) return emptyList()
+    return raw.lineSequence().map { line ->
+      when {
+        line.startsWith("@@") -> DiffLine(DiffLine.Type.HEADER, line)
+        line.startsWith("+") && !line.startsWith("+++") ->
+          DiffLine(DiffLine.Type.ADD, line.removePrefix("+"))
+        line.startsWith("-") && !line.startsWith("---") ->
+          DiffLine(DiffLine.Type.DELETE, line.removePrefix("-"))
+        else -> DiffLine(DiffLine.Type.CONTEXT, line.removePrefix(" "))
+      }
+    }.toList()
+  }
+
   fun commitAndPush() {
     if (_isGitBusy.value || _commitMessage.value.isBlank()) return
     _isGitBusy.value = true
     viewModelScope.launch {
-      delay(1000)
-      _gitPushStatus.value = "Sukses: Berhasil push commit ke ${_gitBranch.value} (remote: origin)"
-      _isGitBusy.value = false
-      delay(4000)
-      _gitPushStatus.value = null
+      try {
+        val token = com.vibe.forge.vcs.GitCredentialStore.token(app.applicationContext)
+        if (token.isBlank()) {
+          _gitPushStatus.value = "Error: token Git belum diatur (buka Git > Settings)"
+          _isGitBusy.value = false
+          return@launch
+        }
+        val repoManager = com.vibe.forge.vcs.GitRepoManager(workspaceRoot, token)
+        val branchResult = repoManager.ensureWorkBranch(_gitBranch.value)
+        if (branchResult.startsWith("error")) {
+          _gitPushStatus.value = branchResult
+          _isGitBusy.value = false
+          return@launch
+        }
+        val gitTools = com.vibe.forge.agent.tools.GitTools(repoManager)
+        val result = gitTools.commitAndPush(_gitBranch.value, _commitMessage.value)
+        _gitPushStatus.value = if (result.startsWith("error")) result else "Sukses: $result"
+      } catch (t: Throwable) {
+        _gitPushStatus.value = "Error: ${t.message}"
+      } finally {
+        _isGitBusy.value = false
+        delay(4000)
+        _gitPushStatus.value = null
+      }
     }
   }
 
@@ -909,64 +889,68 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
     _projectNotice.value = null
   }
 
+
+  /** Walk the real directory and build a ProjectFile tree - replaces the
+   *  hardcoded template trees. Large/binary files get a placeholder note
+   *  instead of being fully read into memory. */
+  private fun buildTreeFromDisk(root: java.io.File, maxDepth: Int = 6): List<ProjectFile> {
+    fun walk(dir: java.io.File, depth: Int): List<ProjectFile> {
+      if (depth > maxDepth) return emptyList()
+      val entries = dir.listFiles() ?: return emptyList()
+      return entries
+        .sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
+        .mapNotNull { f ->
+          try {
+            if (f.isDirectory) {
+              ProjectFile(
+                name = f.name,
+                path = f.absolutePath,
+                isDirectory = true,
+                children = walk(f, depth + 1)
+              )
+            } else {
+              val text = if (f.length() < 500_000) f.readText()
+              else "[file terlalu besar untuk ditampilkan: ${f.length()} bytes]"
+              ProjectFile(
+                name = f.name,
+                path = f.absolutePath,
+                isDirectory = false,
+                content = text,
+                language = f.extension.ifBlank { "txt" }
+              )
+            }
+          } catch (t: Throwable) { null }
+        }
+    }
+    return walk(root, 0)
+  }
+
+  private fun findFirstFile(node: ProjectFile): ProjectFile? {
+    if (!node.isDirectory) return node
+    for (child in node.children) {
+      findFirstFile(child)?.let { return it }
+    }
+    return null
+  }
+
   fun openLocalProject(name: String, path: String) {
     // Auto-detect: a local project has no Git remote - MODE_A (app builder).
     _activeMode.value = AgentMode.MODE_A
+    val root = java.io.File(path)
+    if (!root.exists() || !root.isDirectory) {
+      _projectNotice.value = "Error: folder tidak ditemukan di $path"
+      return
+    }
+    switchWorkspaceRoot(root)
     _activeProjectName.value = name
-    _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path)"
     _showOpenProjectDialog.value = false
 
-    // Load workspace files for local project
-    val localFiles = listOf(
-      ProjectFile(
-        name = name.lowercase().replace(" ", "_"),
-        path = path,
-        isDirectory = true,
-        children = listOf(
-          ProjectFile(
-            name = "src/main/java",
-            path = "$path/src/main/java",
-            isDirectory = true,
-            children = listOf(
-              ProjectFile(
-                name = "MainActivity.java",
-                path = "$path/src/main/java/MainActivity.java",
-                language = "java",
-                content = """
-                  package com.vibe.forge.${name.lowercase().replace(" ", "")};
-
-                  import android.app.Activity;
-                  import android.os.Bundle;
-
-                  public class MainActivity extends Activity {
-                      @Override
-                      protected void onCreate(Bundle savedInstanceState) {
-                          super.onCreate(savedInstanceState);
-                          // Loaded from local workspace: $path
-                      }
-                  }
-                """.trimIndent()
-              )
-            )
-          ),
-          ProjectFile(
-            name = "AndroidManifest.xml",
-            path = "$path/AndroidManifest.xml",
-            language = "xml",
-            content = """
-              <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-                  package="com.vibe.forge.${name.lowercase().replace(" ", "")}">
-                  <application android:label="$name" />
-              </manifest>
-            """.trimIndent()
-          )
-        )
-      )
-    )
-    _workspaceTree.value = localFiles
-    val mainFile = localFiles.first().children.first().children.first()
-    _selectedFile.value = mainFile
-    _editorContent.value = mainFile.content
+    val tree = buildTreeFromDisk(root)
+    _workspaceTree.value = tree
+    val firstFile = tree.firstNotNullOfOrNull { findFirstFile(it) }
+    _selectedFile.value = firstFile
+    _editorContent.value = firstFile?.content ?: ""
+    _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path) - ${tree.size} item ditemukan"
   }
 
   fun cloneGitHubProject(repoUrl: String, branch: String, token: String) {
@@ -1004,52 +988,14 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
       _projectNotice.value = "Repository $repoName berhasil dimuat!"
       _isBusy.value = false
 
-      // Scaffold repository tree
-      val gitTree = listOf(
-        ProjectFile(
-          name = repoName,
-          path = repoName,
-          isDirectory = true,
-          children = listOf(
-            ProjectFile(
-              name = "app",
-              path = "$repoName/app",
-              isDirectory = true,
-              children = listOf(
-                ProjectFile(
-                  name = "src/main/java",
-                  path = "$repoName/app/src/main/java",
-                  isDirectory = true,
-                  children = listOf(
-                    ProjectFile(
-                      name = "MainActivity.java",
-                      path = "$repoName/app/src/main/java/MainActivity.java",
-                      language = "java",
-                      content = "// Kloning dari $repoUrl\npackage com.vibe.forge.$repoName;\n\nimport android.app.Activity;\nimport android.os.Bundle;\n\npublic class MainActivity extends Activity {\n    @Override\n    protected void onCreate(Bundle b) {\n        super.onCreate(b);\n    }\n}"
-                    )
-                  )
-                ),
-                ProjectFile(
-                  name = "AndroidManifest.xml",
-                  path = "$repoName/app/AndroidManifest.xml",
-                  language = "xml",
-                  content = "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n    package=\"com.vibe.forge.$repoName\">\n    <application android:label=\"$repoName\" />\n</manifest>"
-                )
-              )
-            ),
-            ProjectFile(
-              name = "README.md",
-              path = "$repoName/README.md",
-              language = "markdown",
-              content = "# $repoName\n\nCloned into VibeForge On-Device Studio from $repoUrl on branch $branch."
-            )
-          )
-        )
-      )
-      _workspaceTree.value = gitTree
-      val firstFile = gitTree.first().children.first().children.first().children.first()
+      // Build the tree from the REAL cloned directory on disk
+      val cloneTargetDir = java.io.File(workspaceRootIfDefault(), repoName)
+      switchWorkspaceRoot(cloneTargetDir)
+      val tree = buildTreeFromDisk(cloneTargetDir)
+      _workspaceTree.value = tree
+      val firstFile = tree.firstNotNullOfOrNull { findFirstFile(it) }
       _selectedFile.value = firstFile
-      _editorContent.value = firstFile.content
+      _editorContent.value = firstFile?.content ?: ""
     }
   }
 
