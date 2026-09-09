@@ -53,7 +53,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.vibe.forge.model.AgentMode
 import com.vibe.forge.viewmodel.VibeForgeViewModel
 import kotlinx.coroutines.launch
 
@@ -62,7 +61,6 @@ fun WelcomeScreen(
   viewModel: VibeForgeViewModel,
   modifier: Modifier = Modifier
 ) {
-  val activeMode by viewModel.activeMode.collectAsState()
   val pagerState = rememberPagerState(pageCount = { 3 })
   val coroutineScope = rememberCoroutineScope()
 
@@ -133,10 +131,7 @@ fun WelcomeScreen(
       ) { page ->
         when (page) {
           0 -> IntroSlide()
-          1 -> ModeSelectionSlide(
-            activeMode = activeMode,
-            onSelectMode = { viewModel.setMode(it) }
-          )
+          1 -> ModesInfoSlide()
           2 -> CapabilitiesSlide()
         }
       }
@@ -312,10 +307,7 @@ private fun IntroSlide() {
 }
 
 @Composable
-private fun ModeSelectionSlide(
-  activeMode: AgentMode,
-  onSelectMode: (AgentMode) -> Unit
-) {
+private fun ModesInfoSlide() {
   Column(
     modifier = Modifier
       .fillMaxSize()
@@ -324,7 +316,7 @@ private fun ModeSelectionSlide(
     verticalArrangement = Arrangement.Center
   ) {
     Text(
-      text = "Dua Mode Kerja Cerdas",
+      text = "Dua Mode Kerja Otomatis",
       style = MaterialTheme.typography.headlineSmall,
       fontWeight = FontWeight.Bold,
       textAlign = TextAlign.Center
@@ -333,7 +325,7 @@ private fun ModeSelectionSlide(
     Spacer(modifier = Modifier.height(6.dp))
 
     Text(
-      text = "Pilih alur kerja yang sesuai dengan kebutuhan pengembangan Anda.",
+      text = "Mode aktif ditentukan otomatis dari cara Anda membuka proyek - tidak perlu memilih manual.",
       style = MaterialTheme.typography.bodySmall,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
       textAlign = TextAlign.Center
@@ -344,11 +336,11 @@ private fun ModeSelectionSlide(
     // Mode A Card
     SlideModeCard(
       title = "App Builder (APK)",
-      description = "Membangun aplikasi Android Java/Kotlin mandiri dan mengompilasinya menjadi file APK via aapt2, ecj, & d8.",
-      badge = "MODE A",
+      description = "Aktif otomatis saat membuka proyek lokal. Membangun aplikasi Android Java mandiri dan mengompilasinya menjadi APK via aapt2, ecj, & d8.",
+      badge = "LOKAL",
       icon = Icons.Filled.Build,
-      isSelected = activeMode == AgentMode.MODE_A,
-      onClick = { onSelectMode(AgentMode.MODE_A) }
+      isSelected = false,
+      onClick = null
     )
 
     Spacer(modifier = Modifier.height(12.dp))
@@ -356,11 +348,11 @@ private fun ModeSelectionSlide(
     // Mode B Card
     SlideModeCard(
       title = "AOSP SystemUI Assist",
-      description = "Merancang XML antarmuka SystemUI (Quick Settings, Status Bar) dengan live canvas mockup dan guard sanitasi resource.",
-      badge = "MODE B",
+      description = "Aktif otomatis saat mengkloning repository Git. Merancang XML antarmuka SystemUI dengan live canvas mockup dan guard sanitasi resource.",
+      badge = "GIT",
       icon = Icons.Filled.Palette,
-      isSelected = activeMode == AgentMode.MODE_B,
-      onClick = { onSelectMode(AgentMode.MODE_B) }
+      isSelected = false,
+      onClick = null
     )
   }
 }
@@ -423,10 +415,10 @@ private fun SlideModeCard(
   badge: String,
   icon: ImageVector,
   isSelected: Boolean,
-  onClick: () -> Unit
+  onClick: (() -> Unit)?
 ) {
   Surface(
-    onClick = onClick,
+    onClick = onClick ?: {},
     shape = RoundedCornerShape(18.dp),
     color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surfaceContainerLow,
     border = BorderStroke(

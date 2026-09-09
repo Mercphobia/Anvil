@@ -910,6 +910,8 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
   }
 
   fun openLocalProject(name: String, path: String) {
+    // Auto-detect: a local project has no Git remote - MODE_A (app builder).
+    _activeMode.value = AgentMode.MODE_A
     _activeProjectName.value = name
     _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path)"
     _showOpenProjectDialog.value = false
@@ -997,6 +999,8 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
       _activeProjectName.value = repoName
       _gitRemote.value = repoUrl
       _gitBranch.value = branch
+      // Auto-detect: a cloned project has a Git remote - MODE_B (AOSP design assist).
+      _activeMode.value = AgentMode.MODE_B
       _projectNotice.value = "Repository $repoName berhasil dimuat!"
       _isBusy.value = false
 

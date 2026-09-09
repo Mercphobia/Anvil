@@ -44,8 +44,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -151,30 +149,26 @@ fun ChatScreen(
         }
       }
 
-      // Mode Switch Pills
-      Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        FilterChip(
-          selected = activeMode == AgentMode.MODE_A,
-          onClick = { viewModel.setMode(AgentMode.MODE_A) },
-          label = { Text("App Builder", fontSize = 11.sp) },
-          shape = RoundedCornerShape(10.dp),
-          colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-          ),
-          modifier = Modifier.testTag("filter_mode_a")
-        )
-
-        FilterChip(
-          selected = activeMode == AgentMode.MODE_B,
-          onClick = { viewModel.setMode(AgentMode.MODE_B) },
-          label = { Text("SystemUI", fontSize = 11.sp) },
-          shape = RoundedCornerShape(10.dp),
-          colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
-          ),
-          modifier = Modifier.testTag("filter_mode_b")
+      // Mode Indicator (read-only - mode auto-detected from how the project
+      // was opened: local = App Builder, cloned repo = SystemUI)
+      Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = if (activeMode == AgentMode.MODE_A)
+          MaterialTheme.colorScheme.primaryContainer
+        else
+          MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.testTag("mode_indicator")
+      ) {
+        Text(
+          text = if (activeMode == AgentMode.MODE_A) "App Builder" else "SystemUI",
+          style = MaterialTheme.typography.labelMedium,
+          fontWeight = FontWeight.SemiBold,
+          fontSize = 11.sp,
+          color = if (activeMode == AgentMode.MODE_A)
+            MaterialTheme.colorScheme.onPrimaryContainer
+          else
+            MaterialTheme.colorScheme.onSecondaryContainer,
+          modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
       }
     }

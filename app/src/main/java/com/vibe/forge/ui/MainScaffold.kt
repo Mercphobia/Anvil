@@ -68,7 +68,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vibe.forge.model.AgentMode
 import com.vibe.forge.ui.components.ProviderSettingsDialog
-import com.vibe.forge.ui.components.SetupWizardDialog
 import com.vibe.forge.ui.components.WorkingTreeDrawer
 import com.vibe.forge.ui.screens.BuildScreen
 import com.vibe.forge.ui.screens.ChatScreen
@@ -170,12 +169,9 @@ fun MainScaffold(viewModel: VibeForgeViewModel) {
                 }
               },
               actions = {
-                // Minimal Mode Indicator / Switch
+                // Mode indicator (read-only - auto-detected from how the
+                // project was opened, not manually switchable)
                 Surface(
-                  onClick = {
-                    val next = if (activeMode == AgentMode.MODE_A) AgentMode.MODE_B else AgentMode.MODE_A
-                    viewModel.setMode(next)
-                  },
                   shape = RoundedCornerShape(10.dp),
                   color = MaterialTheme.colorScheme.surfaceContainerHigh,
                   modifier = Modifier.padding(end = 4.dp)
