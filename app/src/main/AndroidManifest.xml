@@ -13,7 +13,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.VibeForge"
+        android:theme="@style/Theme.Anvil"
         android:requestLegacyExternalStorage="true">
 
         <activity
@@ -28,7 +28,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.vibe.forge.fileprovider"
+            android:authorities="dev.anvil.ade.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

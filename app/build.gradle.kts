@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.vibe.forge"
+    namespace = "dev.anvil.ade"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.vibe.forge"
+        applicationId = "dev.anvil.ade"
         minSdk = 28
         targetSdk = 34
         versionCode = 1

@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "VibeForge"
+rootProject.name = "Anvil"
 include(":app")

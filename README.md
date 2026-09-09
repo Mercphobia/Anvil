@@ -1,61 +1,76 @@
-# Vibe Forge
+<div align="center">
 
-> AI agent Android IDE: on-device app builder (MODE_A) and AOSP SystemUI design assist (MODE_B).
+# ⚒️ Anvil
 
-## Modes
+**The Agentic Development Environment that lives in your pocket.**
 
-- **MODE_A - App Builder**: natural language -> real APK compiled and installed on-device. Java only, single-Activity, no external dependencies. Build pipeline: aapt2 -> ecj -> d8 -> sign -> install.
-- **MODE_B - AOSP Design Assist**: edit AOSP SystemUI sources (Kotlin+Java+XML) with on-device mockup preview, then commit and push to a real Git working branch. Builds happen off-device (PC/CI) - never on-device.
+An on-device coding agent for Android that plans, writes, builds, and ships —
+no cloud IDE, no companion server, no compromises.
 
-## LLM Providers
+`anvil.dev`
 
-Universal provider layer - bring your own key:
-- Anthropic Claude
-- OpenAI
-- OpenRouter
-- Google Gemini
-- Custom OpenAI-compatible endpoint
+</div>
 
-Keys are stored in EncryptedSharedPreferences (Android Keystore) and never logged or sent anywhere except the chosen provider.
+---
 
-## UI
+## What is Anvil?
 
-Adaptive Material 3 shell: NavigationRail on wide screens, bottom navigation on phones, modal working-tree drawer, setup wizard on first launch, welcome screen, and dedicated screens for Chat, Project, Mockup, Terminal, Git, and Build.
+Anvil is a fully self-contained agentic IDE that runs entirely on your phone:
 
-## Features
+- 🧠 **Real agent loop** — an LLM drives a tool-use loop (read/write files, run shell, build, git) with live reasoning streamed into the chat, build self-correction, and per-project memory.
+- ⚡ **True on-device builds** — aapt2 → ecj → d8 → sign → install, all in-process. Natural language in, installable APK out, no PC required.
+- 🐚 **Real Unix environment** — a genuine Termux-derived bootstrap gives the agent an actual shell with bash, coreutils, and the full Unix toolbox, sandboxed inside the app.
+- 🎨 **AOSP/SystemUI design assist** — edit SystemUI sources with a live mockup canvas, resource-safety guards, and one-tap commit to a real Git working branch (builds stay off-device by design).
+- 🔑 **Bring your own model** — 15+ LLM providers (Claude, OpenAI, Gemini, OpenRouter, Groq, Mistral, DeepSeek, Together, Fireworks, Qwen, Kimi, GLM, Ollama, Azure, custom endpoints). Keys live in Android Keystore-backed encrypted storage and never leave the device except to your chosen provider.
 
-- **Agent loop with live reasoning**: tool calls and results stream into the chat as they execute.
-- **Skill system**: 6 domain skills (app builder/design, SystemUI editing/design, XML resource safety, git conventions) dynamically loaded into the prompt based on mode and instruction. User-editable under `filesDir/agent/skills/`.
-- **Per-project memory**: `.vibeforge/memory.md` auto-loaded into each session; new entries require one explicit user confirmation. `history.jsonl` audit log queryable via `search_history`.
-- **Conversation persistence**: chat history survives app restarts per project, with automatic context trimming for long sessions.
-- **Read-before-edit enforcement**: edit tools reject any file not read earlier in the session.
-- **Build self-correction**: failed builds feed structured errors back to the agent for up to 3 automatic fix attempts.
-- **AOSP mockup engine**: raw XML preview with custom LayoutInflater.Factory2; unknown system views render as red labeled placeholders; private `@*android:` resources sanitized automatically.
-- **Syntax guards**: XML well-formedness and brace-balance checks before edits are accepted.
-- **Git integration**: JGit clone/branch/diff/commit/push to working branches (`ai-mockup/<slug>`) - never main/master. Commit is gated by an explicit UI button.
-- **On-device toolchain**: aapt2 (ARM64), ecj, d8 (r8), apksigner downloaded on demand into the private sandbox.
-- **Sandboxed terminal**: shell execution inside the app workspace with sandboxed PATH.
-- **Embedded Unix environment**: official aarch64 bootstrap (bash + coreutils: grep, find, sed, awk, tar, curl) extracted into the private sandbox on first terminal use - full Termux-style shell without requiring the Termux app. Package manager intentionally disabled; extra .deb packages can be installed manually into the same prefix.
-- **Agent identity (SOUL.md)**: permanent identity/working-style document loaded into every system prompt, above the dynamic skills.
-- **Self-improvement**: the agent can propose updates to its own skills; every proposal requires explicit user approval and keeps a .bak backup for instant revert.
+## How it works
 
-## Demo scenarios
-
-### MODE_A
-1. Open Chat, select "App Builder" mode.
-2. "Create a simple Java calculator app"
-3. Agent writes sources -> run_build -> APK installs via Package Installer.
-
-### MODE_B
-1. Select "AOSP Assist" mode, configure Git remote/token in the Git tab.
-2. "Make the quick settings panel dark blue"
-3. Agent reads the real layout + logic files -> edits -> preview in Mockup tab -> diff in Git tab.
-4. Press "Looks good, commit" -> pushed to `ai-mockup/<slug>`.
-
-## Build
-
-CI builds the debug APK on every push (artifact: `vibeforge-debug-apk`).
-
-```bash
-./gradlew :app:assembleDebug
 ```
+you ──▶ agent loop ──▶ tools ──▶ real results
+             │
+             ├── list_files / read_file / write_file / search
+             ├── run_terminal  (gated by your approval)
+             ├── run_build     (aapt2 + ecj + d8 + apksig, in-process)
+             ├── git: get_diff / commit & push (working branch only, never main)
+             └── self-improvement: skills & SOUL.md (proposals need your sign-off)
+```
+
+Every dangerous action — shell commands, memory writes, skill edits, SOUL.md
+changes — is **gated behind an explicit one-tap approval**. The agent proposes;
+you decide.
+
+## Feature highlights
+
+| | |
+|---|---|
+| **Agent loop** | Tool-use LLM loop with retry, context trimming, and build self-correction (3 attempts with structured error feedback) |
+| **Skill system** | Domain skills dynamically injected into the prompt; user-editable in-app (Agent Config → Skills), the agent can propose updates |
+| **Per-project memory** | `.anvil/memory.md` + `history.jsonl` audit log, queryable via `search_history` |
+| **SOUL.md** | Editable agent identity — the agent can even propose changes to its own soul (with your approval) |
+| **Editor** | Sora-editor with TextMate grammars, Material You dynamic theming, per-language syntax highlighting |
+| **Git** | Clone, diff, commit, push — protected: physically refuses to push to `main`/`master` |
+| **Embedded env** | Termux bootstrap (aarch64), extracted into the app sandbox; symlink-aware, self-repairing |
+
+## Building
+
+Builds run exclusively on **GitHub Actions** (phone-first project — the repo is
+built by CI, not by a local Android SDK):
+
+```yaml
+# .github/workflows/build.yml
+# every push -> assembleDebug + artifact upload
+```
+
+Grab the APK from the latest green run's artifacts.
+
+## Roadmap: Universal Agent
+
+Anvil is generalizing from "Android/AOSP tool" to a **universal coding agent** —
+Python, Node, Rust, Go, C/C++ — via project-type detection, a generic
+shell-based build pipeline, per-language skills, and more editor grammars.
+The agent loop, memory, skills, and environment are already language-agnostic;
+the generalization connects them. See the design reference in the repo docs.
+
+## License
+
+MIT
