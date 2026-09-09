@@ -53,6 +53,12 @@ object TextMateLanguages {
     @Volatile
     private var initialized = false
 
+    /** Cached TextMateLanguage instances per scope - do NOT create a new
+     *  instance per call: SoraEditorWrapper checks reference equality
+     *  (editorLanguage !== language), so a fresh instance re-triggers
+     *  setEditorLanguage on EVERY recomposition (every keystroke). */
+    private val languageCache = mutableMapOf<String, TextMateLanguage>()
+
     /**
      * One-time registration of the assets file resolver and all grammars.
      * Safe to call repeatedly; failures leave [initialized] false so a later
@@ -93,10 +99,12 @@ object TextMateLanguages {
         val scope = extensionScopes[ext] ?: return null
         ensureInitialized(context)
         if (!initialized) return null
-        return try {
-            TextMateLanguage.create(scope, true)
-        } catch (t: Throwable) {
-            null
-        }
+        return languageCache.getOrPut(scope) {
+            try {
+                TextMateLanguage.create(scope, true)
+            } catch (t: Throwable) {
+                null
+            }
+        } ?: null
     }
 }

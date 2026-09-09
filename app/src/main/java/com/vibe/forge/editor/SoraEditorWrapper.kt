@@ -73,17 +73,47 @@ private fun applyColors(
     val textColor = colorScheme.onSurface.toArgb()
     val lineNumber = colorScheme.onSurfaceVariant.toArgb()
     val gutterBg = colorScheme.surfaceContainerLow.toArgb()
+
+    // Skip the rebuild when colors have not changed since the last apply -
+    // this is what prevents TextMateColorScheme from being recreated (and
+    // the theme from being re-parsed) on every keystroke recomposition.
+    val colorKey = background xor textColor xor lineNumber xor gutterBg
+    if (colorKey == lastAppliedColorKey) return
+    lastAppliedColorKey = colorKey
+
     try {
-        val scheme = TextMateColorScheme.create(DynamicTextMateTheme.build(colorScheme))
+        val themeSource = DynamicTextMateTheme.build(colorScheme)
+        val themeRegistry = io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry.getInstance()
+
+        // The theme MUST be registered with the ThemeRegistry and set active
+        // BEFORE TextMateColorScheme.create() - the scheme reads token colors
+        // from the registry, not directly from an IThemeSource. Without this,
+        // token highlighting never applies (flat single color).
+        val themeModel = io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel(
+            themeSource, DYNAMIC_THEME_NAME
+        ).apply {
+            isDark = !DynamicTextMateTheme.isLightScheme(colorScheme)
+        }
+        themeRegistry.loadTheme(themeModel)
+        themeRegistry.setTheme(DYNAMIC_THEME_NAME)
+
+        val scheme = TextMateColorScheme.create(themeRegistry)
         scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, background)
         scheme.setColor(EditorColorScheme.LINE_NUMBER, lineNumber)
         scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, gutterBg)
         scheme.setColor(EditorColorScheme.LINE_DIVIDER, gutterBg)
         editor.colorScheme = scheme
     } catch (t: Throwable) {
+        lastAppliedColorKey = null // allow retry on next pass
         applyFallbackScheme(editor, background, textColor, lineNumber, gutterBg)
     }
 }
+
+/** Last applied color fingerprint - module-level is fine while exactly one
+ *  editor is active at a time (current app design: one file open). */
+private var lastAppliedColorKey: Int? = null
+
+private const val DYNAMIC_THEME_NAME = "vibeforge-dynamic"
 
 private fun applyFallbackScheme(
     editor: CodeEditor,

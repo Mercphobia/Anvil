@@ -98,6 +98,10 @@ object DynamicTextMateTheme {
         return lum > 0.5
     }
 
+    /** Whether [cs] reads as a light scheme - internal so SoraEditorWrapper
+     *  can flag the registered ThemeModel as light/dark. */
+    internal fun isLightScheme(cs: ColorScheme): Boolean = isLight(cs)
+
     private fun hex(argb: Int): String = String.format("#%06X", 0xFFFFFF and argb)
 
     private fun hexAlpha(argb: Int, alpha: Int): String =
