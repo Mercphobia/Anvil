@@ -56,6 +56,35 @@ object SkillLoader {
     }
 
     /** Discover all available skills (user folder first, assets as fallback). */
+    /** Save/overwrite a SKILL.md in the user-editable folder. */
+    suspend fun save(context: Context, slug: String, content: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val dir = File(File(context.filesDir, SKILLS_ASSET_ROOT), slug)
+                dir.mkdirs()
+                File(dir, "SKILL.md").writeText(content)
+                true
+            } catch (t: Throwable) { false }
+        }
+
+    /** Create a new skill with minimal frontmatter. */
+    suspend fun create(context: Context, slug: String, description: String, appliesTo: String): Boolean {
+        val template = """
+            ---
+            name: $slug
+            description: $description
+            applies_to: [$appliesTo]
+            ---
+
+            ## Konteks
+            (isi konteks skill di sini)
+
+            ## Aturan/Pola yang harus diikuti
+            - 
+        """.trimIndent()
+        return save(context, slug, template)
+    }
+
     suspend fun discover(context: Context): List<Skill> = withContext(Dispatchers.IO) {
         val result = mutableListOf<Skill>()
         val seen = mutableSetOf<String>()

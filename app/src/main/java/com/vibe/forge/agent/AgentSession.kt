@@ -64,6 +64,11 @@ class AgentSession(
     private val _pendingTerminalCommand = MutableStateFlow<String?>(null)
     val pendingTerminalCommand: StateFlow<String?> = _pendingTerminalCommand.asStateFlow()
 
+    /** Pending SOUL.md update proposals awaiting user approval. */
+    data class SoulProposal(val newContent: String, val reason: String)
+    private val _pendingSoulProposal = MutableStateFlow<SoulProposal?>(null)
+    val pendingSoulProposal: StateFlow<SoulProposal?> = _pendingSoulProposal.asStateFlow()
+
     private val _steps = MutableStateFlow<List<Step>>(emptyList())
     val steps: StateFlow<List<Step>> = _steps.asStateFlow()
 
@@ -98,11 +103,8 @@ class AgentSession(
     private suspend fun soulSection(): String {
         val ctx = appContext ?: return ""
         if (soulText == null) {
-            soulText = try {
-                ctx.assets.open("agent/SOUL.md").bufferedReader().readText()
-            } catch (t: Throwable) {
-                ""
-            }
+            AgentSoulStore.seedIfMissing(ctx)
+            soulText = AgentSoulStore.read(ctx)
         }
         return if (soulText.isNullOrBlank()) "" else soulText + "\n\n"
     }
@@ -368,6 +370,16 @@ class AgentSession(
                         "pending: skill update requires user approval"
                     }
                 }
+                "propose_soul_update" -> {
+                    val newContent = input.get("new_content")?.asString ?: ""
+                    val reason = input.get("reason")?.asString ?: ""
+                    if (newContent.isBlank()) {
+                        "error: new_content required"
+                    } else {
+                        _pendingSoulProposal.value = SoulProposal(newContent, reason)
+                        "pending: soul update requires user confirmation"
+                    }
+                }
                 "search_history" -> {
                     val query = input.get("query")?.asString ?: ""
                     memoryTools.searchHistory(query)
@@ -439,6 +451,27 @@ class AgentSession(
         val cmd = _pendingTerminalCommand.value ?: return
         _pendingTerminalCommand.value = null
         append(Step(Step.Kind.INFO, "terminal command dismissed: " + cmd.take(80)))
+    }
+
+    /** User approved the pending SOUL.md update - apply it now. */
+    fun confirmSoulProposal() {
+        val proposal = _pendingSoulProposal.value ?: return
+        _pendingSoulProposal.value = null
+        val ctx = appContext ?: return
+        viewModelScope.launch {
+            val ok = AgentSoulStore.write(ctx, proposal.newContent)
+            append(Step(Step.Kind.INFO,
+                if (ok) "soul updated: " + proposal.reason.take(80)
+                else "error: failed to write SOUL.md"))
+            soulText = null // force reload on the next request
+        }
+    }
+
+    /** User rejected the pending SOUL.md update. */
+    fun dismissSoulProposal() {
+        val proposal = _pendingSoulProposal.value ?: return
+        _pendingSoulProposal.value = null
+        append(Step(Step.Kind.INFO, "soul update dismissed: " + proposal.reason.take(80)))
     }
 
     /** User confirmed the pending memory entry - write it now. */

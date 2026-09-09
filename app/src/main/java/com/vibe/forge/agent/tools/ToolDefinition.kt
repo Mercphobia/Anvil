@@ -155,11 +155,21 @@ object ToolRegistry {
         required = listOf("command")
     )
 
+    val proposeSoulUpdate = ToolDefinition(
+        name = "propose_soul_update",
+        description = "Propose an improvement to the agent's own SOUL.md (identity/behavior). The user must approve before it is applied.",
+        properties = mapOf(
+            "new_content" to ToolParam("string", "Full new SOUL.md content"),
+            "reason" to ToolParam("string", "Why this improvement helps")
+        ),
+        required = listOf("new_content", "reason")
+    )
+
     val phase2Tools = listOf(
         listFiles, readFile, writeFile, runBuild,
         editLayoutXml, editKotlinLogic, previewMockup, getDiff,
         searchInProject, getBuildErrors, undoLastChange, runTerminal,
-        searchHistory, updateMemory, proposeSkillUpdate
+        searchHistory, updateMemory, proposeSkillUpdate, proposeSoulUpdate
     )
 
     fun byName(name: String): ToolDefinition? = phase2Tools.firstOrNull { it.name == name }

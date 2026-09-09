@@ -101,6 +101,11 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
               _pendingTerminalCommand.value = cmd
           }
       }
+      viewModelScope.launch {
+          created.pendingSoulProposal.collect { proposal ->
+              _pendingSoulProposal.value = proposal
+          }
+      }
       agentSession = created
       return created
   }
@@ -156,6 +161,22 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
 
   private val _pendingTerminalCommand = MutableStateFlow<String?>(null)
   val pendingTerminalCommand: StateFlow<String?> = _pendingTerminalCommand.asStateFlow()
+
+  // Agent Config (Soul / Memory / Skills manual editing)
+  private val _soulText = MutableStateFlow("")
+  val soulText: StateFlow<String> = _soulText.asStateFlow()
+  private val _memoryText = MutableStateFlow("")
+  val memoryText: StateFlow<String> = _memoryText.asStateFlow()
+  private val _skillList = MutableStateFlow<List<String>>(emptyList())
+  val skillList: StateFlow<List<String>> = _skillList.asStateFlow()
+  private val _selectedSkillContent = MutableStateFlow("")
+  val selectedSkillContent: StateFlow<String> = _selectedSkillContent.asStateFlow()
+  private var selectedSkillSlug: String? = null
+  private val _pendingSoulProposal = MutableStateFlow<com.vibe.forge.agent.AgentSession.SoulProposal?>(null)
+  val pendingSoulProposal: StateFlow<com.vibe.forge.agent.AgentSession.SoulProposal?> =
+    _pendingSoulProposal.asStateFlow()
+  private val _showAgentConfig = MutableStateFlow(false)
+  val showAgentConfig: StateFlow<Boolean> = _showAgentConfig.asStateFlow()
 
   private val _pendingSkillProposal =
       MutableStateFlow<com.vibe.forge.agent.SelfImprovement.SkillProposal?>(null)
@@ -532,6 +553,64 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
   fun dismissTerminalCommand() {
     agentSession?.dismissTerminalCommand()
     _pendingTerminalCommand.value = null
+  }
+
+  fun toggleAgentConfig(show: Boolean) { _showAgentConfig.value = show }
+
+  fun confirmSoulProposal() {
+    agentSession?.confirmSoulProposal()
+    _pendingSoulProposal.value = null
+  }
+
+  fun dismissSoulProposal() {
+    agentSession?.dismissSoulProposal()
+    _pendingSoulProposal.value = null
+  }
+
+  fun loadAgentConfig() {
+    viewModelScope.launch {
+      com.vibe.forge.agent.AgentSoulStore.seedIfMissing(app)
+      _soulText.value = com.vibe.forge.agent.AgentSoulStore.read(app)
+      _memoryText.value = com.vibe.forge.agent.memory.MemoryStore(workspaceRoot).readMemory()
+      _skillList.value = com.vibe.forge.agent.SkillLoader.discover(app).map { it.slug }
+    }
+  }
+
+  fun updateSoulDraft(text: String) { _soulText.value = text }
+  fun saveSoul() {
+    viewModelScope.launch {
+      com.vibe.forge.agent.AgentSoulStore.write(app, _soulText.value)
+      agentSession = null // reload soul in the next session
+    }
+  }
+
+  fun updateMemoryDraft(text: String) { _memoryText.value = text }
+  fun saveMemory() {
+    viewModelScope.launch {
+      com.vibe.forge.agent.memory.MemoryStore(workspaceRoot).writeMemoryRaw(_memoryText.value)
+    }
+  }
+
+  fun selectSkill(slug: String) {
+    selectedSkillSlug = slug
+    viewModelScope.launch {
+      val skill = com.vibe.forge.agent.SkillLoader.discover(app).firstOrNull { it.slug == slug }
+      _selectedSkillContent.value = skill?.body ?: ""
+    }
+  }
+  fun updateSelectedSkillDraft(text: String) { _selectedSkillContent.value = text }
+  fun saveSkill(slug: String) {
+    viewModelScope.launch {
+      com.vibe.forge.agent.SkillLoader.save(app, slug, _selectedSkillContent.value)
+      agentSession = null
+    }
+  }
+  fun createSkill(slug: String, description: String) {
+    if (slug.isBlank()) return
+    viewModelScope.launch {
+      com.vibe.forge.agent.SkillLoader.create(app, slug, description, "MODE_A, MODE_B")
+      _skillList.value = com.vibe.forge.agent.SkillLoader.discover(app).map { it.slug }
+    }
   }
 
   fun dismissMemory() {

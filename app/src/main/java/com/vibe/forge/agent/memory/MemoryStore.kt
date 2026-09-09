@@ -35,6 +35,17 @@ class MemoryStore(private val projectRoot: File) {
     // memory.md
     // ------------------------------------------------------------------
 
+    /** Overwrite the whole memory.md - used by manual editing from the
+     *  Agent Config UI (unlike writeMemoryEntry, which appends/replaces one
+     *  line proposed by the agent). */
+    suspend fun writeMemoryRaw(content: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            dir.mkdirs()
+            memoryFile.writeText(content)
+            true
+        } catch (t: Throwable) { false }
+    }
+
     suspend fun readMemory(): String = withContext(Dispatchers.IO) {
         try {
             if (memoryFile.exists()) memoryFile.readText() else ""

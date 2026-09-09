@@ -95,6 +95,7 @@ fun MainScaffold(viewModel: VibeForgeViewModel) {
   val activeMode by viewModel.activeMode.collectAsState()
   val providerConfig by viewModel.providerConfig.collectAsState()
   val showSettingsDialog by viewModel.showSettingsDialog.collectAsState()
+  val showAgentConfig by viewModel.showAgentConfig.collectAsState()
   val isBusy by viewModel.isBusy.collectAsState()
   val isBuilding by viewModel.isBuilding.collectAsState()
 
@@ -121,6 +122,14 @@ fun MainScaffold(viewModel: VibeForgeViewModel) {
       onSave = { viewModel.updateProviderConfig(it) },
       onDismiss = { viewModel.toggleSettingsDialog(false) }
     )
+  }
+
+  if (showAgentConfig) {
+    com.vibe.forge.ui.screens.AgentConfigScreen(
+      viewModel = viewModel,
+      onClose = { viewModel.toggleAgentConfig(false) }
+    )
+    return
   }
 
   // Responsive design: Check constraints for Compact vs Expanded layout
@@ -214,6 +223,16 @@ fun MainScaffold(viewModel: VibeForgeViewModel) {
                   Icon(
                     imageVector = Icons.Filled.Tune,
                     contentDescription = "Konfigurasi LLM",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                  )
+                }
+
+                // Agent Config (Soul/Memory/Skills) icon
+                IconButton(onClick = { viewModel.toggleAgentConfig(true) }) {
+                  Icon(
+                    imageVector = Icons.Filled.Psychology,
+                    contentDescription = "Agent Config (Soul, Memory, Skills)",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                   )
