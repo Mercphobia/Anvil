@@ -35,6 +35,15 @@ android {
         compose = true
     }
 
+    packaging {
+        resources {
+            // BouncyCastle jars (bcpkix/bcutil/bcprov) all ship the same
+            // OSGI-INF/MANIFEST.MF - exclude duplicates from the APK.
+            excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+            excludes += "META-INF/{AL,BC,DSA,EC,RSA,SF}"
+        }
+    }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.7"
     }
