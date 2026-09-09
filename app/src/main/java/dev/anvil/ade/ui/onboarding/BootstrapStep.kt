@@ -80,7 +80,7 @@ fun BootstrapStep(viewModel: AnvilViewModel) {
                 .fillMaxWidth()
                 .weight(1f),
             color = MaterialTheme.colorScheme.surfaceContainerLowest,
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
         ) {
             Text(
                 text = log,

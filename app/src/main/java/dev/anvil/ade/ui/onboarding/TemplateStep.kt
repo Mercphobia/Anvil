@@ -77,18 +77,18 @@ fun TemplateStep(viewModel: AnvilViewModel) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .border(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                width = if (isSelected) 1.dp else 1.dp,
+                                color = if (isSelected) MaterialTheme.colorScheme.onBackground
                                         else MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(8.dp)
                             )
                             .clickable { selected = id }
                             .padding(16.dp)
                     ) {
                         Text(
                             text = name,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (isSelected) MaterialTheme.colorScheme.onBackground
                                     else MaterialTheme.colorScheme.onSurface
                         )
                         Text(

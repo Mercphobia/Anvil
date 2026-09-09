@@ -159,7 +159,7 @@ private fun SourceOption(
                 width = if (selected) 2.dp else 1.dp,
                 color = if (selected) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.outlineVariant,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(8.dp)
             )
             .clickable { onClick(
                 when (title) {
