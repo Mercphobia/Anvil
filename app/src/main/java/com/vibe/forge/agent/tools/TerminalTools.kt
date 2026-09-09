@@ -39,6 +39,10 @@ class TerminalTools(
             }
 
             try {
+                // The working directory must exist before ProcessBuilder.start()
+                // - a missing workDir fails with ENOENT even when the shell
+                // binary itself is fine.
+                workspaceRoot.mkdirs()
                 val shell = EmbeddedEnvironment.shellBinary(context)
                 val pb = ProcessBuilder(shell, "-c", cmd)
                 pb.directory(workspaceRoot)

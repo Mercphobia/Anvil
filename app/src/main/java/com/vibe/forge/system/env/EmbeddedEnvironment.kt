@@ -138,12 +138,15 @@ object EmbeddedEnvironment {
             env.mkdirs()
             usr.mkdirs()
 
+            // Bootstrap zips are PREFIX-relative (bin/, lib/, SYMLINKS.txt at
+            // the zip root) - they must be extracted INTO the usr prefix dir,
+            // not into env/ itself, or usr/bin/bash will never exist.
             var extracted = 0
             ZipFile(zipFile).use { zip ->
                 zip.entries().asSequence().forEach { entry ->
-                    // Bootstrap zips contain paths like "usr/bin/..." or "./usr/..."
+                    // Bootstrap zips contain paths like "bin/..." or "./bin/..."
                     val cleanName = entry.name.removePrefix("./")
-                    val target = File(env, cleanName)
+                    val target = File(usr, cleanName)
                     try {
                         if (entry.isDirectory) {
                             target.mkdirs()
@@ -155,7 +158,9 @@ object EmbeddedEnvironment {
                                 }
                             }
                             // Mark everything under bin/ and libexec/ executable
-                            if (cleanName.contains("/bin/") || cleanName.contains("/libexec/")) {
+                            // (paths are PREFIX-relative: "bin/...", "libexec/...")
+                            if (cleanName.startsWith("bin/") || cleanName.contains("/bin/") ||
+                                cleanName.startsWith("libexec/") || cleanName.contains("/libexec/")) {
                                 target.setExecutable(true, false)
                                 target.setReadable(true, false)
                             }
