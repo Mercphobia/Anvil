@@ -252,7 +252,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
   // Terminal State
   private val _terminalLogs = MutableStateFlow(
-    dev.anvil.ade.system.env.ForgeBanner.render(app.applicationContext)
+    dev.anvil.ade.system.env.AnvilFetch.render(app.applicationContext)
   )
   val terminalLogs: StateFlow<String> = _terminalLogs.asStateFlow()
 
@@ -610,7 +610,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       _isTerminalRunning.value = true
       val current = _terminalLogs.value
       val separator = if (current.endsWith("\n") || current.isEmpty()) "" else "\n"
-      _terminalLogs.value = current + separator + "$ " + trimmed + "\n"
+      _terminalLogs.value = current + separator + "\u276F " + trimmed + "\n"
 
       val tools = dev.anvil.ade.agent.tools.TerminalTools(
           app.applicationContext, workspaceRoot
@@ -630,7 +630,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   }
 
   fun clearTerminal() {
-    _terminalLogs.value = "anvil@android:~$ "
+    _terminalLogs.value = "\u276F "
   }
 
   fun openFileFromTree(file: ProjectFile) {

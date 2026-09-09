@@ -69,10 +69,14 @@ private fun applyColors(
     editor: CodeEditor,
     colorScheme: androidx.compose.material3.ColorScheme
 ) {
-    val background = colorScheme.surfaceContainerLowest.toArgb()
-    val textColor = colorScheme.onSurface.toArgb()
-    val lineNumber = colorScheme.onSurfaceVariant.toArgb()
-    val gutterBg = colorScheme.surfaceContainerLow.toArgb()
+    // Vercel/Linear formula - the editor canvas matches the terminal canvas
+    // (#0A0C10) so code and shell feel like one surface; gutter is one step
+    // up with a hairline divider; line numbers stay muted.
+    val background = 0xFF0A0C10.toInt()
+    val textColor = 0xFFE6E8EE.toInt()
+    val lineNumber = 0xFF6B7180.toInt()
+    val gutterBg = 0xFF14161D.toInt()
+    val dividerColor = 0xFF262A35.toInt()
 
     // Skip the rebuild when colors have not changed since the last apply -
     // this is what prevents TextMateColorScheme from being recreated (and
@@ -82,7 +86,7 @@ private fun applyColors(
     lastAppliedColorKey = colorKey
 
     try {
-        val themeSource = DynamicTextMateTheme.build(colorScheme)
+        val themeSource = DynamicTextMateTheme.build()
         val themeRegistry = io.github.rosemoe.sora.langs.textmate.registry.ThemeRegistry.getInstance()
 
         // The theme MUST be registered with the ThemeRegistry and set active
@@ -92,7 +96,7 @@ private fun applyColors(
         val themeModel = io.github.rosemoe.sora.langs.textmate.registry.model.ThemeModel(
             themeSource, DYNAMIC_THEME_NAME
         ).apply {
-            isDark = !DynamicTextMateTheme.isLightScheme(colorScheme)
+            isDark = true // fixed dark palette
         }
         themeRegistry.loadTheme(themeModel)
         themeRegistry.setTheme(DYNAMIC_THEME_NAME)
@@ -101,7 +105,10 @@ private fun applyColors(
         scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, background)
         scheme.setColor(EditorColorScheme.LINE_NUMBER, lineNumber)
         scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, gutterBg)
-        scheme.setColor(EditorColorScheme.LINE_DIVIDER, gutterBg)
+        scheme.setColor(EditorColorScheme.LINE_DIVIDER, dividerColor)
+        scheme.setColor(EditorColorScheme.CURRENT_LINE, 0xFF191C24.toInt())
+        scheme.setColor(EditorColorScheme.SELECTION_INSERT, 0xFFA4C9FF.toInt())
+        scheme.setColor(EditorColorScheme.SELECTION_HANDLE, 0xFFA4C9FF.toInt())
         editor.colorScheme = scheme
     } catch (t: Throwable) {
         lastAppliedColorKey = null // allow retry on next pass
@@ -128,6 +135,7 @@ private fun applyFallbackScheme(
         scheme.setColor(EditorColorScheme.TEXT_NORMAL, textColor)
         scheme.setColor(EditorColorScheme.LINE_NUMBER, lineNumber)
         scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, gutterBg)
+        scheme.setColor(EditorColorScheme.LINE_DIVIDER, dividerColor)
     } catch (t: Throwable) {
         // theming is best-effort
     }

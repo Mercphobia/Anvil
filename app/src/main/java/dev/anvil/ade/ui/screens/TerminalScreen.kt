@@ -1,6 +1,7 @@
 package dev.anvil.ade.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -107,27 +108,15 @@ fun TerminalScreen(
           imageVector = Icons.Filled.Terminal,
           contentDescription = null,
           tint = MaterialTheme.colorScheme.primary,
-          modifier = Modifier.size(18.dp)
+          modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
-          text = "On-Device Terminal",
-          style = MaterialTheme.typography.titleSmall,
-          fontWeight = FontWeight.Bold
+          text = branch,
+          fontFamily = FontFamily.Monospace,
+          fontSize = 11.sp,
+          color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        Surface(
-          shape = RoundedCornerShape(6.dp),
-          color = MaterialTheme.colorScheme.surfaceContainerHigh
-        ) {
-          Text(
-            text = "ARM64",
-            fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-          )
-        }
       }
 
       IconButton(
@@ -178,8 +167,9 @@ fun TerminalScreen(
       modifier = Modifier
         .fillMaxWidth()
         .weight(1f)
-        .clip(RoundedCornerShape(16.dp)),
-      color = MaterialTheme.colorScheme.surfaceContainerLowest
+        .clip(RoundedCornerShape(10.dp))
+        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp)),
+      color = Color(0xFF0A0C10)
     ) {
       Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -228,9 +218,17 @@ fun TerminalScreen(
         onValueChange = { inputCmd = it },
         placeholder = {
           Text(
-            text = "Ketik perintah terminal (e.g. git status, aapt2)...",
+            text = "sh — ketik perintah (git status, npm run, …)",
             fontSize = 12.sp,
             fontFamily = FontFamily.Monospace
+          )
+        },
+        leadingIcon = {
+          Text(
+            text = "\u276F",
+            fontFamily = FontFamily.Monospace,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.primary
           )
         },
         modifier = Modifier
@@ -264,9 +262,9 @@ fun TerminalScreen(
           }
         },
         modifier = Modifier
-          .size(48.dp)
+          .size(44.dp)
           .testTag("terminal_send_button"),
-        shape = CircleShape,
+        shape = RoundedCornerShape(10.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
         enabled = !isRunning && inputCmd.isNotBlank(),
         colors = ButtonDefaults.buttonColors(

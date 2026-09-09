@@ -1,109 +1,58 @@
 package dev.anvil.ade.editor
 
-import android.graphics.Color
-import androidx.compose.material3.ColorScheme
-import androidx.compose.ui.graphics.toArgb
 import org.eclipse.tm4e.core.registry.IThemeSource
 
 /**
- * Builds a TextMate theme (JSON) whose token colors are derived from the
- * app's Material 3 color scheme, so syntax highlighting follows dark/light
- * mode and wallpaper-based dynamic color like the rest of the UI.
- *
- * Role mapping (kept readable on both light and dark schemes):
- *   keyword / storage      -> primary
- *   string                 -> tertiary
- *   comment                -> outline (italic)
- *   number / constant      -> secondary
- *   type / class           -> inversePrimary
- *   function               -> primaryContainer-ish onSurface tint
- *   variable / parameter   -> onSurface
- *   invalid                -> error
- *   editor background      -> surfaceContainerLowest
- *   foreground             -> onSurface
- *   line highlight         -> surfaceContainerLow
- *   selection              -> secondaryContainer (55% alpha)
- *   line numbers           -> onSurfaceVariant
+ * Builds Anvil's fixed dark TextMate theme (JSON) - a curated Vercel/Linear
+ * style palette tuned for the editor's fixed #0A0C10 canvas. Token colors
+ * do NOT follow the dynamic Material scheme: the editor, like the terminal,
+ * is a deliberately constant dark surface across light/dark system modes.
  */
 object DynamicTextMateTheme {
 
-    fun build(cs: ColorScheme): IThemeSource {
-        val bg = cs.surfaceContainerLowest.toArgb()
+    fun build(): IThemeSource {
+        // Fixed Vercel/Linear dark palette - the editor canvas no longer follows
+        // the dynamic surface (it is a fixed #0A0C10), so token colors are a
+        // curated dark-theme palette instead of Material mappings.
         val json = """
 {
-  "name": "anvil-dynamic",
-  "type": "${if (isLight(cs)) "light" else "dark"}",
+  "name": "anvil-dark",
+  "type": "dark",
   "colors": {
-    "editor.background": "${hex(bg)}",
-    "editor.foreground": "${hex(cs.onSurface.toArgb())}",
-    "editor.lineHighlightBackground": "${hex(cs.surfaceContainerLow.toArgb())}",
-    "editor.selectionBackground": "${hexAlpha(cs.secondaryContainer.toArgb(), 0x88)}",
-    "editorLineNumber.foreground": "${hex(cs.onSurfaceVariant.toArgb())}",
-    "editorCursor.foreground": "${hex(cs.primary.toArgb())}"
+    "editor.background": "#0A0C10",
+    "editor.foreground": "#E6E8EE",
+    "editor.lineHighlightBackground": "#191C24",
+    "editor.selectionBackground": "#26364F",
+    "editorLineNumber.foreground": "#6B7180",
+    "editorCursor.foreground": "#A4C9FF"
   },
   "tokenColors": [
-    {
-      "scope": ["keyword", "storage", "storage.type", "keyword.control"],
-      "settings": { "foreground": "${hex(cs.primary.toArgb())}", "fontStyle": "bold" }
-    },
-    {
-      "scope": ["string", "string.quoted", "markup.inline.raw"],
-      "settings": { "foreground": "${hex(cs.tertiary.toArgb())}" }
-    },
-    {
-      "scope": ["comment", "punctuation.definition.comment"],
-      "settings": { "foreground": "${hex(cs.outline.toArgb())}", "fontStyle": "italic" }
-    },
-    {
-      "scope": ["constant.numeric", "constant.language", "constant.character"],
-      "settings": { "foreground": "${hex(cs.secondary.toArgb())}" }
-    },
-    {
-      "scope": ["entity.name.type", "entity.name.class", "support.type", "support.class"],
-      "settings": { "foreground": "${hex(cs.inversePrimary.toArgb())}" }
-    },
-    {
-      "scope": ["entity.name.function", "support.function", "meta.function-call"],
-      "settings": { "foreground": "${hex(cs.primary.toArgb())}" }
-    },
-    {
-      "scope": ["variable", "variable.parameter", "variable.other"],
-      "settings": { "foreground": "${hex(cs.onSurface.toArgb())}" }
-    },
-    {
-      "scope": ["markup.heading", "entity.name.section"],
-      "settings": { "foreground": "${hex(cs.primary.toArgb())}", "fontStyle": "bold" }
-    },
-    {
-      "scope": ["markup.bold"],
-      "settings": { "fontStyle": "bold", "foreground": "${hex(cs.onSurface.toArgb())}" }
-    },
-    {
-      "scope": ["markup.italic"],
-      "settings": { "fontStyle": "italic", "foreground": "${hex(cs.onSurface.toArgb())}" }
-    },
-    {
-      "scope": ["invalid", "invalid.illegal"],
-      "settings": { "foreground": "${hex(cs.error.toArgb())}" }
-    }
+    { "scope": ["keyword", "storage", "storage.type", "keyword.control"],
+      "settings": { "foreground": "#A4C9FF", "fontStyle": "bold" } },
+    { "scope": ["string", "string.quoted", "markup.inline.raw"],
+      "settings": { "foreground": "#6FD39A" } },
+    { "scope": ["comment", "punctuation.definition.comment"],
+      "settings": { "foreground": "#5F6572", "fontStyle": "italic" } },
+    { "scope": ["constant.numeric", "constant.language", "constant.character"],
+      "settings": { "foreground": "#F4C96A" } },
+    { "scope": ["entity.name.type", "entity.name.class", "support.type", "support.class"],
+      "settings": { "foreground": "#C9B8FF" } },
+    { "scope": ["entity.name.function", "support.function", "meta.function-call"],
+      "settings": { "foreground": "#82D4F5" } },
+    { "scope": ["variable", "variable.parameter", "variable.other"],
+      "settings": { "foreground": "#E6E8EE" } },
+    { "scope": ["markup.heading", "entity.name.section"],
+      "settings": { "foreground": "#A4C9FF", "fontStyle": "bold" } },
+    { "scope": ["markup.bold"],
+      "settings": { "fontStyle": "bold", "foreground": "#E6E8EE" } },
+    { "scope": ["markup.italic"],
+      "settings": { "fontStyle": "italic", "foreground": "#E6E8EE" } },
+    { "scope": ["invalid", "invalid.illegal"],
+      "settings": { "foreground": "#FF7A88" } }
   ]
 }
 """.trimIndent()
         return IThemeSource.fromString(IThemeSource.ContentType.JSON, json)
     }
 
-    private fun isLight(cs: ColorScheme): Boolean {
-        val c = cs.surfaceContainerLowest.toArgb()
-        val lum = (0.299 * Color.red(c) + 0.587 * Color.green(c) + 0.114 * Color.blue(c)) / 255.0
-        return lum > 0.5
-    }
-
-    /** Whether [cs] reads as a light scheme - internal so SoraEditorWrapper
-     *  can flag the registered ThemeModel as light/dark. */
-    internal fun isLightScheme(cs: ColorScheme): Boolean = isLight(cs)
-
-    private fun hex(argb: Int): String = String.format("#%06X", 0xFFFFFF and argb)
-
-    private fun hexAlpha(argb: Int, alpha: Int): String =
-        String.format("#%08X", (alpha shl 24) or (0xFFFFFF and argb))
 }

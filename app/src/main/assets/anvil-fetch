@@ -1,0 +1,53 @@
+#!/system/bin/sh
+# ============================================================
+#  ANVIL — neofetch-style system banner for the embedded shell
+#  ASCII anvil + system info from the embedded Termux environment
+# ============================================================
+
+# --- palette (24-bit) ---
+if [ -t 1 ]; then
+  D="\033[2m"; B="\033[1m"; ACC="\033[38;5;111m"; OK="\033[38;5;114m"
+  MUT="\033[38;5;245m"; R="\033[0m"
+else
+  D=""; B=""; ACC=""; OK=""; MUT=""; R=""
+fi
+
+# --- info gathering (best-effort, embedded env) ---
+prefix="${PREFIX:-/data/data/com.termux/files/usr}"
+user="anvil"
+host="android"
+kernel="$(uname -r 2>/dev/null || echo '?')"
+arch="$(uname -m 2>/dev/null || echo 'aarch64')"
+uptime="$(uptime 2>/dev/null | sed 's/.*up //; s/,.*//' || echo '?')"
+shell="$(basename "${SHELL:-sh}")"
+pkg_count="$(ls "$prefix/bin" 2>/dev/null | wc -l | tr -d ' ')"
+android_ver="$(getprop ro.build.version.release 2>/dev/null || echo '?')"
+device="$(getprop ro.product.model 2>/dev/null || echo 'Android')"
+
+# --- the anvil (ASCII, Linear×Vercel minimal) ---
+printf '%s' "
+${ACC}        __
+${ACC}       /  |___________
+${ACC}      /  /|           /|
+${ACC}     /  / |__________/ |
+${ACC}    /__/______________/
+${ACC}       |   |     |   |
+${ACC}       |___|_____|___|
+${ACC}      /_______________\\
+${MUT}     ~ forged on device ~${R}
+"
+
+# --- info block ---
+printf '%s' "
+${B}${ACC}${user}${R}${MUT}@${R}${B}${ACC}${host}${R}
+${MUT}-----------------${R}
+${B}OS${R}: Anvil ADE on Android ${android_ver} (${arch})
+${B}Host${R}: ${device}
+${B}Kernel${R}: ${kernel}
+${B}Uptime${R}: ${uptime}
+${B}Shell${R}: ${shell} (embedded Termux env)
+${B}Packages${R}: ${pkg_count} binaries in prefix
+${B}Prefix${R}: ${prefix}
+${OK}Build${R}: aapt2 → ecj → d8 → apksig (in-process)
+${MUT}anvil.dev — the agentic dev env in your pocket${R}
+"
