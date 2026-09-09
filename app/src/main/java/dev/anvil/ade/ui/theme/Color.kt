@@ -1,5 +1,7 @@
 package dev.anvil.ade.ui.theme
 
+import androidx.compose.ui.graphics.Color
+
 /**
  * Vercel Geist palette. Achromatic system: #171717 -> #ffffff is the whole
  * identity. Blue #0070F3 (console blue / focus) is the ONLY accent.
@@ -48,11 +50,11 @@ val VcErrorLight = 0xFFEE0000
 val VcOnErrorLight = 0xFFFFFFFF
 
 // ---- Semantic aliases used by feature screens (Vercel-style diffs) ----
-// Diff green: Geist terminal green; Diff red: Ship Red tinted.
-val ForgeNeonGreen = 0xFF50E3C2          // success / ok accent (terminal)
-val ForgeNeonCyan = 0xFF50C8E3           // info accent
-val ForgeTerminalBg = VcBackgroundDark   // terminal canvas = app dark canvas
-val ForgeDiffAddText = 0xFF1DA750        // diff added text
-val ForgeDiffAddBg = 0xFF0E2A1C          // diff added line bg (dark, tinted)
-val ForgeDiffDelText = 0xFFFF5B4F        // diff removed text (Ship Red)
-val ForgeDiffDelBg = 0xFF2A1114          // diff removed line bg (dark, tinted)
+// Typed as Color for direct Modifier.background(...) usage.
+val ForgeNeonGreen = Color(0xFF50E3C2)          // success / ok accent (terminal)
+val ForgeNeonCyan = Color(0xFF50C8E3)           // info accent
+val ForgeTerminalBg = Color(0xFF0A0A0A)         // terminal canvas = dark canvas
+val ForgeDiffAddText = Color(0xFF1DA750)        // diff added text
+val ForgeDiffAddBg = Color(0xFF0E2A1C)          // diff added line bg (dark, tinted)
+val ForgeDiffDelText = Color(0xFFFF5B4F)        // diff removed text (Ship Red)
+val ForgeDiffDelBg = Color(0xFF2A1114)          // diff removed line bg (dark, tinted)
