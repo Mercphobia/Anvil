@@ -1,6 +1,7 @@
 package dev.anvil.ade.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
@@ -69,6 +70,7 @@ fun TerminalScreen(
 
   var inputCmd by remember { mutableStateOf("") }
   val scrollState = rememberScrollState()
+  val isDark = isSystemInDarkTheme()
 
   // Auto scroll to bottom when log changes
   LaunchedEffect(terminalLogs) {
@@ -168,8 +170,12 @@ fun TerminalScreen(
         .fillMaxWidth()
         .weight(1f)
         .clip(RoundedCornerShape(10.dp))
-        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp)),
-      color = Color(0xFF0A0C10)
+        .border(
+          1.dp,
+          if (isDark) Color(0xFF262626) else Color(0xFFEAEAEA),
+          RoundedCornerShape(10.dp)
+        ),
+      color = if (isDark) Color(0xFF0A0A0A) else Color(0xFFFFFFFF)
     ) {
       Box(modifier = Modifier.fillMaxSize()) {
         Column(
