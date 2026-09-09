@@ -95,13 +95,18 @@ class FileTools(private val workspaceRoot: File) {
         }
     }
 
-    /** Resolve a path against the workspace; null if it escapes the sandbox. */
+    /** Resolve a path against the workspace; null if it escapes the sandbox.
+     *  NOTE: the boundary check must include the separator - a plain
+     *  startsWith would also accept sibling folders like ".../project1-other". */
     private fun resolve(path: String): File? {
         return try {
             val root = workspaceRoot.canonicalFile
             val target = if (path.startsWith("/")) File(path) else File(root, path)
             val canonical = target.canonicalFile
-            if (canonical.path.startsWith(root.path)) canonical else null
+            val rootPath = root.path.trimEnd(File.separatorChar)
+            val isInside = canonical.path == rootPath ||
+                    canonical.path.startsWith(rootPath + File.separatorChar)
+            if (isInside) canonical else null
         } catch (t: Throwable) {
             null
         }

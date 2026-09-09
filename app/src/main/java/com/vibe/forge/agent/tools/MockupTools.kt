@@ -82,7 +82,12 @@ class MockupTools(private val workspaceRoot: File) {
             val root = workspaceRoot.canonicalFile
             val target = if (path.startsWith("/")) File(path) else File(root, path)
             val canon = target.canonicalFile
-            if (canon.path.startsWith(root.path)) canon else null
+            // Boundary check must include the separator - a plain startsWith
+            // would also accept sibling folders like ".../project1-other".
+            val rootPath = root.path.trimEnd(File.separatorChar)
+            val isInside = canon.path == rootPath ||
+                    canon.path.startsWith(rootPath + File.separatorChar)
+            if (isInside) canon else null
         } catch (t: Throwable) {
             null
         }

@@ -15,7 +15,12 @@ class UndoTools(private val workspaceRoot: File) {
             val root = workspaceRoot.canonicalFile
             val target = if (path.startsWith("/")) File(path) else File(root, path)
             val canonical = target.canonicalFile
-            if (!canonical.path.startsWith(root.path)) {
+            // Boundary check must include the separator - a plain startsWith
+            // would also accept sibling folders like ".../project1-other".
+            val rootPath = root.path.trimEnd(File.separatorChar)
+            val isInside = canonical.path == rootPath ||
+                    canonical.path.startsWith(rootPath + File.separatorChar)
+            if (!isInside) {
                 return@withContext "error: path outside workspace"
             }
             val backup = File(canonical.parentFile, canonical.name + ".vibeforge.bak")
