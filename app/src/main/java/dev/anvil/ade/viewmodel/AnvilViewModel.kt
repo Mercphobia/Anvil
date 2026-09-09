@@ -52,61 +52,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
   private var agentSession: dev.anvil.ade.agent.AgentSession? = null
 
-  private fun session(): dev.anvil.ade.agent.AgentSession {
-      val existing = agentSession
-      if (existing != null) return existing
-      val config = dev.anvil.ade.agent.ProviderConfigStore.load(app)
-      val created = dev.anvil.ade.agent.AgentSession(
-          config = config,
-          workspaceRoot = workspaceRoot,
-          appContext = app.applicationContext
-      )
-      created.projectType = _activeType.value
-      viewModelScope.launch {
-          created.steps.collect { engineSteps ->
-              _steps.value = engineSteps.map { s ->
-                  dev.anvil.ade.model.AgentStep(
-                      id = java.util.UUID.randomUUID().toString(),
-                      kind = when (s.kind) {
-                          dev.anvil.ade.agent.AgentSession.Step.Kind.USER -> dev.anvil.ade.model.StepKind.USER
-                          dev.anvil.ade.agent.AgentSession.Step.Kind.AGENT_TEXT -> dev.anvil.ade.model.StepKind.AGENT_TEXT
-                          dev.anvil.ade.agent.AgentSession.Step.Kind.TOOL_CALL -> dev.anvil.ade.model.StepKind.TOOL_CALL
-                          dev.anvil.ade.agent.AgentSession.Step.Kind.TOOL_RESULT -> dev.anvil.ade.model.StepKind.TOOL_RESULT
-                          dev.anvil.ade.agent.AgentSession.Step.Kind.ERROR -> dev.anvil.ade.model.StepKind.ERROR
-                          dev.anvil.ade.agent.AgentSession.Step.Kind.INFO -> dev.anvil.ade.model.StepKind.INFO
-                      },
-                      text = s.text,
-                      timestamp = ""
-                  )
-              }
-          }
-      }
-      viewModelScope.launch {
-          created.busy.collect { _isBusy.value = it }
-      }
-      viewModelScope.launch {
-          created.pendingMemoryEntry.collect { entry ->
-              _pendingMemory.value = entry
-          }
-      }
-      viewModelScope.launch {
-          created.pendingSkillProposal.collect { proposal ->
-              _pendingSkillProposal.value = proposal
-          }
-      }
-      viewModelScope.launch {
-          created.pendingTerminalCommand.collect { cmd ->
-              _pendingTerminalCommand.value = cmd
-          }
-      }
-      viewModelScope.launch {
-          created.pendingSoulProposal.collect { proposal ->
-              _pendingSoulProposal.value = proposal
-          }
-      }
-      agentSession = created
-      return created
-  }
+
 
   // Navigation / Welcome state
   private val _showWelcome = MutableStateFlow(false)
@@ -261,6 +207,27 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
   init {
     loadInitialData()
+  }
+
+  private fun session(): dev.anvil.ade.agent.AgentSession {
+      val existing = agentSession
+      if (existing != null) return existing
+      val created = dev.anvil.ade.agent.AgentSessionFactory.create(
+          context = app.applicationContext,
+          scope = viewModelScope,
+          workspaceRoot = workspaceRoot,
+          projectType = _activeType.value,
+          hooks = dev.anvil.ade.agent.AgentSessionFactory.Hooks(
+              onSteps = { _steps.value = it },
+              onBusy = { _isBusy.value = it },
+              onPendingMemoryEntry = { _pendingMemory.value = it },
+              onPendingSkillProposal = { _pendingSkillProposal.value = it },
+              onPendingTerminalCommand = { _pendingTerminalCommand.value = it },
+              onPendingSoulProposal = { _pendingSoulProposal.value = it }
+          )
+      )
+      agentSession = created
+      return created
   }
 
   private fun loadInitialData() {
