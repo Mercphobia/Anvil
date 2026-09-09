@@ -91,6 +91,7 @@ fun ChatScreen(
   val providerConfig by viewModel.providerConfig.collectAsState()
   val pendingMemory by viewModel.pendingMemory.collectAsState()
   val pendingSkillProposal by viewModel.pendingSkillProposal.collectAsState()
+  val pendingTerminalCommand by viewModel.pendingTerminalCommand.collectAsState()
 
   var inputText by remember { mutableStateOf("") }
   var showAttachMenu by remember { mutableStateOf(false) }
@@ -302,6 +303,62 @@ fun ChatScreen(
                 shape = RoundedCornerShape(8.dp)
               ) {
                 Text("Setujui", fontSize = 12.sp)
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Terminal Command Confirmation Pill if pending
+    AnimatedVisibility(
+      visible = pendingTerminalCommand != null,
+      enter = fadeIn(),
+      exit = fadeOut()
+    ) {
+      pendingTerminalCommand?.let { cmd ->
+        Surface(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+          shape = RoundedCornerShape(16.dp),
+          color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+          Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Icon(
+                imageVector = Icons.Filled.Code,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text(
+                text = "Jalankan perintah shell?",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold
+              )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = cmd,
+              style = MaterialTheme.typography.bodySmall,
+              fontFamily = FontFamily.Monospace,
+              color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.End
+            ) {
+              TextButton(onClick = { viewModel.dismissTerminalCommand() }) {
+                Text("Batal", fontSize = 12.sp)
+              }
+              Spacer(modifier = Modifier.width(4.dp))
+              Button(
+                onClick = { viewModel.confirmTerminalCommand() },
+                shape = RoundedCornerShape(8.dp)
+              ) {
+                Text("Jalankan", fontSize = 12.sp)
               }
             }
           }

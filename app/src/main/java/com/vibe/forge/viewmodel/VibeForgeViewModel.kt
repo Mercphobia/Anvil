@@ -80,6 +80,11 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
               _pendingSkillProposal.value = proposal
           }
       }
+      viewModelScope.launch {
+          created.pendingTerminalCommand.collect { cmd ->
+              _pendingTerminalCommand.value = cmd
+          }
+      }
       agentSession = created
       return created
   }
@@ -132,6 +137,9 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
   val isBusy: StateFlow<Boolean> = _isBusy.asStateFlow()
 
   private val _pendingMemory = MutableStateFlow<String?>(null)
+
+  private val _pendingTerminalCommand = MutableStateFlow<String?>(null)
+  val pendingTerminalCommand: StateFlow<String?> = _pendingTerminalCommand.asStateFlow()
 
   private val _pendingSkillProposal =
       MutableStateFlow<com.vibe.forge.agent.SelfImprovement.SkillProposal?>(null)
@@ -569,6 +577,16 @@ class VibeForgeViewModel(private val app: Application) : AndroidViewModel(app) {
   fun dismissSkillProposal() {
     agentSession?.dismissSkillProposal()
     _pendingSkillProposal.value = null
+  }
+
+  fun confirmTerminalCommand() {
+    agentSession?.confirmTerminalCommand()
+    _pendingTerminalCommand.value = null
+  }
+
+  fun dismissTerminalCommand() {
+    agentSession?.dismissTerminalCommand()
+    _pendingTerminalCommand.value = null
   }
 
   fun dismissMemory() {

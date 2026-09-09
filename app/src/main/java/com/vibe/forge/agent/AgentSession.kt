@@ -60,6 +60,10 @@ class AgentSession(
     val pendingSkillProposal: StateFlow<SelfImprovement.SkillProposal?> =
         _pendingSkillProposal.asStateFlow()
 
+    /** Pending terminal command awaiting one-time user confirmation. */
+    private val _pendingTerminalCommand = MutableStateFlow<String?>(null)
+    val pendingTerminalCommand: StateFlow<String?> = _pendingTerminalCommand.asStateFlow()
+
     private val _steps = MutableStateFlow<List<Step>>(emptyList())
     val steps: StateFlow<List<Step>> = _steps.asStateFlow()
 
@@ -340,13 +344,13 @@ class AgentSession(
                     }
                 }
                 "run_terminal" -> {
-                    val ctx = appContext ?: return "error: no context"
-                    if (terminalTools == null) {
-                        terminalTools = TerminalTools(ctx, workspaceRoot)
-                    }
                     val cmd = input.get("command")?.asString ?: ""
-                    val timeout = input.get("timeout_seconds")?.asInt ?: 60
-                    terminalTools!!.run(cmd, timeout)
+                    if (cmd.isBlank()) {
+                        "error: command required"
+                    } else {
+                        _pendingTerminalCommand.value = cmd
+                        "pending: command requires user confirmation before running"
+                    }
                 }
                 "undo_last_change" -> {
                     val path = input.get("path")?.asString ?: ""
@@ -416,6 +420,25 @@ class AgentSession(
         val proposal = _pendingSkillProposal.value ?: return
         _pendingSkillProposal.value = null
         append(Step(Step.Kind.INFO, "skill update dismissed: " + proposal.slug))
+    }
+
+    /** User approved the pending terminal command - run it now. */
+    fun confirmTerminalCommand() {
+        val cmd = _pendingTerminalCommand.value ?: return
+        _pendingTerminalCommand.value = null
+        val ctx = appContext ?: return
+        viewModelScope.launch {
+            if (terminalTools == null) terminalTools = TerminalTools(ctx, workspaceRoot)
+            val result = terminalTools!!.run(cmd, 60)
+            append(Step(Step.Kind.TOOL_RESULT, result.take(2000)))
+        }
+    }
+
+    /** User rejected the pending terminal command. */
+    fun dismissTerminalCommand() {
+        val cmd = _pendingTerminalCommand.value ?: return
+        _pendingTerminalCommand.value = null
+        append(Step(Step.Kind.INFO, "terminal command dismissed: " + cmd.take(80)))
     }
 
     /** User confirmed the pending memory entry - write it now. */
