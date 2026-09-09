@@ -58,5 +58,13 @@ dependencies {
     implementation("io.github.Rosemoe.sora-editor:editor:0.23.4")
     implementation("io.github.Rosemoe.sora-editor:language-textmate:0.23.4")
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.8.0.202311291450-r")
+    // In-process MODE_A build pipeline: ecj (Java compiler), r8 (D8 dexer) and
+    // apksig (APK signer) run via their programmatic JVM APIs - they are
+    // regular JVM bytecode and cannot be exec'd via dalvikvm as a subprocess.
+    // AGP dexes them into the app classpath automatically.
+    implementation("org.eclipse.jdt:ecj:3.33.0")
+    implementation("com.android.tools:r8:8.3.37")
+    implementation("com.android.tools.build:apksig:8.3.2")
+    implementation("org.bouncycastle:bcpkix-jdk18on:1.78") // self-signed debug keystore
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
