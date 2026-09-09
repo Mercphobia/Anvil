@@ -46,3 +46,13 @@ val VcSurfaceHighLight = 0xFFEBEBEB
 val VcSurfaceHighestLight = 0xFFE5E5E5
 val VcErrorLight = 0xFFEE0000
 val VcOnErrorLight = 0xFFFFFFFF
+
+// ---- Semantic aliases used by feature screens (Vercel-style diffs) ----
+// Diff green: Geist terminal green; Diff red: Ship Red tinted.
+val ForgeNeonGreen = 0xFF50E3C2          // success / ok accent (terminal)
+val ForgeNeonCyan = 0xFF50C8E3           // info accent
+val ForgeTerminalBg = VcBackgroundDark   // terminal canvas = app dark canvas
+val ForgeDiffAddText = 0xFF1DA750        // diff added text
+val ForgeDiffAddBg = 0xFF0E2A1C          // diff added line bg (dark, tinted)
+val ForgeDiffDelText = 0xFFFF5B4F        // diff removed text (Ship Red)
+val ForgeDiffDelBg = 0xFF2A1114          // diff removed line bg (dark, tinted)
