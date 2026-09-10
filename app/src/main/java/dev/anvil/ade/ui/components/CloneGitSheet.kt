@@ -53,7 +53,7 @@ fun CloneGitSheet(
     // Header
     Row(verticalAlignment = Alignment.CenterVertically) {
       Icon(
-        Icons.Default.Link,
+        Icons.Filled.Link,
         contentDescription = null,
         tint = AcsGold,
         modifier = Modifier.size(22.dp)
@@ -67,7 +67,7 @@ fun CloneGitSheet(
       )
       Spacer(Modifier.weight(1f))
       IconButton(onClick = onDismiss) {
-        Icon(Icons.Default.Close, "Close", tint = AcsOnSurfaceDim)
+        Icon(Icons.Filled.Close, "Close", tint = AcsOnSurfaceDim)
       }
     }
     Spacer(Modifier.height(20.dp))

@@ -33,14 +33,14 @@ fun MessageActionToolbar(
       .padding(horizontal = 4.dp, vertical = 2.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
-    ActionButton(Icons.Default.ContentCopy, "Copy", onCopy)
-    ActionButton(Icons.Default.Refresh, "Retry", onRetry)
+    ActionButton(Icons.Filled.ContentCopy, "Copy", onCopy)
+    ActionButton(Icons.Filled.Refresh, "Retry", onRetry)
     ActionButton(
-      if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+      if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
       "Favorite",
       onToggleFavorite
     )
-    ActionButton(Icons.Default.Delete, "Delete", onDelete)
+    ActionButton(Icons.Filled.Delete, "Delete", onDelete)
   }
 }
 

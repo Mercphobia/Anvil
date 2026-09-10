@@ -26,14 +26,14 @@ fun ProviderPill(
   modifier: Modifier = Modifier
 ) {
   val (icon, color) = when (projectType) {
-    ProjectType.ANDROID -> Icons.Default.Android to AcsFileIconKt
-    ProjectType.NODE_JS -> Icons.Default.Code to AcsGreen
-    ProjectType.PYTHON -> Icons.Default.Code to AcsTeal
-    ProjectType.RUST -> Icons.Default.Build to AcsRed
-    ProjectType.GO -> Icons.Default.Code to AcsTeal
-    ProjectType.C_CPP -> Icons.Default.Terminal to AcsOnSurfaceVariant
-    ProjectType.GIT_LINKED_SYSTEM -> Icons.Default.Folder to AcsFolderIcon
-    ProjectType.GENERIC -> Icons.Default.InsertDriveFile to AcsOnSurfaceDim
+    ProjectType.ANDROID -> Icons.Filled.Android to AcsFileIconKt
+    ProjectType.NODE_JS -> Icons.Filled.Code to AcsGreen
+    ProjectType.PYTHON -> Icons.Filled.Code to AcsTeal
+    ProjectType.RUST -> Icons.Filled.Build to AcsRed
+    ProjectType.GO -> Icons.Filled.Code to AcsTeal
+    ProjectType.C_CPP -> Icons.Filled.Terminal to AcsOnSurfaceVariant
+    ProjectType.GIT_LINKED_SYSTEM -> Icons.Filled.Folder to AcsFolderIcon
+    ProjectType.GENERIC -> Icons.Filled.InsertDriveFile to AcsOnSurfaceDim
   }
 
   Row(
