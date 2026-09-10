@@ -18,7 +18,9 @@ import dev.anvil.ade.model.ProjectType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
@@ -137,7 +139,28 @@ class AgentSession(
                 "For complex instructions touching more than 2 related files, " +
                 "present a short step plan to the user BEFORE executing tool calls." +
                 skillsSection +
+                steeringSection() +
                 memorySection()
+    }
+
+    /** Steering files (starting context, generated once per project). */
+    private var steeringText: String? = null
+    private suspend fun steeringSection(): String {
+        if (steeringText == null) {
+            steeringText = withContext(Dispatchers.IO) {
+                val dir = java.io.File(workspaceRoot, ".anvil/steering")
+                if (!dir.isDirectory) ""
+                else listOf("product.md", "structure.md", "tech.md")
+                    .mapNotNull { n ->
+                        java.io.File(dir, n).takeIf { it.exists() }?.readText()?.trim()
+                            ?.let { "## $n\n$it" }
+                    }
+                    .joinToString("\n\n")
+                    .takeIf { it.isNotBlank() }
+                    ?.let { "Project steering context:\n$it\n\n" } ?: ""
+            }
+        }
+        return steeringText ?: ""
     }
 
     private suspend fun memorySection(): String {
@@ -199,7 +222,13 @@ class AgentSession(
             val texts = response.blocks
                 .filterIsInstance<LlmClient.ContentBlock.Text>()
 
-            texts.forEach { append(Step(Step.Kind.AGENT_TEXT, it.text)) }
+            // Streaming already rendered text deltas into a step; only append
+            // when nothing was streamed (fallback/non-streaming path).
+            if (streamStepIndex < 0) {
+                texts.forEach { append(Step(Step.Kind.AGENT_TEXT, it.text)) }
+            } else {
+                streamStepIndex = -1
+            }
 
             // Auto-continue when the response was cut off by the token cap
             if (response.stopReason == "max_tokens" || response.stopReason == "length") {
@@ -269,6 +298,29 @@ class AgentSession(
         history += first + tail
     }
 
+    /**
+     * Streaming hook: create one AGENT_TEXT step and grow it in place as
+     * text deltas arrive, so the UI renders word-by-word instead of once
+     * at the end.
+     */
+    private var streamStepIndex: Int = -1
+    private suspend fun onTextDelta(delta: String) {
+        if (streamStepIndex < 0 || streamStepIndex >= _steps.value.size) {
+            _steps.value = _steps.value + Step(Step.Kind.AGENT_TEXT, delta)
+            streamStepIndex = _steps.value.size - 1
+        } else {
+            val cur = _steps.value[streamStepIndex]
+            if (cur.kind != Step.Kind.AGENT_TEXT) {
+                _steps.value = _steps.value + Step(Step.Kind.AGENT_TEXT, delta)
+                streamStepIndex = _steps.value.size - 1
+            } else {
+                val updated = _steps.value.toMutableList()
+                updated[streamStepIndex] = cur.copy(text = cur.text + delta)
+                _steps.value = updated
+            }
+        }
+    }
+
     /** Retry LLM calls with exponential backoff (network/rate-limit failures). */
     private suspend fun sendWithRetry(): Result<LlmClient.LlmResponse> {
         val delays = longArrayOf(0, 2000, 5000)
@@ -279,7 +331,8 @@ class AgentSession(
                 kotlinx.coroutines.delay(delays[attempt])
             }
             trimHistoryForContext()
-            val result = client.send(systemPrompt(currentInstruction), history, ToolRegistry.phase2Tools)
+            streamStepIndex = -1
+            val result = client.send(systemPrompt(currentInstruction), history, ToolRegistry.phase2Tools, ::onTextDelta)
             if (result.isSuccess) return result
             lastError = result.exceptionOrNull()
             val msg = lastError?.message ?: ""

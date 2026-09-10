@@ -50,6 +50,21 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     agentSession = null
   }
 
+  /** Generate .anvil/steering/ (product/structure/tech) once per project
+   *  via a single LLM analysis call. Skipped when already generated. */
+  private fun ensureSteeringFiles(root: java.io.File) {
+    viewModelScope.launch {
+      try {
+        if (dev.anvil.ade.agent.SteeringFileGenerator.isGenerated(root)) return@launch
+        val config = dev.anvil.ade.agent.ProviderConfigStore.load(app.applicationContext)
+        val llm = dev.anvil.ade.agent.LlmClient(config)
+        dev.anvil.ade.agent.SteeringFileGenerator.generate(root, _activeType.value, llm)
+      } catch (_: Throwable) {
+        // Non-fatal: steering files fall back to skeletons, or stay absent.
+      }
+    }
+  }
+
   private var agentSession: dev.anvil.ade.agent.AgentSession? = null
 
 
@@ -831,7 +846,9 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     val firstFile = tree.firstNotNullOfOrNull { dev.anvil.ade.workspace.WorkspaceTree.findFirstFile(it) }
     _selectedFile.value = firstFile
     _editorContent.value = firstFile?.content ?: ""
-    _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path) - ${tree.size} item ditemukan"
+  
+      ensureSteeringFiles(cloneTargetDir)  _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path) - ${tree.size} item ditemukan"
+    ensureSteeringFiles(root)
   }
 
   fun cloneGitHubProject(repoUrl: String, branch: String, token: String) {
