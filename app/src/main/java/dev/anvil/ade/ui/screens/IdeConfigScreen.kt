@@ -47,7 +47,7 @@ fun IdeConfigScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, "Back", tint = AcsOnSurface)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = AcsOnSurface)
             }
             Spacer(Modifier.width(8.dp))
             Text(
@@ -70,7 +70,7 @@ fun IdeConfigScreen(
                 // NDK Version selector
                 Box {
                     AcsCardRow(
-                        icon = Icons.Default.Build,
+                        icon = Icons.Filled.Build,
                         title = "Android NDK",
                         subtitle = selectedNdk,
                         onClick = { ndkExpanded = true }
@@ -107,7 +107,7 @@ fun IdeConfigScreen(
                         )
                     ) {
                         Icon(
-                            Icons.Default.Download,
+                            Icons.Filled.Download,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
@@ -121,7 +121,7 @@ fun IdeConfigScreen(
                 // CMake Version selector
                 Box {
                     AcsCardRow(
-                        icon = Icons.Default.Terminal,
+                        icon = Icons.Filled.Terminal,
                         title = "CMake",
                         subtitle = selectedCmake,
                         onClick = { cmakeExpanded = true }
@@ -158,7 +158,7 @@ fun IdeConfigScreen(
                         )
                     ) {
                         Icon(
-                            Icons.Default.Download,
+                            Icons.Filled.Download,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
@@ -174,17 +174,17 @@ fun IdeConfigScreen(
 
             AcsCardGroup {
                 AcsCardRow(
-                    icon = Icons.Default.AccountTree,
+                    icon = Icons.Filled.AccountTree,
                     title = "Gradle JDK",
                     subtitle = "JDK 21 (embedded)"
                 )
                 AcsCardRow(
-                    icon = Icons.Default.Memory,
+                    icon = Icons.Filled.Memory,
                     title = "Daemon Memory",
                     subtitle = "2048 MB"
                 )
                 AcsCardRow(
-                    icon = Icons.Default.Speed,
+                    icon = Icons.Filled.Speed,
                     title = "Parallel Builds",
                     subtitle = "Enabled"
                 )

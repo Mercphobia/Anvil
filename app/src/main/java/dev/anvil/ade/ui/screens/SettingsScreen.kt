@@ -54,7 +54,7 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, "Back", tint = AcsOnSurface)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = AcsOnSurface)
             }
             Spacer(Modifier.width(8.dp))
             Text(
@@ -76,7 +76,7 @@ fun SettingsScreen(
 
             AcsCardGroup {
                 AcsCardSwitchRow(
-                    icon = Icons.Default.DarkMode,
+                    icon = Icons.Filled.DarkMode,
                     title = "Dark Theme",
                     subtitle = if (darkTheme) "Dark mode enabled" else "Light mode enabled",
                     checked = darkTheme,
@@ -91,7 +91,7 @@ fun SettingsScreen(
             AcsCardGroup {
                 // Autonomy level selector
                 AcsCardRow(
-                    icon = Icons.Default.AutoAwesome,
+                    icon = Icons.Filled.AutoAwesome,
                     title = "Autonomy Level",
                     subtitle = autonomyLabels[autonomyLevel] + " — " + autonomyDescriptions[autonomyLevel],
                     modifier = Modifier
@@ -133,14 +133,14 @@ fun SettingsScreen(
 
             AcsCardGroup {
                 AcsCardSwitchRow(
-                    icon = Icons.Default.Hub,
+                    icon = Icons.Filled.Hub,
                     title = "MCP Server",
                     subtitle = "Model Context Protocol integration",
                     checked = mcpServer,
                     onCheckedChange = { mcpServer = it }
                 )
                 AcsCardSwitchRow(
-                    icon = Icons.Default.Link,
+                    icon = Icons.Filled.Link,
                     title = "Hooks",
                     subtitle = "Pre/post action automation hooks",
                     checked = hooksEnabled,
@@ -154,7 +154,7 @@ fun SettingsScreen(
 
             AcsCardGroup {
                 AcsCardRow(
-                    icon = Icons.Default.Info,
+                    icon = Icons.Filled.Info,
                     title = "Anvil Studio",
                     subtitle = "Version 1.0.0-dev • Built for Android"
                 )

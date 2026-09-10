@@ -69,7 +69,7 @@ fun BuildOutputPanel(
       Spacer(Modifier.weight(1f))
       IconButton(onClick = onClose, modifier = Modifier.size(28.dp)) {
         Icon(
-          Icons.Default.Close,
+          Icons.Filled.Close,
           contentDescription = "Close panel",
           tint = AcsOnSurfaceDim,
           modifier = Modifier.size(16.dp)

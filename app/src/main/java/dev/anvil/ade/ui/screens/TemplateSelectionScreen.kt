@@ -65,7 +65,7 @@ fun TemplateSelectionScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, "Back", tint = AcsOnSurface)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = AcsOnSurface)
             }
             Spacer(Modifier.width(8.dp))
             Column(Modifier.weight(1f)) {

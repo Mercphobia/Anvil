@@ -61,7 +61,7 @@ fun ProjectConfigScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.Default.ArrowBack, "Back", tint = AcsOnSurface)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = AcsOnSurface)
             }
             Spacer(Modifier.width(8.dp))
             Text(
@@ -120,7 +120,7 @@ fun ProjectConfigScreen(
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         Icon(
-                            if (languageExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                            if (languageExpanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
                             contentDescription = null,
                             tint = AcsOnSurfaceVariant
                         )
@@ -169,7 +169,7 @@ fun ProjectConfigScreen(
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         Icon(
-                            if (sdkExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                            if (sdkExpanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
                             contentDescription = null,
                             tint = AcsOnSurfaceVariant
                         )
