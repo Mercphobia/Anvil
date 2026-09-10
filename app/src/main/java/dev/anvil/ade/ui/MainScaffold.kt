@@ -68,12 +68,7 @@ import dev.anvil.ade.ui.components.GitSidebar
 import dev.anvil.ade.ui.components.ProjectSidebar
 import dev.anvil.ade.ui.components.ProviderSettingsDialog
 import dev.anvil.ade.ui.components.TerminalSidebar
-import dev.anvil.ade.ui.screens.ChatScreen
-import dev.anvil.ade.ui.screens.EditorScreen
-import dev.anvil.ade.ui.screens.GitScreen
-import dev.anvil.ade.ui.screens.MockupScreen
-import dev.anvil.ade.ui.screens.TerminalScreen
-import dev.anvil.ade.ui.screens.WelcomeScreen
+import dev.anvil.ade.ui.screens.*
 import dev.anvil.ade.viewmodel.AnvilViewModel
 import kotlinx.coroutines.launch
 
