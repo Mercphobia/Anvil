@@ -69,7 +69,6 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -77,6 +76,7 @@ import dev.anvil.ade.model.ProjectType
 import dev.anvil.ade.model.AgentStep
 import dev.anvil.ade.model.StepKind
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import dev.anvil.ade.ui.theme.GeistMono
 
 @Composable
 fun ChatScreen(
@@ -338,7 +338,7 @@ fun ChatScreen(
             Text(
               text = cmd,
               style = MaterialTheme.typography.bodySmall,
-              fontFamily = FontFamily.Monospace,
+              fontFamily = GeistMono,
               color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(
@@ -876,7 +876,7 @@ private fun GeminiToolCallStep(step: AgentStep) {
       Spacer(modifier = Modifier.width(8.dp))
       Text(
         text = step.text,
-        fontFamily = FontFamily.Monospace,
+        fontFamily = GeistMono,
         fontSize = 11.sp,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.weight(1f)
@@ -914,7 +914,7 @@ private fun GeminiToolResultStep(step: AgentStep) {
       Spacer(modifier = Modifier.width(6.dp))
       Text(
         text = step.text,
-        fontFamily = FontFamily.Monospace,
+        fontFamily = GeistMono,
         fontSize = 10.sp,
         color = MaterialTheme.colorScheme.onSurfaceVariant
       )

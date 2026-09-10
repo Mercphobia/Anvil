@@ -52,12 +52,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import dev.anvil.ade.ui.theme.GeistMono
 
 @Composable
 fun TerminalScreen(
@@ -116,7 +116,7 @@ fun TerminalScreen(
         Spacer(modifier = Modifier.width(6.dp))
         Text(
           text = branch,
-          fontFamily = FontFamily.Monospace,
+          fontFamily = GeistMono,
           fontSize = 11.sp,
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -151,7 +151,7 @@ fun TerminalScreen(
           Text(
             text = "Build APK",
             fontSize = 11.sp,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = GeistMono,
             fontWeight = FontWeight.Medium
           )
         },
@@ -171,7 +171,7 @@ fun TerminalScreen(
             Text(
               text = label,
               fontSize = 11.sp,
-              fontFamily = FontFamily.Monospace,
+              fontFamily = GeistMono,
               fontWeight = FontWeight.Medium
             )
           },
@@ -208,7 +208,7 @@ fun TerminalScreen(
           androidx.compose.foundation.text.selection.SelectionContainer {
             Text(
               text = terminalLogs,
-              fontFamily = FontFamily.Monospace,
+              fontFamily = GeistMono,
               fontSize = 12.sp,
               lineHeight = 18.sp,
               color = MaterialTheme.colorScheme.onSurface
@@ -246,13 +246,13 @@ fun TerminalScreen(
           Text(
             text = "sh — ketik perintah (git status, npm run, …)",
             fontSize = 12.sp,
-            fontFamily = FontFamily.Monospace
+            fontFamily = GeistMono
           )
         },
         leadingIcon = {
           Text(
             text = "\u276F",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = GeistMono,
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.primary
           )
@@ -263,7 +263,7 @@ fun TerminalScreen(
         shape = RoundedCornerShape(14.dp),
         singleLine = true,
         textStyle = androidx.compose.ui.text.TextStyle(
-          fontFamily = FontFamily.Monospace,
+          fontFamily = GeistMono,
           fontSize = 12.sp
         ),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),

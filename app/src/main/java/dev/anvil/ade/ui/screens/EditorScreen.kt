@@ -28,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -37,6 +36,7 @@ import dev.anvil.ade.editor.SoraEditorWrapper
 import dev.anvil.ade.ui.components.ErrorChipPeek
 import dev.anvil.ade.ui.components.ErrorLogBottomSheet
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import dev.anvil.ade.ui.theme.GeistMono
 
 /**
  * Code editor screen (anvil_ui spec Bagian 1). Opened when a file is tapped
@@ -82,7 +82,7 @@ fun EditorScreen(
           text = selectedFile?.name ?: "No file",
           fontSize = 14.sp,
           fontWeight = FontWeight.Medium,
-          fontFamily = FontFamily.Monospace,
+          fontFamily = GeistMono,
           color = MaterialTheme.colorScheme.onSurface,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis

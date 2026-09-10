@@ -35,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,6 +43,7 @@ import dev.anvil.ade.model.DiffLine
 import dev.anvil.ade.model.ProjectFile
 import dev.anvil.ade.model.StepKind
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import dev.anvil.ade.ui.theme.GeistMono
 
 /** One changed file derived from the live unified diff (path + +/- counts). */
 internal data class GitChangedFile(
@@ -153,7 +153,7 @@ private fun SectionLabel(text: String) {
         fontSize = 10.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 1.sp,
-        fontFamily = FontFamily.Monospace,
+        fontFamily = GeistMono,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 4.dp)
     )
@@ -242,7 +242,7 @@ fun ProjectSidebar(viewModel: AnvilViewModel, onClose: () -> Unit) {
                         text = "${changed.size} files changed",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = GeistMono,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.weight(1f))

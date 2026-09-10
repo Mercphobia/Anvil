@@ -71,13 +71,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.ui.theme.ForgeNeonCyan
 import dev.anvil.ade.ui.theme.ForgeNeonGreen
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import dev.anvil.ade.ui.theme.GeistMono
 
 @Composable
 fun MockupScreen(
@@ -441,7 +441,7 @@ fun MockupScreen(
               text = effectiveValidation,
               style = MaterialTheme.typography.labelSmall,
               color = MaterialTheme.colorScheme.primary,
-              fontFamily = FontFamily.Monospace,
+              fontFamily = GeistMono,
               modifier = Modifier.weight(1f)
             )
           }
@@ -453,7 +453,7 @@ fun MockupScreen(
               .fillMaxSize()
               .testTag("mockup_xml_editor"),
             textStyle = TextStyle(
-              fontFamily = FontFamily.Monospace,
+              fontFamily = GeistMono,
               fontSize = 11.sp,
               color = MaterialTheme.colorScheme.onSurface,
               lineHeight = 17.sp

@@ -12,9 +12,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import dev.anvil.ade.ui.theme.GeistMono
 
 /**
  * Agent Config screen: manual editing of SOUL.md, project memory, and the
@@ -73,7 +73,7 @@ private fun EditableTextPanel(value: String, onValueChange: (String) -> Unit, on
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.weight(1f).fillMaxWidth(),
-            textStyle = androidx.compose.ui.text.TextStyle(fontFamily = FontFamily.Monospace)
+            textStyle = androidx.compose.ui.text.TextStyle(fontFamily = GeistMono)
         )
         Button(onClick = onSave, modifier = Modifier.align(Alignment.End).padding(top = 8.dp)) {
             Text("Simpan")

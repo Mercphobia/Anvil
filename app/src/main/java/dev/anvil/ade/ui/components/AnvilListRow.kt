@@ -20,11 +20,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.anvil.ade.ui.theme.GeistSans
+import dev.anvil.ade.ui.theme.GeistMono
 
 /**
  * Universal list row contract (anvil_ui spec: AnvilListRow, 32dp circular
@@ -64,7 +65,7 @@ fun AnvilListRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    fontFamily = if (titleMono) FontFamily.Monospace else FontFamily.Default,
+                    fontFamily = if (titleMono) GeistMono else GeistSans,
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,

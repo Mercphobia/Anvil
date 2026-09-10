@@ -48,7 +48,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,6 +58,7 @@ import dev.anvil.ade.ui.theme.ForgeDiffDelBg
 import dev.anvil.ade.ui.theme.ForgeDiffDelText
 import dev.anvil.ade.ui.theme.ForgeTerminalBg
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import dev.anvil.ade.ui.theme.GeistMono
 
 @Composable
 fun GitScreen(
@@ -101,7 +101,7 @@ fun GitScreen(
           text = branch,
           style = MaterialTheme.typography.titleSmall,
           fontWeight = FontWeight.Bold,
-          fontFamily = FontFamily.Monospace,
+          fontFamily = GeistMono,
           color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -136,14 +136,14 @@ fun GitScreen(
         Column(modifier = Modifier.padding(10.dp)) {
           Text(
             text = "Remote: $remote",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = GeistMono,
             fontSize = 11.sp,
             color = MaterialTheme.colorScheme.onSurface
           )
           Spacer(modifier = Modifier.height(2.dp))
           Text(
             text = "Credential: Keystore Encrypted",
-            fontFamily = FontFamily.Monospace,
+            fontFamily = GeistMono,
             fontSize = 11.sp,
             color = MaterialTheme.colorScheme.tertiary
           )
@@ -257,7 +257,7 @@ val added = diffLines.count { it.type == DiffLine.Type.ADD }
                     Text(
             text = "+$added -$deleted additions/deletions",
             style = MaterialTheme.typography.labelSmall,
-            fontFamily = FontFamily.Monospace,
+            fontFamily = GeistMono,
             color = ForgeDiffAddText
           )
         }
@@ -303,14 +303,14 @@ private fun DiffRow(line: DiffLine) {
     if (line.type != DiffLine.Type.HEADER) {
       Text(
         text = line.oldLineNo?.toString() ?: " ",
-        fontFamily = FontFamily.Monospace,
+        fontFamily = GeistMono,
         fontSize = 10.sp,
         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
         modifier = Modifier.width(26.dp)
       )
       Text(
         text = line.newLineNo?.toString() ?: " ",
-        fontFamily = FontFamily.Monospace,
+        fontFamily = GeistMono,
         fontSize = 10.sp,
         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
         modifier = Modifier.width(26.dp)
@@ -319,7 +319,7 @@ private fun DiffRow(line: DiffLine) {
 
     Text(
       text = line.text,
-      fontFamily = FontFamily.Monospace,
+      fontFamily = GeistMono,
       fontSize = 11.sp,
       color = textColor,
       lineHeight = 16.sp,

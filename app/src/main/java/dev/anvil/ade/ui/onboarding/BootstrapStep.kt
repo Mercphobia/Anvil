@@ -23,11 +23,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import dev.anvil.ade.ui.theme.GeistMono
 
 /**
  * Runs the embedded bootstrap setup automatically on entry and streams
@@ -84,7 +84,7 @@ fun BootstrapStep(viewModel: AnvilViewModel) {
         ) {
             Text(
                 text = log,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = GeistMono,
                 fontSize = 11.sp,
                 lineHeight = 16.sp,
                 color = MaterialTheme.colorScheme.onSurface,
