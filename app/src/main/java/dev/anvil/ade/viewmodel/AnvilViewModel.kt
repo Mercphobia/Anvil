@@ -846,8 +846,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     val firstFile = tree.firstNotNullOfOrNull { dev.anvil.ade.workspace.WorkspaceTree.findFirstFile(it) }
     _selectedFile.value = firstFile
     _editorContent.value = firstFile?.content ?: ""
-  
-      ensureSteeringFiles(cloneTargetDir)  _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path) - ${tree.size} item ditemukan"
+    _projectNotice.value = "Berhasil memuat proyek lokal: $name ($path) - ${tree.size} item ditemukan"
     ensureSteeringFiles(root)
   }
 
@@ -895,6 +894,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       val firstFile = tree.firstNotNullOfOrNull { dev.anvil.ade.workspace.WorkspaceTree.findFirstFile(it) }
       _selectedFile.value = firstFile
       _editorContent.value = firstFile?.content ?: ""
+      ensureSteeringFiles(cloneTargetDir)
     }
   }
 

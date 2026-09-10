@@ -161,7 +161,7 @@ class LlmClient(private val config: ProviderConfig) {
             }
         } else {
         val responseText = post(config.baseUrl + "/v1/messages", headers, body.toString())
-        return try {
+        try {
             val root = JsonParser.parseString(responseText).asJsonObject
             val blocks = mutableListOf<ContentBlock>()
             root.getAsJsonArray("content")?.forEach { el ->
@@ -291,7 +291,7 @@ class LlmClient(private val config: ProviderConfig) {
             }
         } else {
         val responseText = post(url, headers, body.toString())
-        return try {
+        try {
             val root = JsonParser.parseString(responseText).asJsonObject
             val choice = root.getAsJsonArray("choices").first().asJsonObject
             val message = choice.getAsJsonObject("message")
@@ -323,7 +323,8 @@ class LlmClient(private val config: ProviderConfig) {
     // ------------------------------------------------------------------
 
     private suspend fun sendGemini(
-        systemPrompt: String, messages: List<Message>, tools: List<ToolDefinition>
+        systemPrompt: String, messages: List<Message>, tools: List<ToolDefinition>,
+        onTextDelta: (suspend (String) -> Unit)? = null
     ): Result<LlmResponse> {
         val body = JsonObject().apply {
             add("systemInstruction", JsonObject().apply {
@@ -404,7 +405,7 @@ class LlmClient(private val config: ProviderConfig) {
             }
         } else {
         val responseText = post(url, mapOf("content-type" to "application/json"), body.toString())
-        return try {
+        try {
             val root = JsonParser.parseString(responseText).asJsonObject
             val candidate = root.getAsJsonArray("candidates").first().asJsonObject
             val blocks = mutableListOf<ContentBlock>()

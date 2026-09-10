@@ -61,7 +61,7 @@ object SteeringFileGenerator {
             ?.filterIsInstance<LlmClient.ContentBlock.Text>()
             ?.joinToString("") { it.text } ?: ""
 
-        val parsed = parseSteeringJson(text)
+        val parsed = parseSteeringJson(text, projectType)
         dir.mkdirs()
         File(dir, "product.md").writeText(parsed.product)
         File(dir, "structure.md").writeText(parsed.structure)
@@ -70,7 +70,7 @@ object SteeringFileGenerator {
     }
 
     /** Extract the {...} JSON object from a reply that may carry markdown fences. */
-    private fun parseSteeringJson(reply: String): Steering {
+    private fun parseSteeringJson(reply: String, projectType: ProjectType): Steering {
         val start = reply.indexOf('{')
         val end = reply.lastIndexOf('}')
         if (start >= 0 && end > start) {
