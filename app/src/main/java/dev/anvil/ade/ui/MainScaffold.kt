@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.model.ProjectType
 import dev.anvil.ade.ui.components.ChatSidebar
+import dev.anvil.ade.ui.components.CloneGitSheet
 import dev.anvil.ade.ui.components.GitSidebar
 import dev.anvil.ade.ui.components.ProjectSidebar
 import dev.anvil.ade.ui.components.ProviderSettingsDialog
@@ -324,8 +325,14 @@ fun MainScaffold(viewModel: AnvilViewModel) {
       ) { paddingValues ->
         if (showWelcome) {
           // Fullscreen Welcome Page
-          WelcomeScreen(
-            viewModel = viewModel,
+          HomeScreen(
+            onCreateProject = { viewModel.startNewProject() },
+            onOpenProject = { viewModel.toggleOpenProjectDialog(true) },
+            onCloneGit = { viewModel.setRoute("clone") },
+            onOpenTerminal = { viewModel.setRoute("terminal") },
+            onOpenPreferences = { viewModel.setRoute("preferences") },
+            onOpenIdeConfig = { viewModel.setRoute("ideconfig") },
+            onOpenDocs = { },
             modifier = Modifier
               .fillMaxSize()
               .padding(paddingValues)
@@ -415,6 +422,15 @@ fun MainScaffold(viewModel: AnvilViewModel) {
                       MockupScreen(viewModel = viewModel)
                     }
                   }
+                  "home" -> HomeScreen(onCreateProject = { viewModel.startNewProject() }, onOpenProject = { viewModel.toggleOpenProjectDialog(true) }, onCloneGit = { viewModel.setRoute("clone") }, onOpenTerminal = { viewModel.setRoute("terminal") }, onOpenPreferences = { viewModel.setRoute("preferences") }, onOpenIdeConfig = { viewModel.setRoute("ideconfig") }, onOpenDocs = { })
+                  "preferences" -> PreferencesScreen(onBack = { viewModel.setRoute("home") })
+                  "projectconfig" -> ProjectConfigScreen(onBack = { viewModel.setRoute("home") }, onCreateProject = { n, p, l, lang, sdk, kts -> viewModel.createProject(n, p, l, lang, sdk, kts) })
+                  "templates" -> TemplateSelectionScreen(onBack = { viewModel.setRoute("projectconfig") }, onSelectTemplate = { viewModel.applyProjectTemplate(it) })
+                  "sdkinstall" -> SdkInstallationScreen(onBack = { viewModel.setRoute("home") }, onDone = { s, j, n, g, ssh -> viewModel.installSdk(s, j, n, g, ssh) })
+                  "ideconfig" -> IdeConfigScreen(onBack = { viewModel.setRoute("home") })
+                  "settings" -> SettingsScreen(onBack = { viewModel.setRoute("home") })
+                  "clone" -> CloneGitSheet(onDismiss = { viewModel.setRoute("home") }, onClone = { url, branch, token -> viewModel.cloneGitHubProject(url, branch, token) })
+
                   else -> ChatScreen(viewModel = viewModel)
                 }
               }
