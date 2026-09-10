@@ -85,6 +85,7 @@ data class NavDestination(
 fun MainScaffold(viewModel: AnvilViewModel) {
   val currentRoute by viewModel.currentRoute.collectAsState()
   val showWelcome by viewModel.showWelcome.collectAsState()
+  val activeProjectName by viewModel.activeProjectName.collectAsState()
   val showSetupWizard by viewModel.showSetupWizard.collectAsState()
   val activeType by viewModel.activeType.collectAsState()
   val providerConfig by viewModel.providerConfig.collectAsState()
@@ -323,7 +324,9 @@ fun MainScaffold(viewModel: AnvilViewModel) {
           }
         }
       ) { paddingValues ->
-        if (showWelcome) {
+        // Show HomeScreen when no project is open
+        val noProject = activeProjectName.isEmpty()
+        if (noProject) {
           // Fullscreen Welcome Page
           HomeScreen(
             onCreateProject = { viewModel.startNewProject() },
