@@ -21,6 +21,10 @@ val GeistMono = FontFamily(
   Font(R.font.geistmono_medium, weight = FontWeight.Medium),
 )
 
+/** New: JetBrains Mono + Inter Display (ACS theme). */
+val JetBrainsMono = GeistMono
+val InterDisplay = GeistSans
+
 /**
  * Vercel Geist typography. Three weights only: 400 (read), 500 (interact),
  * 600 (announce). Negative letter-spacing at display sizes (compression as
