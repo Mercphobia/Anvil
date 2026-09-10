@@ -1,5 +1,6 @@
 package dev.anvil.ade.ui.components
 
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -110,45 +111,47 @@ fun ProjectTemplateDialog(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        templates.forEach { (id, title, desc) ->
+        templates.forEachIndexed { idx, (id, title, desc) ->
           val isSelected = selectedId == id
-          Card(
-            onClick = { selectedId = id },
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(
-              containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-              else MaterialTheme.colorScheme.surfaceContainerLow
-            ),
+          Box(
             modifier = Modifier
               .fillMaxWidth()
-              .padding(vertical = 4.dp)
               .then(
-                if (isSelected) Modifier.border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(14.dp))
+                if (isSelected) Modifier.border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
                 else Modifier
               )
+              .clip(RoundedCornerShape(12.dp))
           ) {
-            Row(
-              modifier = Modifier.padding(14.dp),
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Icon(
-                imageVector = when (id) {
-                  "empty_activity" -> Icons.Filled.Layers
-                  "no_activity" -> Icons.Filled.Memory
-                  "basic_views" -> Icons.Filled.Code
-                  "github_clone" -> Icons.Filled.CloudDownload
-                  else -> Icons.Filled.Palette
-                },
-                contentDescription = null,
-                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(22.dp)
-              )
-              Spacer(modifier = Modifier.width(12.dp))
-              Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text(desc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-              }
-            }
+            AnvilListRow(
+              leadingIcon = {
+                Icon(
+                  imageVector = when (id) {
+                    "empty_activity" -> Icons.Filled.Layers
+                    "no_activity" -> Icons.Filled.Memory
+                    "basic_views" -> Icons.Filled.Code
+                    "github_clone" -> Icons.Filled.CloudDownload
+                    else -> Icons.Filled.Dashboard
+                  },
+                  contentDescription = null,
+                  tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                  modifier = Modifier.size(16.dp)
+                )
+              },
+              title = title,
+              subtitle = desc,
+              trailing = {
+                if (isSelected) {
+                  Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = "Terpilih",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                  )
+                }
+              },
+              onClick = { selectedId = id },
+              showDivider = false
+            )
           }
         }
 

@@ -1,7 +1,12 @@
 package dev.anvil.ade.ui.screens
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -92,10 +97,28 @@ private fun SkillsTab(
         Column(Modifier.width(140.dp)) {
             TextButton(onClick = { showCreate = true }) { Text("+ Skill baru") }
             LazyColumn {
-                items(skills) { slug ->
-                    TextButton(onClick = { selected = slug; onSelect(slug) }) {
-                        Text(slug, maxLines = 1)
-                    }
+                itemsIndexed(skills) { idx, slug ->
+                    dev.anvil.ade.ui.components.AnvilListRow(
+                        leadingIcon = {
+                            dev.anvil.ade.ui.components.AnvilRowLetter(
+                                slug.take(1).uppercase()
+                            )
+                        },
+                        title = slug,
+                        titleMono = true,
+                        trailing = {
+                            if (selected == slug) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Skill terpilih",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        },
+                        onClick = { selected = slug; onSelect(slug) },
+                        showDivider = idx != skills.lastIndex
+                    )
                 }
             }
         }
