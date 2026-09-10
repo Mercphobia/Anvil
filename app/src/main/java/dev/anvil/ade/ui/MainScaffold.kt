@@ -324,7 +324,7 @@ fun MainScaffold(viewModel: AnvilViewModel) {
       ) { paddingValues ->
         if (showWelcome) {
           // Fullscreen Welcome Page
-          WelcomeScreen(
+          HomeScreen(
             viewModel = viewModel,
             modifier = Modifier
               .fillMaxSize()
@@ -415,6 +415,34 @@ fun MainScaffold(viewModel: AnvilViewModel) {
                       MockupScreen(viewModel = viewModel)
                     }
                   }
+                  "home" -> HomeScreen(
+                    onCreateProject = { viewModel.startNewProject() },
+                    onOpenProject = { viewModel.toggleOpenProjectDialog(true) },
+                    onCloneGit = { viewModel.setRoute("clone") },
+                    onOpenTerminal = { viewModel.setRoute("terminal") },
+                    onOpenPreferences = { viewModel.setRoute("preferences") },
+                    onOpenIdeConfig = { viewModel.setRoute("ideconfig") },
+                    onOpenDocs = { }
+                  )
+                  "preferences" -> PreferencesScreen(onBack = { viewModel.setRoute("home") })
+                  "projectconfig" -> ProjectConfigScreen(
+                    onBack = { viewModel.setRoute("home") },
+                    onCreateProject = { n, p, l, lang, sdk, kts -> viewModel.createProject(n, p, l, lang, sdk, kts) }
+                  )
+                  "templates" -> TemplateSelectionScreen(
+                    onBack = { viewModel.setRoute("projectconfig") },
+                    onSelectTemplate = { viewModel.applyProjectTemplate(it) }
+                  )
+                  "sdkinstall" -> SdkInstallationScreen(
+                    onBack = { viewModel.setRoute("home") },
+                    onDone = { s, j, n, g, ssh -> viewModel.installSdk(s, j, n, g, ssh) }
+                  )
+                  "ideconfig" -> IdeConfigScreen(onBack = { viewModel.setRoute("home") })
+                  "settings" -> SettingsScreen(onBack = { viewModel.setRoute("home") })
+                  "clone" -> CloneGitSheet(
+                    onDismiss = { viewModel.setRoute("home") },
+                    onClone = { url, branch, token -> viewModel.cloneGitHubProject(url, branch, token) }
+                  )
                   else -> ChatScreen(viewModel = viewModel)
                 }
               }
