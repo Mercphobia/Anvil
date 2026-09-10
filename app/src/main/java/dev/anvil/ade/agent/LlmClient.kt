@@ -134,7 +134,7 @@ class LlmClient(private val config: ProviderConfig) {
             val blocks = mutableListOf<ContentBlock>()
             var textBuf = StringBuilder()
             var stopReason = ""
-            try {
+            return try {
                 postStream(config.baseUrl + "/v1/messages", headers, body.toString()) { data ->
                     when (JsonParser.parseString(data).asJsonObject.get("type")?.asString) {
                         "content_block_start" -> {}
@@ -159,9 +159,9 @@ class LlmClient(private val config: ProviderConfig) {
                 // Fall back to non-streaming on any SSE failure
                 sendClaude(systemPrompt, messages, tools, null)
             }
-        } else {
+        }
         val responseText = post(config.baseUrl + "/v1/messages", headers, body.toString())
-        try {
+        return try {
             val root = JsonParser.parseString(responseText).asJsonObject
             val blocks = mutableListOf<ContentBlock>()
             root.getAsJsonArray("content")?.forEach { el ->
@@ -180,7 +180,6 @@ class LlmClient(private val config: ProviderConfig) {
             Result.success(LlmResponse(blocks, root.get("stop_reason")?.asString ?: ""))
         } catch (t: Throwable) {
             Result.failure(Exception("claude parse error: ${t.message} :: ${responseText.take(300)}"))
-        }
         }
     }
 
@@ -272,7 +271,7 @@ class LlmClient(private val config: ProviderConfig) {
         val url = config.baseUrl.trimEnd('/') + "/chat/completions"
         if (onTextDelta != null) {
             val textBuf = StringBuilder()
-            try {
+            return try {
                 postStream(url, headers, body.toString()) { data ->
                     if (data == "[DONE]") return@postStream
                     val obj = JsonParser.parseString(data).asJsonObject
@@ -289,9 +288,9 @@ class LlmClient(private val config: ProviderConfig) {
                 // Fall back to non-streaming on any SSE failure
                 sendOpenAiCompatible(systemPrompt, messages, tools, null)
             }
-        } else {
+        }
         val responseText = post(url, headers, body.toString())
-        try {
+        return try {
             val root = JsonParser.parseString(responseText).asJsonObject
             val choice = root.getAsJsonArray("choices").first().asJsonObject
             val message = choice.getAsJsonObject("message")
@@ -314,7 +313,6 @@ class LlmClient(private val config: ProviderConfig) {
             Result.success(LlmResponse(blocks, choice.get("finish_reason")?.asString ?: ""))
         } catch (t: Throwable) {
             Result.failure(Exception("openai parse error: ${t.message} :: ${responseText.take(300)}"))
-        }
         }
     }
 
@@ -384,7 +382,7 @@ class LlmClient(private val config: ProviderConfig) {
         if (onTextDelta != null) {
             val streamUrl = url.replace(":generateContent?key=", ":streamGenerateContent?alt=sse&key=")
             val textBuf = StringBuilder()
-            try {
+            return try {
                 postStream(streamUrl, mapOf("content-type" to "application/json"), body.toString()) { data ->
                     val obj = JsonParser.parseString(data).asJsonObject
                     val parts = obj.getAsJsonArray("candidates")?.firstOrNull()
@@ -403,9 +401,9 @@ class LlmClient(private val config: ProviderConfig) {
                 // Fall back to non-streaming on any SSE failure
                 sendGemini(systemPrompt, messages, tools, null)
             }
-        } else {
+        }
         val responseText = post(url, mapOf("content-type" to "application/json"), body.toString())
-        try {
+        return try {
             val root = JsonParser.parseString(responseText).asJsonObject
             val candidate = root.getAsJsonArray("candidates").first().asJsonObject
             val blocks = mutableListOf<ContentBlock>()
@@ -428,7 +426,6 @@ class LlmClient(private val config: ProviderConfig) {
             Result.success(LlmResponse(blocks, candidate.get("finishReason")?.asString ?: ""))
         } catch (t: Throwable) {
             Result.failure(Exception("gemini parse error: ${t.message} :: ${responseText.take(300)}"))
-        }
         }
     }
 
