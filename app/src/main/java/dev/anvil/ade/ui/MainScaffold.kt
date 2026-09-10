@@ -168,7 +168,7 @@ fun MainScaffold(viewModel: AnvilViewModel) {
           modifier = Modifier.width(drawerWidth),
           drawerContainerColor = MaterialTheme.colorScheme.surface
         ) {
-          val closeDrawer = { scope.launch { drawerState.close() } }
+          val closeDrawer: () -> Unit = { scope.launch { drawerState.close() } }
           when (currentRoute) {
             "chat" -> ChatSidebar(viewModel = viewModel, onClose = closeDrawer)
             "git" -> GitSidebar(viewModel = viewModel, onClose = closeDrawer)
