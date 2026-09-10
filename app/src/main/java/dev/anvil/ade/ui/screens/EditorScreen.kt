@@ -28,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,6 +35,13 @@ import dev.anvil.ade.editor.SoraEditorWrapper
 import dev.anvil.ade.ui.components.ErrorChipPeek
 import dev.anvil.ade.ui.components.ErrorLogBottomSheet
 import dev.anvil.ade.viewmodel.AnvilViewModel
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
 import dev.anvil.ade.ui.theme.GeistMono
 
 /**
@@ -58,12 +64,21 @@ fun EditorScreen(
   var scrollRequestLine by remember { mutableStateOf<Int?>(null) }
 
   Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
-    // ---- Top bar (spec: 56dp, hamburger + file name + relative path) ----
+    // ---- Top bar: file tabs (120dp, scrollable, close button) ----
+    val openFiles = remember { mutableStateListOf<dev.anvil.ade.model.ProjectFile>() }
+    LaunchedEffect(selectedFile) {
+      selectedFile?.let { file ->
+        if (openFiles.none { it.path == file.path }) {
+          openFiles.add(file)
+        }
+      }
+    }
+
     Row(
       modifier = Modifier
         .fillMaxWidth()
         .height(56.dp)
-        .padding(horizontal = 14.dp, vertical = 12.dp),
+        .padding(start = 14.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
       verticalAlignment = Alignment.CenterVertically
     ) {
       IconButton(
@@ -76,29 +91,62 @@ fun EditorScreen(
           tint = MaterialTheme.colorScheme.onSurface
         )
       }
-      Spacer(modifier = Modifier.width(10.dp))
-      Column(modifier = Modifier.weight(1f)) {
-        Text(
-          text = selectedFile?.name ?: "No file",
-          fontSize = 14.sp,
-          fontWeight = FontWeight.Medium,
-          fontFamily = GeistMono,
-          color = MaterialTheme.colorScheme.onSurface,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis
-        )
-        selectedFile?.path?.let { path ->
-          Text(
-            text = path,
-            fontSize = 11.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-          )
+      Spacer(modifier = Modifier.width(8.dp))
+
+      LazyRow(
+        modifier = Modifier.weight(1f),
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+      ) {
+        items(openFiles.toList(), key = { it.path }) { file ->
+          val isSelected = file.path == (selectedFile?.path ?: "")
+          Box(
+            modifier = Modifier
+              .width(120.dp)
+              .height(32.dp)
+              .background(
+                color = if (isSelected)
+                  MaterialTheme.colorScheme.surfaceContainer
+                else
+                  MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+              )
+              .padding(horizontal = 8.dp),
+            contentAlignment = Alignment.CenterStart
+          ) {
+            Row(
+              modifier = Modifier.fillMaxSize(),
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Text(
+                text = file.name,
+                fontSize = 11.sp,
+                fontFamily = GeistMono,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+              )
+              IconButton(
+                onClick = {
+                  openFiles.remove(file)
+                  if (selectedFile?.path == file.path) {
+                    openFiles.lastOrNull()?.let { viewModel.selectFile(it) }
+                  }
+                },
+                modifier = Modifier.size(16.dp)
+              ) {
+                Icon(
+                  imageVector = Icons.Filled.Close,
+                  contentDescription = "Tutup tab",
+                  tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                  modifier = Modifier.size(10.dp)
+                )
+              }
+            }
+          }
         }
       }
-      // Preview button: ONLY for .xml layout files (mockup is a contextual
-      // view now, not a nav tab).
+
       if (selectedFile?.name?.endsWith(".xml") == true) {
         IconButton(onClick = { viewModel.setRoute("mockup") }) {
           Icon(
@@ -139,7 +187,7 @@ fun EditorScreen(
       } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
           Text(
-            text = "Buka file dari Project Sidebar",
+            text = "Open the left drawer for files",
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
           )

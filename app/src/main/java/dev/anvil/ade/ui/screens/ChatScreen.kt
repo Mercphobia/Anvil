@@ -4,14 +4,15 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,6 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
@@ -753,22 +755,21 @@ private fun GeminiUserMessage(step: AgentStep) {
   Row(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(vertical = 2.dp),
+      .padding(vertical = 3.dp),
     horizontalArrangement = Arrangement.End
   ) {
     Surface(
-      shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = 4.dp),
-      color = MaterialTheme.colorScheme.surfaceContainerHigh,
-      modifier = Modifier.fillMaxWidth(0.85f)
+      shape = RoundedCornerShape(18.dp),
+      color = MaterialTheme.colorScheme.surfaceContainer,
+      modifier = Modifier.fillMaxWidth(0.80f)
     ) {
-      Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-        Text(
-          text = step.text,
-          style = MaterialTheme.typography.bodyMedium,
-          color = MaterialTheme.colorScheme.onSurface,
-          lineHeight = 20.sp
-        )
-      }
+      Text(
+        text = step.text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        lineHeight = 20.sp,
+        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+      )
     }
   }
 }
@@ -782,30 +783,19 @@ private fun GeminiAgentMessage(
   Row(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(vertical = 4.dp),
-    horizontalArrangement = Arrangement.Start
+      .height(IntrinsicSize.Min)
+      .padding(vertical = 6.dp)
   ) {
-    // Gemini Spark Icon
+    // Claude-style left accent strip (subtle)
     Box(
       modifier = Modifier
-        .size(28.dp)
-        .clip(CircleShape)
-        .background(
-          Brush.linearGradient(
-            listOf(Color(0xFF4285F4), Color(0xFF9B51E0), Color(0xFFEA4335))
-          )
-        ),
-      contentAlignment = Alignment.Center
-    ) {
-      Icon(
-        imageVector = Icons.Filled.AutoAwesome,
-        contentDescription = null,
-        tint = Color.White,
-        modifier = Modifier.size(14.dp)
-      )
-    }
+        .width(2.dp)
+        .fillMaxHeight()
+        .clip(RoundedCornerShape(1.dp))
+        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+    )
 
-    Spacer(modifier = Modifier.width(12.dp))
+    Spacer(modifier = Modifier.width(14.dp))
 
     Column(modifier = Modifier.weight(1f)) {
       Text(
@@ -815,38 +805,36 @@ private fun GeminiAgentMessage(
         lineHeight = 22.sp
       )
 
-      // Gemini Response Quick Actions Row
+      // Subtle action row — muted, small icons
       Row(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+          .padding(top = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
-        IconButton(onClick = onCopy, modifier = Modifier.size(28.dp)) {
+        IconButton(onClick = onCopy, modifier = Modifier.size(24.dp)) {
           Icon(
             imageVector = Icons.Filled.ContentCopy,
-            contentDescription = "Salin tanggapan",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(14.dp)
+            contentDescription = "Salin",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            modifier = Modifier.size(12.dp)
           )
         }
-
-        IconButton(onClick = onOpenEditor, modifier = Modifier.size(28.dp)) {
+        IconButton(onClick = onOpenEditor, modifier = Modifier.size(24.dp)) {
           Icon(
             imageVector = Icons.Filled.Code,
-            contentDescription = "Buka di Editor",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(14.dp)
+            contentDescription = "Editor",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            modifier = Modifier.size(12.dp)
           )
         }
-
-        IconButton(onClick = {}, modifier = Modifier.size(28.dp)) {
+        IconButton(onClick = {}, modifier = Modifier.size(24.dp)) {
           Icon(
             imageVector = Icons.Filled.ThumbUp,
             contentDescription = "Suka",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(14.dp)
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+            modifier = Modifier.size(12.dp)
           )
         }
       }
@@ -856,59 +844,23 @@ private fun GeminiAgentMessage(
 
 @Composable
 private fun GeminiToolCallStep(step: AgentStep) {
-  Surface(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(start = 36.dp, top = 2.dp, bottom = 2.dp),
-    shape = RoundedCornerShape(12.dp),
-    color = MaterialTheme.colorScheme.surfaceContainerLow
-  ) {
-    Row(
-      modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Icon(
-        imageVector = Icons.Filled.Code,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(14.dp)
-      )
-      Spacer(modifier = Modifier.width(8.dp))
-      Text(
-        text = step.text,
-        fontFamily = GeistMono,
-        fontSize = 11.sp,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.weight(1f)
-      )
-      step.executionMs?.let { ms ->
-        Text(
-          text = "${ms}ms",
-          fontSize = 10.sp,
-          color = MaterialTheme.colorScheme.outline
-        )
-      }
-    }
-  }
-}
+  var expanded by remember { mutableStateOf(false) }
 
-@Composable
-private fun GeminiToolResultStep(step: AgentStep) {
-  Surface(
+  Column(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(start = 44.dp, top = 1.dp, bottom = 2.dp),
-    shape = RoundedCornerShape(10.dp),
-    color = MaterialTheme.colorScheme.surfaceContainer
+      .padding(start = 16.dp, top = 1.dp, bottom = 1.dp)
   ) {
     Row(
-      modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+      modifier = Modifier
+        .fillMaxWidth()
+        .clickable { expanded = !expanded },
       verticalAlignment = Alignment.CenterVertically
     ) {
       Icon(
-        imageVector = Icons.Filled.Check,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
+        imageVector = if (expanded) Icons.Filled.KeyboardArrowDown else Icons.Filled.Code,
+        contentDescription = if (expanded) "Collapse" else "Expand",
+        tint = MaterialTheme.colorScheme.onSurfaceDim,
         modifier = Modifier.size(12.dp)
       )
       Spacer(modifier = Modifier.width(6.dp))
@@ -916,44 +868,108 @@ private fun GeminiToolResultStep(step: AgentStep) {
         text = step.text,
         fontFamily = GeistMono,
         fontSize = 10.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        color = MaterialTheme.colorScheme.onSurfaceDim,
+        modifier = Modifier.weight(1f),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+      )
+      step.executionMs?.let { ms ->
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+          text = "${ms}ms",
+          fontSize = 9.sp,
+          fontFamily = GeistMono,
+          color = MaterialTheme.colorScheme.outline
+        )
+      }
+    }
+    AnimatedVisibility(visible = expanded) {
+      Text(
+        text = step.text,
+        fontFamily = GeistMono,
+        fontSize = 10.sp,
+        color = MaterialTheme.colorScheme.onSurfaceDim,
+        lineHeight = 15.sp,
+        modifier = Modifier.padding(start = 18.dp, top = 2.dp, bottom = 4.dp)
       )
     }
   }
 }
 
 @Composable
-private fun GeminiInfoCard(step: AgentStep) {
-  Surface(
+private fun GeminiToolResultStep(step: AgentStep) {
+  var expanded by remember { mutableStateOf(false) }
+
+  Row(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(start = 36.dp, top = 2.dp),
-    shape = RoundedCornerShape(10.dp),
-    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)
+      .padding(start = 32.dp, top = 1.dp, bottom = 1.dp)
+      .clickable { expanded = !expanded },
+    verticalAlignment = Alignment.CenterVertically
   ) {
+    Icon(
+      imageVector = Icons.Filled.Check,
+      contentDescription = null,
+      tint = MaterialTheme.colorScheme.onSurfaceDim.copy(alpha = 0.6f),
+      modifier = Modifier.size(10.dp)
+    )
+    Spacer(modifier = Modifier.width(6.dp))
+    Text(
+      text = step.text,
+      fontFamily = GeistMono,
+      fontSize = 10.sp,
+      color = MaterialTheme.colorScheme.onSurfaceDim.copy(alpha = 0.7f),
+      modifier = Modifier.weight(1f),
+      maxLines = if (expanded) Int.MAX_VALUE else 2,
+      overflow = TextOverflow.Ellipsis
+    )
+  }
+}
+
+@Composable
+private fun GeminiInfoCard(step: AgentStep) {
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(vertical = 2.dp)
+  ) {
+    Box(
+      modifier = Modifier
+        .width(2.dp)
+        .height(20.dp)
+        .clip(RoundedCornerShape(1.dp))
+        .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.25f))
+    )
+    Spacer(modifier = Modifier.width(12.dp))
     Text(
       text = step.text,
       style = MaterialTheme.typography.bodySmall,
-      color = MaterialTheme.colorScheme.onSecondaryContainer,
-      modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier = Modifier.padding(vertical = 2.dp)
     )
   }
 }
 
 @Composable
 private fun GeminiErrorCard(step: AgentStep) {
-  Surface(
+  Row(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(start = 36.dp, top = 2.dp),
-    shape = RoundedCornerShape(10.dp),
-    color = MaterialTheme.colorScheme.errorContainer
+      .padding(vertical = 2.dp)
   ) {
+    Box(
+      modifier = Modifier
+        .width(2.dp)
+        .height(20.dp)
+        .clip(RoundedCornerShape(1.dp))
+        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+    )
+    Spacer(modifier = Modifier.width(12.dp))
     Text(
       text = "Error: ${step.text}",
       style = MaterialTheme.typography.bodySmall,
-      color = MaterialTheme.colorScheme.onErrorContainer,
-      modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+      color = MaterialTheme.colorScheme.error,
+      modifier = Modifier.padding(vertical = 2.dp)
     )
   }
 }
