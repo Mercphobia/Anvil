@@ -56,7 +56,7 @@ fun MainScaffold(viewModel: AnvilViewModel) {
   val scope = rememberCoroutineScope()
 
   val isProjectOpen = projectName.isNotEmpty() && currentRoute != "home"
-  val isHomeRoute = currentRoute == "home" || (projectName.isEmpty() && currentRoute !in listOf("preferences", "ideconfig", "sdkinstall", "projectconfig", "templates"))
+  val isHomeRoute = currentRoute == "home" || (projectName.isEmpty() && currentRoute !in listOf("preferences", "ideconfig", "sdkinstall", "projectconfig", "templates", "clone"))
 
   // 4-tab nav
   val destinations = listOf(
@@ -123,6 +123,24 @@ fun MainScaffold(viewModel: AnvilViewModel) {
           viewModel.createProject(name, pkg, loc, lang, sdk, kts)
         }
       )
+      return
+    }
+    "clone" -> {
+      Box(
+        modifier = Modifier
+          .fillMaxSize()
+          .background(MaterialTheme.colorScheme.background.copy(alpha = 0.6f))
+          .clickable { viewModel.setRoute("home") },
+        contentAlignment = Alignment.BottomCenter
+      ) {
+        CloneGitSheet(
+          onDismiss = { viewModel.setRoute("home") },
+          onClone = { url, branch, shallow ->
+            viewModel.cloneGitHubProject(url, branch, "")
+            viewModel.setRoute("home")
+          }
+        )
+      }
       return
     }
     "templates" -> {

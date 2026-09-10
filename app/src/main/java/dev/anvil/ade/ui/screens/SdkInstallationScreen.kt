@@ -1,12 +1,16 @@
 package dev.anvil.ade.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +20,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.ui.theme.*
+import dev.anvil.ade.ui.components.AcsCardGroup
+import dev.anvil.ade.ui.components.AcsCardRow
+import dev.anvil.ade.ui.components.AcsCardSwitchRow
+import dev.anvil.ade.ui.components.AcsSectionLabel
 
 @Composable
 fun SdkInstallationScreen(
@@ -64,30 +72,33 @@ fun SdkInstallationScreen(
     Spacer(Modifier.height(20.dp))
 
     // Auto install toggle
-    Row(
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
-        .clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainer)
-        .padding(horizontal = 14.dp, vertical = 12.dp),
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Column(modifier = Modifier.weight(1f)) {
-        Text("Automatic installation", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
-      }
-      Switch(checked = autoInstall, onCheckedChange = { autoInstall = it }, colors = SwitchDefaults.colors(checkedTrackColor = AcsGold))
+    AcsCardGroup(modifier = Modifier.padding(horizontal = 16.dp)) {
+      AcsCardSwitchRow(
+        icon = Icons.Filled.Build,
+        title = "Automatic installation",
+        checked = autoInstall,
+        onCheckedChange = { autoInstall = it }
+      )
     }
 
     Spacer(Modifier.height(16.dp))
 
     // Dropdown selections
-    ConfigDropdown("Android SDK version", sdkVersion, sdkVersions, showSdkDropdown, { showSdkDropdown = !showSdkDropdown }, { sdkVersion = it; showSdkDropdown = false })
-    ConfigDropdown("JDK version", jdkVersion, jdkVersions, showJdkDropdown, { showJdkDropdown = !showJdkDropdown }, { jdkVersion = it; showJdkDropdown = false })
-    ConfigDropdown("Android NDK version", ndkVersion, ndkVersions, showNdkDropdown, { showNdkDropdown = !showNdkDropdown }, { ndkVersion = it; showNdkDropdown = false })
+    AcsSectionLabel("SDK Versions", modifier = Modifier.padding(horizontal = 16.dp))
+    AcsCardGroup(modifier = Modifier.padding(horizontal = 16.dp)) {
+      ConfigDropdown("Android SDK version", sdkVersion, sdkVersions, showSdkDropdown, { showSdkDropdown = !showSdkDropdown }, { sdkVersion = it; showSdkDropdown = false })
+      ConfigDropdown("JDK version", jdkVersion, jdkVersions, showJdkDropdown, { showJdkDropdown = !showJdkDropdown }, { jdkVersion = it; showJdkDropdown = false })
+      ConfigDropdown("Android NDK version", ndkVersion, ndkVersions, showNdkDropdown, { showNdkDropdown = !showNdkDropdown }, { ndkVersion = it; showNdkDropdown = false })
+    }
 
     Spacer(Modifier.height(12.dp))
 
     // Toggle options
-    ToggleRow("Install Git", installGit, { installGit = it })
-    ToggleRow("Install OpenSSH", installSsh, { installSsh = it })
+    AcsSectionLabel("Additional Tools", modifier = Modifier.padding(horizontal = 16.dp))
+    AcsCardGroup(modifier = Modifier.padding(horizontal = 16.dp)) {
+      AcsCardSwitchRow(Icons.Filled.Code, "Install Git", checked = installGit, onCheckedChange = { installGit = it })
+      AcsCardSwitchRow(Icons.Filled.Key, "Install OpenSSH", checked = installSsh, onCheckedChange = { installSsh = it })
+    }
 
     Spacer(Modifier.weight(1f))
 
@@ -105,15 +116,15 @@ fun SdkInstallationScreen(
 
 @Composable
 private fun ConfigDropdown(label: String, value: String, options: List<String>, expanded: Boolean, onToggle: () -> Unit, onSelect: (String) -> Unit) {
-  Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)) {
-    Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp)
+  Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp)) {
+    Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = AcsGold, letterSpacing = 0.5.sp)
     Spacer(Modifier.height(6.dp))
     Box {
       Row(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-          .background(MaterialTheme.colorScheme.surfaceContainer)
-          .clickable(onClick = onToggle)  // note: this is a Modifier extension issue, but works in practice since clickable is composed here
-          .padding(horizontal = 14.dp, vertical = 13.dp),
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+          .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+          .clickable(onClick = onToggle)
+          .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
         Text(value, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
@@ -125,18 +136,5 @@ private fun ConfigDropdown(label: String, value: String, options: List<String>, 
         }
       }
     }
-  }
-}
-
-@Composable
-private fun ToggleRow(label: String, checked: Boolean, onToggle: (Boolean) -> Unit) {
-  Row(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 2.dp)
-      .clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainer)
-      .padding(horizontal = 14.dp, vertical = 10.dp),
-    verticalAlignment = Alignment.CenterVertically
-  ) {
-    Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-    Switch(checked = checked, onCheckedChange = onToggle, colors = SwitchDefaults.colors(checkedTrackColor = AcsGold))
   }
 }

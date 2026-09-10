@@ -12,11 +12,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.ui.theme.*
+import dev.anvil.ade.ui.components.AcsCardGroup
+import dev.anvil.ade.ui.components.AcsCardRow
+import dev.anvil.ade.ui.components.AcsSectionLabel
 
 @Composable
 fun IdeConfigScreen(
@@ -50,60 +52,61 @@ fun IdeConfigScreen(
 
     Spacer(Modifier.height(16.dp))
 
-    // NDK
-    ConfigCard(
-      label = "Android development kit",
-      current = "Installed NDK Version: $ndkVersion",
-      versions = ndkVersions,
-      expanded = showNdkDropdown,
-      onToggle = { showNdkDropdown = !showNdkDropdown },
-      onDownload = { ndkVersion = it; showNdkDropdown = false }
-    )
-
-    Spacer(Modifier.height(12.dp))
-
-    // CMake
-    ConfigCard(
-      label = "CMake build system",
-      current = "Installed CMake Version: $cmakeVersion",
-      versions = cmakeVersions,
-      expanded = showCmakeDropdown,
-      onToggle = { showCmakeDropdown = !showCmakeDropdown },
-      onDownload = { cmakeVersion = it; showCmakeDropdown = false }
-    )
+    AcsSectionLabel("Build Tools", modifier = Modifier.padding(horizontal = 16.dp))
+    AcsCardGroup(modifier = Modifier.padding(horizontal = 16.dp)) {
+      // NDK
+      ConfigRow(
+        label = "Android NDK",
+        current = ndkVersion,
+        versions = ndkVersions,
+        expanded = showNdkDropdown,
+        onToggle = { showNdkDropdown = !showNdkDropdown },
+        onSelect = { ndkVersion = it; showNdkDropdown = false }
+      )
+      // CMake
+      ConfigRow(
+        label = "CMake",
+        current = cmakeVersion,
+        versions = cmakeVersions,
+        expanded = showCmakeDropdown,
+        onToggle = { showCmakeDropdown = !showCmakeDropdown },
+        onSelect = { cmakeVersion = it; showCmakeDropdown = false }
+      )
+    }
   }
 }
 
 @Composable
-private fun ConfigCard(
+private fun ConfigRow(
   label: String, current: String, versions: List<String>,
-  expanded: Boolean, onToggle: () -> Unit, onDownload: (String) -> Unit
+  expanded: Boolean, onToggle: () -> Unit, onSelect: (String) -> Unit
 ) {
-  Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-    Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant, letterSpacing = 0.5.sp)
-    Spacer(Modifier.height(6.dp))
-    Column(
-      modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-        .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.7f))
-        .padding(14.dp)
-    ) {
-      Text(current, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-      Spacer(Modifier.height(8.dp))
-      Box {
-        Button(
-          onClick = onToggle,
-          shape = RoundedCornerShape(8.dp),
-          colors = ButtonDefaults.buttonColors(containerColor = AcsGold.copy(alpha = 0.15f)),
-          contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-          Icon(Icons.Filled.Download, null, tint = AcsGold, modifier = Modifier.size(14.dp))
-          Spacer(Modifier.width(6.dp))
-          Text("Download", fontSize = 12.sp, color = AcsGold, fontWeight = FontWeight.Medium)
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = {}) {
-          versions.forEach { v ->
-            DropdownMenuItem(text = { Text(v, fontSize = 13.sp) }, onClick = { onDownload(v) })
-          }
+  Column(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(horizontal = 16.dp, vertical = 13.dp)
+  ) {
+    Text(
+      label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+      color = AcsGold, letterSpacing = 0.5.sp
+    )
+    Spacer(Modifier.height(4.dp))
+    Text(current, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
+    Spacer(Modifier.height(8.dp))
+    Box {
+      Button(
+        onClick = onToggle,
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = AcsGold.copy(alpha = 0.15f)),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+      ) {
+        Icon(Icons.Filled.Download, null, tint = AcsGold, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(6.dp))
+        Text("Download", fontSize = 12.sp, color = AcsGold, fontWeight = FontWeight.Medium)
+      }
+      DropdownMenu(expanded = expanded, onDismissRequest = {}) {
+        versions.forEach { v ->
+          DropdownMenuItem(text = { Text(v, fontSize = 13.sp) }, onClick = { onSelect(v) })
         }
       }
     }
