@@ -2,9 +2,11 @@ package dev.anvil.ade.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,111 +16,118 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.anvil.ade.ui.components.AcsCardGroup
+import dev.anvil.ade.ui.components.AcsCardRow
+import dev.anvil.ade.ui.components.AcsSectionLabel
 import dev.anvil.ade.ui.theme.*
 
 @Composable
 fun HomeScreen(
-  onNewProject: () -> Unit,
-  onOpenProject: () -> Unit,
-  onCloneProject: () -> Unit,
-  modifier: Modifier = Modifier
+    onCreateProject: () -> Unit,
+    onOpenProject: () -> Unit,
+    onCloneGit: () -> Unit,
+    onOpenTerminal: () -> Unit,
+    onOpenPreferences: () -> Unit,
+    onOpenIdeConfig: () -> Unit,
+    onOpenDocs: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-  Column(
-    modifier = modifier
-      .fillMaxSize()
-      .background(AcsBg)
-      .padding(24.dp),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.Center
-  ) {
-    Spacer(Modifier.weight(0.6f))
-
-    // Hero icon
-    Box(
-      modifier = Modifier
-        .size(72.dp)
-        .clip(RoundedCornerShape(18.dp))
-        .background(
-          Brush.linearGradient(listOf(AcsGold, AcsTeal))
-        ),
-      contentAlignment = Alignment.Center
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AcsBg)
+            .padding(top = 48.dp, bottom = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Text("⚒", fontSize = 32.sp)
-    }
-
-    Spacer(Modifier.height(24.dp))
-
-    // Headline
-    Text(
-      "Your Ideas, Anywhere.",
-      fontSize = 26.sp,
-      fontWeight = FontWeight.SemiBold,
-      color = AcsOnSurface,
-      textAlign = TextAlign.Center,
-      fontFamily = InterDisplay,
-      letterSpacing = (-0.5).sp
-    )
-
-    Spacer(Modifier.height(8.dp))
-
-    Text(
-      "Build Android apps, Node.js services, and more —\non-device, with an AI pair programmer.",
-      fontSize = 14.sp,
-      color = AcsOnSurfaceVariant,
-      textAlign = TextAlign.Center,
-      lineHeight = 21.sp
-    )
-
-    Spacer(Modifier.height(36.dp))
-
-    // Actions
-    HomeActionButton("New Project", "Start fresh with a template", AcsGold, onNewProject)
-    Spacer(Modifier.height(10.dp))
-    HomeActionButton("Open Project", "Open an existing local project", AcsTeal, onOpenProject)
-    Spacer(Modifier.height(10.dp))
-    HomeActionButton("Clone Git Repo", "Clone from GitHub or GitLab", AcsOnSurfaceVariant, onCloneProject)
-
-    Spacer(Modifier.weight(0.8f))
-  }
-}
-
-@Composable
-private fun HomeActionButton(
-  title: String,
-  subtitle: String,
-  accent: androidx.compose.ui.graphics.Color,
-  onClick: () -> Unit
-) {
-  Surface(
-    onClick = onClick,
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(14.dp),
-    color = AcsSurface2,
-    tonalElevation = 0.dp
-  ) {
-    Row(
-      modifier = Modifier.padding(16.dp),
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Box(
-        modifier = Modifier
-          .size(40.dp)
-          .clip(RoundedCornerShape(10.dp))
-          .background(accent.copy(alpha = 0.12f)),
-        contentAlignment = Alignment.Center
-      ) {
+        // Hero logo mark
         Box(
-          modifier = Modifier
-            .size(8.dp)
-            .clip(CircleShape)
-            .background(accent)
+            modifier = Modifier
+                .size(72.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(Brush.linearGradient(listOf(AcsGold, AcsTeal))),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("⚒", fontSize = 32.sp)
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // Headline
+        Text(
+            "Android Code Studio",
+            fontSize = 26.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = AcsOnSurface,
+            textAlign = TextAlign.Center,
+            fontFamily = InterDisplay,
+            letterSpacing = (-0.5).sp
         )
-      }
-      Spacer(Modifier.width(14.dp))
-      Column {
-        Text(title, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = AcsOnSurface)
-        Text(subtitle, fontSize = 12.sp, color = AcsOnSurfaceDim)
-      }
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            "Your Ideas, Anywhere.",
+            fontSize = 15.sp,
+            color = AcsGold,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(Modifier.height(28.dp))
+
+        // Action rows
+        AcsCardGroup {
+            AcsCardRow(
+                icon = Icons.Filled.Add,
+                title = "Create Project",
+                subtitle = "Start fresh from a template",
+                onClick = onCreateProject
+            )
+            AcsCardRow(
+                icon = Icons.Filled.FolderOpen,
+                title = "Open Project",
+                subtitle = "Open an existing local project",
+                onClick = onOpenProject
+            )
+            AcsCardRow(
+                icon = Icons.Outlined.CloudDownload,
+                title = "Clone Git Repo",
+                subtitle = "Clone from GitHub, GitLab or any remote",
+                onClick = onCloneGit
+            )
+            AcsCardRow(
+                icon = Icons.Filled.Terminal,
+                title = "Open Terminal",
+                subtitle = "Direct shell access to your environment",
+                onClick = onOpenTerminal
+            )
+            AcsCardRow(
+                icon = Icons.Filled.Settings,
+                title = "Preferences",
+                subtitle = "Editor, keymap, and workspace settings",
+                onClick = onOpenPreferences
+            )
+            AcsCardRow(
+                icon = Icons.Filled.Build,
+                title = "IDE Configuration",
+                subtitle = "SDK, NDK, CMake and toolchains",
+                onClick = onOpenIdeConfig
+            )
+            AcsCardRow(
+                icon = Icons.Filled.MenuBook,
+                title = "Documentation",
+                subtitle = "Guides, API reference, and tutorials",
+                onClick = onOpenDocs
+            )
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        Text(
+            "Anvil Studio • v1.0.0-dev",
+            fontSize = 11.sp,
+            color = AcsOnSurfaceDim,
+            fontFamily = JetBrainsMono
+        )
     }
-  }
 }

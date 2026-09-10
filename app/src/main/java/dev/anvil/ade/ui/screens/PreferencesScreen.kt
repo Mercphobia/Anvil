@@ -6,97 +6,132 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.ui.components.AcsCardGroup
 import dev.anvil.ade.ui.components.AcsCardRow
-import dev.anvil.ade.ui.components.AcsCardSwitchRow
 import dev.anvil.ade.ui.components.AcsSectionLabel
 import dev.anvil.ade.ui.theme.*
 
-/** IDE Preferences: editor, keymap, font size, and auto-save settings. */
 @Composable
 fun PreferencesScreen(
-  editorFontSize: Int,
-  showLineNumbers: Boolean,
-  wordWrap: Boolean,
-  autoSave: Boolean,
-  onEditorFontSize: (Int) -> Unit,
-  onShowLineNumbers: (Boolean) -> Unit,
-  onWordWrap: (Boolean) -> Unit,
-  onAutoSave: (Boolean) -> Unit,
-  modifier: Modifier = Modifier
+    onBack: () -> Unit,
+    onOpenGeneral: () -> Unit = {},
+    onOpenEditor: () -> Unit = {},
+    onOpenAiAgent: () -> Unit = {},
+    onOpenBuildRun: () -> Unit = {},
+    onOpenTermux: () -> Unit = {},
+    onOpenPrivacy: () -> Unit = {},
+    onOpenDevOptions: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
-  Column(
-    modifier = modifier
-      .fillMaxSize()
-      .background(AcsBg)
-      .verticalScroll(rememberScrollState())
-      .padding(bottom = 32.dp)
-  ) {
-    AcsSectionLabel("EDITOR")
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AcsBg)
+    ) {
+        // Top bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(AcsSurface1)
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Filled.ArrowBack, "Back", tint = AcsOnSurface)
+            }
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "IDE Preferences",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AcsOnSurface,
+                fontFamily = InterDisplay
+            )
+        }
 
-    AcsCardGroup {
-      AcsCardRow(
-        icon = Icons.Default.TextFields,
-        title = "Font Size",
-        subtitle = "${editorFontSize}sp"
-      )
-      AcsCardRow(
-        icon = Icons.Default.FormatListNumbered,
-        title = "Show Line Numbers",
-        subtitle = if (showLineNumbers) "Enabled" else "Disabled"
-      )
-      AcsCardSwitchRow(
-        icon = Icons.Default.LineStyle,
-        title = "Word Wrap",
-        checked = wordWrap,
-        onCheckedChange = onWordWrap
-      )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 32.dp)
+        ) {
+            AcsSectionLabel("CONFIGURE")
+
+            AcsCardGroup {
+                AcsCardRow(
+                    icon = Icons.Filled.Tune,
+                    title = "General",
+                    subtitle = "Appearance, language, startup",
+                    onClick = onOpenGeneral
+                )
+                AcsCardRow(
+                    icon = Icons.Filled.Code,
+                    title = "Editor",
+                    subtitle = "Font, line numbers, word wrap, indentation",
+                    onClick = onOpenEditor
+                )
+                AcsCardRow(
+                    icon = Icons.Filled.AutoAwesome,
+                    title = "AI Agent",
+                    subtitle = "Model provider, autonomy, permissions",
+                    onClick = onOpenAiAgent
+                )
+                AcsCardRow(
+                    icon = Icons.Filled.PlayArrow,
+                    title = "Build & Run",
+                    subtitle = "Gradle JDK, daemon memory, compiler flags",
+                    onClick = onOpenBuildRun
+                )
+                AcsCardRow(
+                    icon = Icons.Filled.Terminal,
+                    title = "Termux",
+                    subtitle = "Shell integration, environment variables",
+                    onClick = onOpenTermux
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            AcsSectionLabel("SYSTEM")
+
+            AcsCardGroup {
+                AcsCardRow(
+                    icon = Icons.Filled.Security,
+                    title = "Privacy",
+                    subtitle = "Telemetry, crash reports, data sharing",
+                    onClick = onOpenPrivacy
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            AcsSectionLabel("MORE")
+
+            AcsCardGroup {
+                AcsCardRow(
+                    icon = Icons.Filled.BugReport,
+                    title = "Developer Options",
+                    subtitle = "Debug overlay, layout bounds, GPU profiling",
+                    onClick = onOpenDevOptions
+                )
+                AcsCardRow(
+                    icon = Icons.Filled.Info,
+                    title = "About",
+                    subtitle = "Version, licenses, open-source credits",
+                    onClick = onOpenAbout
+                )
+            }
+        }
     }
-
-    Spacer(Modifier.height(8.dp))
-
-    AcsSectionLabel("WORKSPACE")
-
-    AcsCardGroup {
-      AcsCardSwitchRow(
-        icon = Icons.Default.Save,
-        title = "Auto Save",
-        subtitle = "Save file on focus change",
-        checked = autoSave,
-        onCheckedChange = onAutoSave
-      )
-      AcsCardRow(
-        icon = Icons.Default.Key,
-        title = "Keymap",
-        subtitle = "VSCode-compatible"
-      )
-      AcsCardRow(
-        icon = Icons.Default.ColorLens,
-        title = "Editor Theme",
-        subtitle = "Dark (ACS)"
-      )
-    }
-
-    Spacer(Modifier.height(8.dp))
-
-    AcsSectionLabel("CODE COMPLETION")
-
-    AcsCardGroup {
-      AcsCardRow(
-        icon = Icons.Default.Code,
-        title = "AI Code Completion",
-        subtitle = "Agent-powered suggestions"
-      )
-      AcsCardRow(
-        icon = Icons.Default.Lightbulb,
-        title = "Inline Hints",
-        subtitle = "Parameter names and types"
-      )
-    }
-  }
 }

@@ -2,13 +2,13 @@ package dev.anvil.ade.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
@@ -16,114 +16,189 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.ui.components.AcsCardGroup
 import dev.anvil.ade.ui.components.AcsCardRow
-import dev.anvil.ade.ui.components.AcsCardSwitchRow
 import dev.anvil.ade.ui.components.AcsSectionLabel
 import dev.anvil.ade.ui.theme.*
 
-/** NDK, CMake, and native toolchain configuration screen. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IdeConfigScreen(
-  ndkVersion: String,
-  cmakeVersion: String,
-  useNdk: Boolean,
-  useCcache: Boolean,
-  onToggleNdk: (Boolean) -> Unit,
-  onToggleCcache: (Boolean) -> Unit,
-  onConfigureNdk: () -> Unit,
-  onConfigureCmake: () -> Unit,
-  modifier: Modifier = Modifier
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-  Column(
-    modifier = modifier
-      .fillMaxSize()
-      .background(AcsBg)
-      .verticalScroll(rememberScrollState())
-      .padding(bottom = 32.dp)
-  ) {
-    // Header
-    Box(
-      modifier = Modifier
-        .fillMaxWidth()
-        .background(AcsSurface1)
-        .padding(20.dp)
+    var ndkExpanded by remember { mutableStateOf(false) }
+    var cmakeExpanded by remember { mutableStateOf(false) }
+    var selectedNdk by remember { mutableStateOf("27.0.12077973") }
+    var selectedCmake by remember { mutableStateOf("3.30.2") }
+
+    val ndkOptions = listOf("26.3.11579264", "27.0.12077973", "28.0.12433566")
+    val cmakeOptions = listOf("3.22.1", "3.28.4", "3.30.2")
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AcsBg)
     ) {
-      Column {
-        Text(
-          "IDE Configuration",
-          fontSize = 22.sp,
-          fontWeight = FontWeight.SemiBold,
-          color = AcsOnSurface,
-          fontFamily = InterDisplay
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-          "Native toolchains and compiler flags",
-          fontSize = 13.sp,
-          color = AcsOnSurfaceVariant
-        )
-      }
+        // Top bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(AcsSurface1)
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.ArrowBack, "Back", tint = AcsOnSurface)
+            }
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "IDE Configuration",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AcsOnSurface,
+                fontFamily = InterDisplay
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+        ) {
+            AcsSectionLabel("NATIVE TOOLCHAINS")
+
+            AcsCardGroup {
+                // NDK Version selector
+                Box {
+                    AcsCardRow(
+                        icon = Icons.Default.Build,
+                        title = "Android NDK",
+                        subtitle = selectedNdk,
+                        onClick = { ndkExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = ndkExpanded,
+                        onDismissRequest = { ndkExpanded = false }
+                    ) {
+                        ndkOptions.forEach { ndk ->
+                            DropdownMenuItem(
+                                text = { Text(ndk, color = AcsOnSurface) },
+                                onClick = {
+                                    selectedNdk = ndk
+                                    ndkExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // NDK download button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    OutlinedButton(
+                        onClick = { /* trigger NDK download */ },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AcsGold),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(
+                            brush = androidx.compose.ui.graphics.SolidColor(AcsGold)
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text("Download NDK", fontSize = 13.sp)
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // CMake Version selector
+                Box {
+                    AcsCardRow(
+                        icon = Icons.Default.Terminal,
+                        title = "CMake",
+                        subtitle = selectedCmake,
+                        onClick = { cmakeExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = cmakeExpanded,
+                        onDismissRequest = { cmakeExpanded = false }
+                    ) {
+                        cmakeOptions.forEach { cmake ->
+                            DropdownMenuItem(
+                                text = { Text(cmake, color = AcsOnSurface) },
+                                onClick = {
+                                    selectedCmake = cmake
+                                    cmakeExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // CMake download button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    OutlinedButton(
+                        onClick = { /* trigger CMake download */ },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AcsGold),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(
+                            brush = androidx.compose.ui.graphics.SolidColor(AcsGold)
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Download,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text("Download CMake", fontSize = 13.sp)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            AcsSectionLabel("BUILD SYSTEM")
+
+            AcsCardGroup {
+                AcsCardRow(
+                    icon = Icons.Default.AccountTree,
+                    title = "Gradle JDK",
+                    subtitle = "JDK 21 (embedded)"
+                )
+                AcsCardRow(
+                    icon = Icons.Default.Memory,
+                    title = "Daemon Memory",
+                    subtitle = "2048 MB"
+                )
+                AcsCardRow(
+                    icon = Icons.Default.Speed,
+                    title = "Parallel Builds",
+                    subtitle = "Enabled"
+                )
+            }
+
+            Spacer(Modifier.weight(1f))
+
+            Text(
+                "Changes apply to the next Gradle sync.",
+                fontSize = 11.sp,
+                color = AcsOnSurfaceDim,
+                fontFamily = JetBrainsMono,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
     }
-
-    Spacer(Modifier.height(16.dp))
-
-    AcsSectionLabel("NATIVE TOOLCHAINS")
-
-    AcsCardGroup {
-      AcsCardSwitchRow(
-        icon = Icons.Default.Build,
-        title = "Android NDK",
-        subtitle = if (useNdk) "Version $ndkVersion" else "Native compilation disabled",
-        checked = useNdk,
-        onCheckedChange = onToggleNdk
-      )
-      AcsCardRow(
-        icon = Icons.Default.Settings,
-        title = "NDK Path",
-        subtitle = ndkVersion,
-        onClick = onConfigureNdk
-      )
-    }
-
-    Spacer(Modifier.height(8.dp))
-
-    AcsCardGroup {
-      AcsCardRow(
-        icon = Icons.Default.Terminal,
-        title = "CMake",
-        subtitle = "Version $cmakeVersion",
-        onClick = onConfigureCmake
-      )
-    }
-
-    Spacer(Modifier.height(8.dp))
-
-    AcsSectionLabel("COMPILER FLAGS")
-
-    AcsCardGroup {
-      AcsCardSwitchRow(
-        icon = Icons.Default.Speed,
-        title = "ccache",
-        subtitle = "Accelerate recompilation",
-        checked = useCcache,
-        onCheckedChange = onToggleCcache
-      )
-    }
-
-    Spacer(Modifier.height(8.dp))
-
-    AcsSectionLabel("BUILD SYSTEM")
-
-    AcsCardGroup {
-      AcsCardRow(
-        icon = Icons.Default.AccountTree,
-        title = "Gradle JDK",
-        subtitle = "JDK 21 (embedded)"
-      )
-      AcsCardRow(
-        icon = Icons.Default.Memory,
-        title = "Daemon Memory",
-        subtitle = "2048 MB"
-      )
-    }
-  }
 }
