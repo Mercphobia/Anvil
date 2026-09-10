@@ -20,17 +20,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.CallSplit
-import androidx.compose.material.icons.filled.Android
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ChatBubble
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Preview
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Tune
@@ -68,13 +63,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.model.ProjectType
+import dev.anvil.ade.ui.components.ChatSidebar
+import dev.anvil.ade.ui.components.GitSidebar
+import dev.anvil.ade.ui.components.ProjectSidebar
 import dev.anvil.ade.ui.components.ProviderSettingsDialog
-import dev.anvil.ade.ui.components.WorkingTreeDrawer
-import dev.anvil.ade.ui.screens.BuildScreen
+import dev.anvil.ade.ui.components.TerminalSidebar
 import dev.anvil.ade.ui.screens.ChatScreen
+import dev.anvil.ade.ui.screens.EditorScreen
 import dev.anvil.ade.ui.screens.GitScreen
 import dev.anvil.ade.ui.screens.MockupScreen
-import dev.anvil.ade.ui.screens.ProjectScreen
 import dev.anvil.ade.ui.screens.TerminalScreen
 import dev.anvil.ade.ui.screens.WelcomeScreen
 import dev.anvil.ade.viewmodel.AnvilViewModel
@@ -103,13 +100,19 @@ fun MainScaffold(viewModel: AnvilViewModel) {
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
 
+  // Keep the diff fresh so sidebar "N files changed" is honest.
+  androidx.compose.runtime.LaunchedEffect(currentRoute) {
+    viewModel.refreshGitDiff()
+  }
+
+  // 3-tab nav (user decision, FINAL): Chat / Git / Terminal.
+  // Project files live in the Project Sidebar (drawer); build output is
+  // merged into the Terminal panel; mockup preview is a contextual view
+  // from the editor's Preview button.
   val destinations = listOf(
     NavDestination("chat", "Chat", Icons.Filled.ChatBubble, hasBadge = isBusy),
-    NavDestination("terminal", "Terminal", Icons.Filled.Terminal),
-    NavDestination("project", "Project", Icons.Filled.Folder),
-    NavDestination("mockup", "Mockup", Icons.Filled.Palette),
     NavDestination("git", "Git", Icons.AutoMirrored.Filled.CallSplit),
-    NavDestination("build", "Build", Icons.Filled.Android, hasBadge = isBuilding)
+    NavDestination("terminal", "Terminal", Icons.Filled.Terminal, hasBadge = isBuilding)
   )
 
   if (showSetupWizard) {
@@ -125,6 +128,22 @@ fun MainScaffold(viewModel: AnvilViewModel) {
     )
   }
 
+  if (showOpenProjectDialog) {
+    dev.anvil.ade.ui.components.OpenProjectDialog(
+      onDismiss = { viewModel.toggleOpenProjectDialog(false) },
+      onOpenLocal = { name, path -> viewModel.openLocalProject(name, path) },
+      onCloneGitHub = { url, branch, token -> viewModel.cloneGitHubProject(url, branch, token) }
+    )
+  }
+
+  val showTemplateDialog by viewModel.showTemplateDialog.collectAsState()
+  if (showTemplateDialog) {
+    dev.anvil.ade.ui.components.ProjectTemplateDialog(
+      onDismiss = { viewModel.toggleTemplateDialog(false) },
+      onSelectTemplate = { templateId -> viewModel.applyProjectTemplate(templateId) }
+    )
+  }
+
   if (showAgentConfig) {
     dev.anvil.ade.ui.screens.AgentConfigScreen(
       viewModel = viewModel,
@@ -137,18 +156,24 @@ fun MainScaffold(viewModel: AnvilViewModel) {
   BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
     val isWideScreen = maxWidth >= 600.dp
 
+    // Sidebar width: 78% of screen (anvil_ui component spec).
+    val drawerWidth = maxWidth * 0.78f
+
     ModalNavigationDrawer(
       drawerState = drawerState,
       gesturesEnabled = !showWelcome,
       drawerContent = {
         ModalDrawerSheet(
-          modifier = Modifier.width(320.dp),
+          modifier = Modifier.width(drawerWidth),
           drawerContainerColor = MaterialTheme.colorScheme.surface
         ) {
-          WorkingTreeDrawer(
-            viewModel = viewModel,
-            onClose = { scope.launch { drawerState.close() } }
-          )
+          val closeDrawer = { scope.launch { drawerState.close() } }
+          when (currentRoute) {
+            "chat" -> ChatSidebar(viewModel = viewModel, onClose = closeDrawer)
+            "git" -> GitSidebar(viewModel = viewModel, onClose = closeDrawer)
+            "terminal" -> TerminalSidebar(viewModel = viewModel, onClose = closeDrawer)
+            else -> ProjectSidebar(viewModel = viewModel, onClose = closeDrawer)
+          }
         }
       }
     ) {
@@ -359,11 +384,41 @@ fun MainScaffold(viewModel: AnvilViewModel) {
               ) { route ->
                 when (route) {
                   "chat" -> ChatScreen(viewModel = viewModel)
-                  "terminal" -> TerminalScreen(viewModel = viewModel)
-                  "project" -> ProjectScreen(viewModel = viewModel)
-                  "mockup" -> MockupScreen(viewModel = viewModel)
                   "git" -> GitScreen(viewModel = viewModel)
-                  "build" -> BuildScreen(viewModel = viewModel)
+                  "terminal" -> TerminalScreen(viewModel = viewModel)
+                  "editor" -> EditorScreen(
+                    viewModel = viewModel,
+                    onOpenSidebar = { scope.launch { drawerState.open() } }
+                  )
+                  "mockup" -> Column(modifier = Modifier.fillMaxSize()) {
+                    // Mockup preview is a contextual view opened from the
+                    // editor's Preview button — back returns to the editor.
+                    Row(
+                      modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .padding(horizontal = 8.dp),
+                      verticalAlignment = Alignment.CenterVertically
+                    ) {
+                      IconButton(onClick = { viewModel.setRoute("editor") }) {
+                        Icon(
+                          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                          contentDescription = "Kembali ke editor",
+                          tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                          modifier = Modifier.size(18.dp)
+                        )
+                      }
+                      Text(
+                        text = "Preview",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                      )
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                      MockupScreen(viewModel = viewModel)
+                    }
+                  }
                   else -> ChatScreen(viewModel = viewModel)
                 }
               }

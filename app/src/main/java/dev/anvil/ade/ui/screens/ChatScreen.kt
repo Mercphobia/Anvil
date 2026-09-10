@@ -200,7 +200,7 @@ fun ChatScreen(
               StepKind.AGENT_TEXT -> GeminiAgentMessage(
                 step = step,
                 onCopy = { clipboardManager.setText(AnnotatedString(step.text)) },
-                onOpenEditor = { viewModel.setRoute("project") }
+                onOpenEditor = { viewModel.setRoute("editor") }
               )
               StepKind.TOOL_CALL -> GeminiToolCallStep(step)
               StepKind.TOOL_RESULT -> GeminiToolResultStep(step)
@@ -545,7 +545,7 @@ fun ChatScreen(
               leadingIcon = { Icon(Icons.Filled.Code, contentDescription = null) },
               onClick = {
                 showAttachMenu = false
-                viewModel.setRoute("project")
+                viewModel.toggleTemplateDialog(true)
               }
             )
             DropdownMenuItem(
