@@ -75,6 +75,5 @@ dependencies {
     implementation("com.android.tools:r8:8.3.37")
     implementation("com.android.tools.build:apksig:8.3.2")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.78") // self-signed debug keystore
-    implementation("androidx.work:work-runtime-ktx:2.9.1") // WorkManager for background tasks
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
