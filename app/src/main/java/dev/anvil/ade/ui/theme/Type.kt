@@ -8,105 +8,104 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.R
 
-/** Geist Sans (Vercel) - bundled static weights 400/500/600. */
-val GeistSans = FontFamily(
+/** Inter Display (system-like, clean). Falls back to Geist if not bundled. */
+val InterDisplay = FontFamily(
   Font(R.font.geist_regular, weight = FontWeight.Normal),
   Font(R.font.geist_medium, weight = FontWeight.Medium),
   Font(R.font.geist_semibold, weight = FontWeight.SemiBold),
 )
 
-/** Geist Mono (Vercel) - bundled static weights 400/500. */
-val GeistMono = FontFamily(
+/** JetBrains Mono for code. */
+val JetBrainsMono = FontFamily(
   Font(R.font.geistmono_regular, weight = FontWeight.Normal),
   Font(R.font.geistmono_medium, weight = FontWeight.Medium),
 )
 
 /**
- * Vercel Geist typography. Three weights only: 400 (read), 500 (interact),
- * 600 (announce). Negative letter-spacing at display sizes (compression as
- * identity). Geist Mono for technical labels (via FontFamily.Monospace -
- * closest system approximation; Geist fonts can be bundled later).
+ * ACS typography. Warm, readable hierarchy.
+ * Display sizes for the "ACS" logo mark.
+ * Mono for code paths, tech labels, IDE chrome.
  */
 val AnvilTypography = Typography(
   displayLarge = TextStyle(
-    fontFamily = GeistSans,
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.SemiBold,
     fontSize = 38.sp, lineHeight = 42.sp,
-    letterSpacing = (-1.2).sp,
-  ),
-  displayMedium = TextStyle(
-    fontFamily = GeistSans,
-    fontWeight = FontWeight.SemiBold,
-    fontSize = 32.sp, lineHeight = 38.sp,
     letterSpacing = (-1.0).sp,
   ),
-  displaySmall = TextStyle(
-    fontFamily = GeistSans,
+  displayMedium = TextStyle(
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.SemiBold,
-    fontSize = 26.sp, lineHeight = 32.sp,
+    fontSize = 32.sp, lineHeight = 38.sp,
     letterSpacing = (-0.8).sp,
   ),
-  headlineLarge = TextStyle(
-    fontFamily = GeistSans,
+  displaySmall = TextStyle(
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.SemiBold,
-    fontSize = 24.sp, lineHeight = 30.sp,
-    letterSpacing = (-0.96).sp,
+    fontSize = 26.sp, lineHeight = 32.sp,
+    letterSpacing = (-0.6).sp,
   ),
-  headlineMedium = TextStyle(
-    fontFamily = GeistSans,
+  headlineLarge = TextStyle(
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.SemiBold,
-    fontSize = 20.sp, lineHeight = 26.sp,
+    fontSize = 22.sp, lineHeight = 28.sp,
     letterSpacing = (-0.5).sp,
   ),
-  headlineSmall = TextStyle(
-    fontFamily = GeistSans,
+  headlineMedium = TextStyle(
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.SemiBold,
-    fontSize = 18.sp, lineHeight = 24.sp,
+    fontSize = 19.sp, lineHeight = 25.sp,
     letterSpacing = (-0.4).sp,
   ),
+  headlineSmall = TextStyle(
+    fontFamily = InterDisplay,
+    fontWeight = FontWeight.Medium,
+    fontSize = 17.sp, lineHeight = 23.sp,
+    letterSpacing = (-0.3).sp,
+  ),
   titleLarge = TextStyle(
-    fontFamily = GeistSans,
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.SemiBold,
-    fontSize = 16.sp, lineHeight = 22.sp,
-    letterSpacing = (-0.32).sp,
+    fontSize = 15.sp, lineHeight = 21.sp,
+    letterSpacing = (-0.2).sp,
   ),
   titleMedium = TextStyle(
-    fontFamily = GeistSans,
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.Medium,
     fontSize = 14.sp, lineHeight = 20.sp,
   ),
   titleSmall = TextStyle(
-    fontFamily = GeistSans,
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.Medium,
     fontSize = 12.sp, lineHeight = 16.sp,
   ),
   bodyLarge = TextStyle(
-    fontFamily = GeistSans,
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.Normal,
     fontSize = 16.sp, lineHeight = 24.sp,
   ),
   bodyMedium = TextStyle(
-    fontFamily = GeistSans,
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.Normal,
     fontSize = 14.sp, lineHeight = 21.sp,
   ),
   bodySmall = TextStyle(
-    fontFamily = GeistSans,
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.Normal,
     fontSize = 12.sp, lineHeight = 18.sp,
   ),
   labelLarge = TextStyle(
-    fontFamily = GeistSans,
+    fontFamily = InterDisplay,
     fontWeight = FontWeight.Medium,
-    fontSize = 14.sp, lineHeight = 20.sp,
+    fontSize = 13.sp, lineHeight = 18.sp,
   ),
   labelMedium = TextStyle(
-    fontFamily = GeistMono,
+    fontFamily = JetBrainsMono,
     fontWeight = FontWeight.Medium,
     fontSize = 11.sp, lineHeight = 14.sp,
   ),
   labelSmall = TextStyle(
-    fontFamily = GeistMono,
+    fontFamily = JetBrainsMono,
     fontWeight = FontWeight.Medium,
     fontSize = 10.sp, lineHeight = 13.sp,
   ),

@@ -914,4 +914,20 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     result.notice?.let { _projectNotice.value = it }
   }
 
+  // ---- New navigation methods (Stage C UI overhaul) ----
+
+  fun startNewProject() {
+    _currentRoute.value = "projectconfig"
+  }
+
+  fun createProject(name: String, packageName: String, location: String, language: String, minSdk: String, useKts: Boolean) {
+    _activeProjectName.value = name
+    _currentRoute.value = "templates"
+  }
+
+  fun installSdk(sdkVersion: String, jdkVersion: String, ndkVersion: String, installGit: Boolean, installSsh: Boolean) {
+    // Opens terminal with sdkmanager commands
+    _currentRoute.value = "terminal"
+  }
+
 }
