@@ -56,10 +56,13 @@ class TerminalTools(
                 val process = pb.start()
 
                 val output = StringBuilder()
+                var truncated = false
                 val readerThread = Thread {
                     process.inputStream.bufferedReader().forEachLine { line ->
                         if (output.length < 8000) {
                             output.append(line).append("\n")
+                        } else {
+                            truncated = true
                         }
                     }
                 }
@@ -74,7 +77,9 @@ class TerminalTools(
                 readerThread.join(2000)
 
                 val text = output.toString()
-                val suffix = "[exit ${process.exitValue()}]"
+                val suffix = "[exit ${process.exitValue()}]" +
+                    if (truncated) "[truncated at 8000 chars - pipe through grep/head or redirect to a file and read it in parts]"
+                    else ""
                 if (text.isBlank()) suffix else text + suffix
             } catch (t: Throwable) {
                 "error: ${t.message}"

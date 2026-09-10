@@ -14,7 +14,11 @@ object AgentSoulStore {
 
     suspend fun seedIfMissing(context: Context) = withContext(Dispatchers.IO) {
         val target = File(context.filesDir, REL_PATH)
-        if (target.exists()) return@withContext
+        if (target.exists()) {
+            // Overwrite stale pre-rename seeds still carrying the old identity.
+            val stale = target.readText().contains("Vibe Forge")
+            if (!stale) return@withContext
+        }
         try {
             target.parentFile?.mkdirs()
             context.assets.open(REL_PATH).use { input ->

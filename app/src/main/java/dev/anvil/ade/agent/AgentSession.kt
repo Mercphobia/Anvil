@@ -350,9 +350,11 @@ class AgentSession(
                 }
                 "get_build_errors" -> {
                     if (lastBuildErrors.isEmpty()) "no build errors recorded"
-                    else lastBuildErrors.joinToString("\n") {
+                    else lastBuildErrors.take(30).joinToString("\n") {
                         "${it.file}:${it.line} ${it.message}"
-                    }
+                    } + if (lastBuildErrors.size > 30)
+                        "\n[truncated - ${lastBuildErrors.size - 30} more errors not shown, fix the top ones and rebuild]"
+                    else ""
                 }
                 "run_terminal" -> {
                     val cmd = input.get("command")?.asString ?: ""
