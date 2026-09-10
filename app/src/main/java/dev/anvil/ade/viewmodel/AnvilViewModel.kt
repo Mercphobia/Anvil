@@ -914,4 +914,54 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     result.notice?.let { _projectNotice.value = it }
   }
 
+  // ────────────────────────────────────────────────
+  // New project creation + SDK install
+  // ────────────────────────────────────────────────
+
+  /** Navigate to the new-project flow (opens template selection). */
+  fun startNewProject() {
+    _showTemplateDialog.value = true
+    _currentRoute.value = "template"
+  }
+
+  /** Create a project from the given config and switch the workspace. */
+  fun createProject(
+    name: String,
+    packageName: String,
+    language: String,
+    templateId: String
+  ) {
+    _activeProjectName.value = name
+    applyProjectTemplate(templateId)
+    _showTemplateDialog.value = false
+
+    addStep(
+      AgentStep(
+        id = UUID.randomUUID().toString(),
+        kind = StepKind.INFO,
+        text = "Project \"$name\" created ($language, $packageName) from template $templateId",
+        timestamp = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+          .format(java.util.Date())
+      )
+    )
+  }
+
+  /** Trigger SDK installation via the embedded environment tools. */
+  fun installSdk() {
+    viewModelScope.launch {
+      _isBusy.value = true
+      try {
+        val tools = dev.anvil.ade.agent.tools.TerminalTools(app.applicationContext, workspaceRoot)
+        tools.ensureEnvironment { line ->
+          _terminalLogs.value += "[sdk] $line\n"
+        }
+        _projectNotice.value = "SDK environment ready"
+      } catch (t: Throwable) {
+        _projectNotice.value = "SDK install failed: ${t.message}"
+      } finally {
+        _isBusy.value = false
+      }
+    }
+  }
+
 }
