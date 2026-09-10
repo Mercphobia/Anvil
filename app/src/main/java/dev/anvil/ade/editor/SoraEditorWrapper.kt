@@ -27,7 +27,10 @@ fun SoraEditorWrapper(
     onTextChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
     readOnly: Boolean = false,
-    fileName: String? = null
+    fileName: String? = null,
+    onEditorReady: ((CodeEditor) -> Unit)? = null,
+    scrollRequestLine: Int? = null,
+    onScrollHandled: (() -> Unit)? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val isDark = isSystemInDarkTheme()
@@ -43,6 +46,7 @@ fun SoraEditorWrapper(
                 subscribeAlways(io.github.rosemoe.sora.event.ContentChangeEvent::class.java) {
                     onTextChanged(getText().toString())
                 }
+                onEditorReady?.invoke(this)
             }
         },
         update = { editor ->
@@ -51,6 +55,18 @@ fun SoraEditorWrapper(
             val current = editor.text.toString()
             if (current != text) {
                 editor.setText(text)
+            }
+            // Scroll-to-line request from the error log: move the cursor to
+            // the requested line (1-based) and bring it on screen.
+            if (scrollRequestLine != null && scrollRequestLine > 0) {
+                val target = scrollRequestLine - 1
+                if (target < editor.lineCount) {
+                    editor.setSelection(target, 0)
+                    editor.ensureSelectionVisible()
+                }
+                // Consume the request so later recompositions (keystrokes)
+                // do not keep yanking the cursor back to this line.
+                onScrollHandled?.invoke()
             }
         }
     )
