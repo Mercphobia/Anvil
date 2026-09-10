@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ fun AnvilListRow(
     leadingIcon: @Composable () -> Unit,
     title: String,
     subtitle: String? = null,
+    titleMono: Boolean = false,
     trailing: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     showDivider: Boolean = true,
@@ -62,6 +64,7 @@ fun AnvilListRow(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
+                    fontFamily = if (titleMono) FontFamily.Monospace else FontFamily.Default,
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,

@@ -66,6 +66,13 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   private val _showOpenProjectDialog = MutableStateFlow(false)
   val showOpenProjectDialog: StateFlow<Boolean> = _showOpenProjectDialog.asStateFlow()
 
+  private val _showTemplateDialog = MutableStateFlow(false)
+  val showTemplateDialog: StateFlow<Boolean> = _showTemplateDialog.asStateFlow()
+
+  fun toggleTemplateDialog(show: Boolean) {
+    _showTemplateDialog.value = show
+  }
+
   // Active Project Name and Status
   private val _activeProjectName = MutableStateFlow("Anvil Studio")
   val activeProjectName: StateFlow<String> = _activeProjectName.asStateFlow()
@@ -196,6 +203,10 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   private val _buildLogs = MutableStateFlow("")
   val buildLogs: StateFlow<String> = _buildLogs.asStateFlow()
 
+  // Errors from the last build (empty = last build clean or not run)
+  private val _buildErrors = MutableStateFlow<List<dev.anvil.ade.compiler.BuildPipelineManager.BuildError>>(emptyList())
+  val buildErrors: StateFlow<List<dev.anvil.ade.compiler.BuildPipelineManager.BuildError>> = _buildErrors.asStateFlow()
+
   // Terminal State
   private val _terminalLogs = MutableStateFlow(
     dev.anvil.ade.system.env.AnvilFetch.render(app.applicationContext)
@@ -204,6 +215,20 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
   private val _isTerminalRunning = MutableStateFlow(false)
   val isTerminalRunning: StateFlow<Boolean> = _isTerminalRunning.asStateFlow()
+
+  // One executed shell command (Terminal Sidebar history)
+  data class TerminalCommandEntry(val command: String, val timestamp: String)
+
+  // Input draft shared with the Terminal Sidebar recall action
+  private val _terminalInputDraft = MutableStateFlow("")
+  val terminalInputDraft: StateFlow<String> = _terminalInputDraft.asStateFlow()
+
+  private val _terminalHistory = MutableStateFlow<List<TerminalCommandEntry>>(emptyList())
+  val terminalHistory: StateFlow<List<TerminalCommandEntry>> = _terminalHistory.asStateFlow()
+
+  fun setTerminalInputDraft(value: String) {
+    _terminalInputDraft.value = value
+  }
 
   init {
     loadInitialData()
@@ -251,6 +276,11 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
   // Route control
   fun setRoute(route: String) {
     _currentRoute.value = route
+  }
+
+  // Start a fresh conversation (Chat Sidebar "New Chat")
+  fun newChat() {
+    _steps.value = emptyList()
   }
 
   // Project type control
@@ -548,6 +578,9 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       }
       _buildStage.value = 5
       _buildLogs.value += result + "\n"
+      _buildErrors.value = tools.lastErrors
+      // Surface build output in the terminal panel too (Build tab removed)
+      _terminalLogs.value += "[build] " + result + "\n"
       _isBuilding.value = false
     }
   }
@@ -559,6 +592,9 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
       clearTerminal()
       return
     }
+
+    val stamp = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+    _terminalHistory.value = (_terminalHistory.value + TerminalCommandEntry(trimmed, stamp)).takeLast(100)
 
     viewModelScope.launch {
       _isTerminalRunning.value = true
@@ -591,7 +627,7 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
     if (file.isDirectory) return
     _selectedFile.value = file
     _editorContent.value = file.content
-    _currentRoute.value = "project"
+    _currentRoute.value = "editor"
   }
 
   // Setup Wizard Controls

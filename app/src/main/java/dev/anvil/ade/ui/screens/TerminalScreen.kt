@@ -68,7 +68,8 @@ fun TerminalScreen(
   val isRunning by viewModel.isTerminalRunning.collectAsState()
   val branch by viewModel.gitBranch.collectAsState()
 
-  var inputCmd by remember { mutableStateOf("") }
+  val inputCmd by viewModel.terminalInputDraft.collectAsState()
+  val isBuilding by viewModel.isBuilding.collectAsState()
   val scrollState = rememberScrollState()
   val isDark = isSystemInDarkTheme()
 
@@ -142,6 +143,25 @@ fun TerminalScreen(
         .padding(bottom = 8.dp),
       horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
+      // Build output is merged into this terminal panel (nav decision:
+      // Build tab removed, build runs here).
+      SuggestionChip(
+        onClick = { viewModel.runBuildPipeline() },
+        label = {
+          Text(
+            text = "Build APK",
+            fontSize = 11.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Medium
+          )
+        },
+        shape = RoundedCornerShape(8.dp),
+        colors = SuggestionChipDefaults.suggestionChipColors(
+          containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        ),
+        enabled = !isRunning && !isBuilding
+      )
+
       commandTemplates.forEach { (cmd, label) ->
         SuggestionChip(
           onClick = {
@@ -221,7 +241,7 @@ fun TerminalScreen(
     ) {
       OutlinedTextField(
         value = inputCmd,
-        onValueChange = { inputCmd = it },
+        onValueChange = { viewModel.setTerminalInputDraft(it) },
         placeholder = {
           Text(
             text = "sh — ketik perintah (git status, npm run, …)",
@@ -251,7 +271,7 @@ fun TerminalScreen(
           onSend = {
             if (inputCmd.isNotBlank() && !isRunning) {
               viewModel.runTerminalCommand(inputCmd)
-              inputCmd = ""
+              viewModel.setTerminalInputDraft("")
             }
           }
         ),
@@ -264,7 +284,7 @@ fun TerminalScreen(
         onClick = {
           if (inputCmd.isNotBlank() && !isRunning) {
             viewModel.runTerminalCommand(inputCmd)
-            inputCmd = ""
+            viewModel.setTerminalInputDraft("")
           }
         },
         modifier = Modifier
