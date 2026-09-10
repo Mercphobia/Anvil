@@ -96,6 +96,7 @@ fun MainScaffold(viewModel: AnvilViewModel) {
   val showAgentConfig by viewModel.showAgentConfig.collectAsState()
   val isBusy by viewModel.isBusy.collectAsState()
   val isBuilding by viewModel.isBuilding.collectAsState()
+  val showOpenProjectDialog by viewModel.showOpenProjectDialog.collectAsState()
 
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
@@ -157,7 +158,7 @@ fun MainScaffold(viewModel: AnvilViewModel) {
     val isWideScreen = maxWidth >= 600.dp
 
     // Sidebar width: 78% of screen (anvil_ui component spec).
-    val drawerWidth = maxWidth * 0.78f
+    val drawerWidth = (maxWidth.value * 0.78f).dp
 
     ModalNavigationDrawer(
       drawerState = drawerState,
