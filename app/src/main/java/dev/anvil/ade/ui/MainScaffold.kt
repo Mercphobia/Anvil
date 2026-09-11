@@ -53,7 +53,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,6 +71,7 @@ import dev.anvil.ade.ui.components.CloneGitSheet
 import dev.anvil.ade.ui.components.GitSidebar
 import dev.anvil.ade.ui.components.ProjectSidebar
 import dev.anvil.ade.ui.components.ProviderSettingsDialog
+import dev.anvil.ade.ui.components.TabbedBottomPanel
 import dev.anvil.ade.ui.components.TerminalSidebar
 import dev.anvil.ade.ui.screens.*
 import dev.anvil.ade.viewmodel.AnvilViewModel
@@ -94,6 +98,12 @@ fun MainScaffold(viewModel: AnvilViewModel) {
   val isBusy by viewModel.isBusy.collectAsState()
   val isBuilding by viewModel.isBuilding.collectAsState()
   val showOpenProjectDialog by viewModel.showOpenProjectDialog.collectAsState()
+
+  // Tabbed bottom panel state
+  var showBottomPanel by remember { mutableStateOf(false) }
+  val buildLogs by viewModel.buildLogs.collectAsState()
+  val buildErrors by viewModel.buildErrors.collectAsState()
+  val terminalLogs by viewModel.terminalLogs.collectAsState()
 
   val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
   val scope = rememberCoroutineScope()
@@ -262,6 +272,19 @@ fun MainScaffold(viewModel: AnvilViewModel) {
                   )
                 }
 
+                // Build & Terminal panel toggle
+                if (activeProjectName.isNotEmpty()) {
+                  IconButton(onClick = { showBottomPanel = !showBottomPanel }) {
+                    Icon(
+                      imageVector = Icons.Filled.Terminal,
+                      contentDescription = if (showBottomPanel) "Sembunyikan panel" else "Tampilkan panel build & terminal",
+                      tint = if (showBottomPanel) MaterialTheme.colorScheme.primary
+                             else MaterialTheme.colorScheme.onSurfaceVariant,
+                      modifier = Modifier.size(20.dp)
+                    )
+                  }
+                }
+
                 // Welcome / Help Info icon
                 IconButton(onClick = { viewModel.openWelcome() }) {
                   Icon(
@@ -341,11 +364,10 @@ fun MainScaffold(viewModel: AnvilViewModel) {
               .padding(paddingValues)
           )
         } else {
-          Row(
-            modifier = Modifier
-              .fillMaxSize()
-              .padding(paddingValues)
-          ) {
+          Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            Row(
+              modifier = Modifier.fillMaxSize()
+            ) {
             // Adaptive Navigation Rail for Wide Screens
             if (isWideScreen) {
               NavigationRail(
@@ -438,9 +460,26 @@ fun MainScaffold(viewModel: AnvilViewModel) {
                 }
               }
             }
+          } // end Row
+
+          // Tabbed bottom panel overlay (Blueprint 3.1)
+          if (showBottomPanel) {
+            TabbedBottomPanel(
+              buildLogs = buildLogs,
+              buildErrors = buildErrors,
+              terminalLogs = terminalLogs,
+              isBuilding = isBuilding,
+              onRetryBuild = { viewModel.runBuildPipeline() },
+              onClose = { showBottomPanel = false },
+              modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+                .align(Alignment.BottomCenter)
+            )
           }
-        }
-      }
-    }
-  }
-}
+        } // end Box
+          } // end else
+        } // end Scaffold content
+    } // end ModalNavigationDrawer
+  } // end BoxWithConstraints
+} // end MainScaffold

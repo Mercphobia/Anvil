@@ -1,6 +1,7 @@
 package dev.anvil.ade.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,48 @@ import dev.anvil.ade.ui.components.ErrorChipPeek
 import dev.anvil.ade.ui.components.ErrorLogBottomSheet
 import dev.anvil.ade.viewmodel.AnvilViewModel
 import dev.anvil.ade.ui.theme.GeistMono
+
+/**
+ * Blueprint empty state — shown when no file is open in the editor.
+ * Wordmark, ruler-tick divider, contextual hint text.
+ */
+@Composable
+fun EditorEmptyState(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Ruler-tick decorative line
+        Box(
+            modifier = Modifier
+                .width(48.dp)
+                .height(2.dp)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = "ANVIL",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = GeistMono,
+            color = MaterialTheme.colorScheme.onBackground,
+            letterSpacing = 8.sp
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Buka drawer kiri untuk lihat file.",
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "Geser ke atas untuk build & terminal.",
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
 
 /**
  * Code editor screen (anvil_ui spec Bagian 1). Opened when a file is tapped
@@ -137,13 +180,7 @@ fun EditorScreen(
           onScrollHandled = { scrollRequestLine = null }
         )
       } else {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          Text(
-            text = "Buka file dari Project Sidebar",
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-          )
-        }
+        EditorEmptyState()
       }
 
       // ---- Error log bottom sheet (peek: first row partially visible) ----

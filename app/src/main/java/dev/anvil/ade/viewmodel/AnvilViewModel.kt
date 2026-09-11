@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-/** Fullscreen onboarding wizard steps. */
-enum class WizardStep { WELCOME, BOOTSTRAP, AI_ASSISTANT, PROJECT_SOURCE, TEMPLATE }
+/** Fullscreen onboarding wizard steps — Blueprint 4-step flow. */
+enum class WizardStep { WELCOME, PROVIDER_SETUP, WORKSPACE_PERMISSION, READY }
 
 /** How the user wants to start their project in the wizard. */
 enum class ProjectSource { NEW, LOCAL, CLONE }
@@ -674,21 +674,19 @@ class AnvilViewModel(private val app: Application) : AndroidViewModel(app) {
 
   fun advanceWizard() {
     _wizardStep.value = when (_wizardStep.value) {
-      WizardStep.WELCOME -> WizardStep.BOOTSTRAP
-      WizardStep.BOOTSTRAP -> WizardStep.AI_ASSISTANT
-      WizardStep.AI_ASSISTANT -> WizardStep.PROJECT_SOURCE
-      WizardStep.PROJECT_SOURCE -> WizardStep.TEMPLATE
-      WizardStep.TEMPLATE -> WizardStep.TEMPLATE // finished via finishWizard
+      WizardStep.WELCOME -> WizardStep.PROVIDER_SETUP
+      WizardStep.PROVIDER_SETUP -> WizardStep.WORKSPACE_PERMISSION
+      WizardStep.WORKSPACE_PERMISSION -> WizardStep.READY
+      WizardStep.READY -> WizardStep.READY
     }
   }
 
   fun backWizard() {
     _wizardStep.value = when (_wizardStep.value) {
       WizardStep.WELCOME -> WizardStep.WELCOME
-      WizardStep.BOOTSTRAP -> WizardStep.WELCOME
-      WizardStep.AI_ASSISTANT -> WizardStep.BOOTSTRAP
-      WizardStep.PROJECT_SOURCE -> WizardStep.AI_ASSISTANT
-      WizardStep.TEMPLATE -> WizardStep.PROJECT_SOURCE
+      WizardStep.PROVIDER_SETUP -> WizardStep.WELCOME
+      WizardStep.WORKSPACE_PERMISSION -> WizardStep.PROVIDER_SETUP
+      WizardStep.READY -> WizardStep.WORKSPACE_PERMISSION
     }
   }
 

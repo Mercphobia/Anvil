@@ -52,11 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.anvil.ade.model.DiffLine
-import dev.anvil.ade.ui.theme.ForgeDiffAddBg
-import dev.anvil.ade.ui.theme.ForgeDiffAddText
-import dev.anvil.ade.ui.theme.ForgeDiffDelBg
-import dev.anvil.ade.ui.theme.ForgeDiffDelText
-import dev.anvil.ade.ui.theme.ForgeTerminalBg
+import dev.anvil.ade.ui.theme.LocalThemeTokens
 import dev.anvil.ade.viewmodel.AnvilViewModel
 import dev.anvil.ade.ui.theme.GeistMono
 
@@ -258,7 +254,7 @@ val added = diffLines.count { it.type == DiffLine.Type.ADD }
             text = "+$added -$deleted additions/deletions",
             style = MaterialTheme.typography.labelSmall,
             fontFamily = GeistMono,
-            color = ForgeDiffAddText
+            color = LocalThemeTokens.current.ok
           )
         }
 
@@ -279,15 +275,15 @@ val added = diffLines.count { it.type == DiffLine.Type.ADD }
 @Composable
 private fun DiffRow(line: DiffLine) {
   val bgColor = when (line.type) {
-    DiffLine.Type.ADD -> ForgeDiffAddBg
-    DiffLine.Type.DELETE -> ForgeDiffDelBg
+    DiffLine.Type.ADD -> LocalThemeTokens.current.diffAddBg
+    DiffLine.Type.DELETE -> LocalThemeTokens.current.diffDelBg
     DiffLine.Type.HEADER -> MaterialTheme.colorScheme.surfaceContainerLow
     DiffLine.Type.CONTEXT -> Color.Transparent
   }
 
   val textColor = when (line.type) {
-    DiffLine.Type.ADD -> ForgeDiffAddText
-    DiffLine.Type.DELETE -> ForgeDiffDelText
+    DiffLine.Type.ADD -> LocalThemeTokens.current.ok
+    DiffLine.Type.DELETE -> LocalThemeTokens.current.err
     DiffLine.Type.HEADER -> MaterialTheme.colorScheme.primary
     DiffLine.Type.CONTEXT -> MaterialTheme.colorScheme.onSurface
   }

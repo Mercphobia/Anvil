@@ -74,8 +74,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.ui.theme.ForgeNeonCyan
-import dev.anvil.ade.ui.theme.ForgeNeonGreen
+import dev.anvil.ade.ui.theme.LocalThemeTokens
 import dev.anvil.ade.viewmodel.AnvilViewModel
 import dev.anvil.ade.ui.theme.GeistMono
 
@@ -197,7 +196,8 @@ fun MockupScreen(
         modifier = Modifier
           .fillMaxWidth()
           .weight(1f)
-          .testTag("mockup_canvas_card"),
+          .testTag("mockup_canvas_card")
+          .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(28.dp)),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.elevatedCardColors(
           containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
@@ -231,7 +231,7 @@ fun MockupScreen(
             ) {
               Icon(Icons.Filled.Wifi, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurface)
               Icon(Icons.Filled.SignalCellularAlt, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurface)
-              Icon(Icons.Filled.BatteryChargingFull, contentDescription = null, modifier = Modifier.size(18.dp), tint = ForgeNeonGreen)
+              Icon(Icons.Filled.BatteryChargingFull, contentDescription = null, modifier = Modifier.size(18.dp), tint = LocalThemeTokens.current.ok)
             }
           }
 

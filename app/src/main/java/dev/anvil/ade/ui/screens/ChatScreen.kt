@@ -77,6 +77,7 @@ import dev.anvil.ade.model.AgentStep
 import dev.anvil.ade.model.StepKind
 import dev.anvil.ade.viewmodel.AnvilViewModel
 import dev.anvil.ade.ui.theme.GeistMono
+import dev.anvil.ade.ui.components.blueprintGrid
 
 @Composable
 fun ChatScreen(
@@ -107,6 +108,7 @@ fun ChatScreen(
     modifier = modifier
       .fillMaxSize()
       .background(MaterialTheme.colorScheme.surface)
+      .blueprintGrid(spacing = 24)
   ) {
     // Gemini Top Header: Model Pill & Mode Indicator
     Row(
