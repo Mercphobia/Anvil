@@ -16,7 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.ui.theme.*
 
 @Composable
 fun HomeScreen(
@@ -32,16 +31,16 @@ fun HomeScreen(
   Column(
     modifier = modifier
       .fillMaxSize()
-      .background(AcsBg)
+      .background(MaterialTheme.colorScheme.background)
       .padding(32.dp),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center
   ) {
-    Text("ACS", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = AcsGold, letterSpacing = (-2).sp)
+    Text("ANVIL", fontSize = 42.sp, fontWeight = FontWeight.Bold,
+      color = MaterialTheme.colorScheme.primary, letterSpacing = 4.sp)
     Spacer(Modifier.height(4.dp))
-    Text("Android Code Studio", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = AcsOnSurface)
-    Spacer(Modifier.height(2.dp))
-    Text("Your Ideas, Anywhere", fontSize = 14.sp, color = AcsGold)
+    Text("Coding agent di genggaman", fontSize = 16.sp,
+      fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(36.dp))
 
     val actions = listOf(
@@ -51,7 +50,7 @@ fun HomeScreen(
       Triple("Terminal", "Open a terminal session", Icons.Filled.Terminal) to onOpenTerminal,
       Triple("Preferences", "Configure IDE settings", Icons.Filled.Settings) to onOpenPreferences,
       Triple("IDE Configurations", "IDE build system configurations", Icons.Filled.Tune) to onOpenIdeConfig,
-      Triple("Documentation", "Learn more about Android Code Studio", Icons.Filled.MenuBook) to onOpenDocs
+      Triple("Documentation", "Learn more about Anvil", Icons.Filled.MenuBook) to onOpenDocs
     )
 
     Column(Modifier.fillMaxWidth()) {
@@ -59,17 +58,21 @@ fun HomeScreen(
         val (title, subtitle, icon) = triple
         Row(
           Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
-            .background(AcsSurface2).clickable(onClick = onClick)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh).clickable(onClick = onClick)
             .padding(14.dp),
           verticalAlignment = Alignment.CenterVertically
         ) {
-          Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(AcsGold.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = AcsGold, modifier = Modifier.size(18.dp))
+          Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
           }
           Spacer(Modifier.width(12.dp))
           Column(Modifier.weight(1f)) {
-            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = AcsOnSurface)
-            Text(subtitle, fontSize = 12.sp, color = AcsOnSurfaceVariant)
+            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium,
+              color = MaterialTheme.colorScheme.onSurface)
+            Text(subtitle, fontSize = 12.sp,
+              color = MaterialTheme.colorScheme.onSurfaceVariant)
           }
         }
         if (idx < actions.lastIndex) Spacer(Modifier.height(8.dp))

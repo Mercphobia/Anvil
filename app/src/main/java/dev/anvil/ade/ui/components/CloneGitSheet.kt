@@ -20,7 +20,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,57 +37,46 @@ fun CloneGitSheet(
     modifier = modifier
       .fillMaxWidth()
       .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-      .background(AcsSurface1)
+      .background(MaterialTheme.colorScheme.surfaceContainer)
       .padding(20.dp)
   ) {
     // Handle bar
     Box(
       modifier = Modifier
         .align(Alignment.CenterHorizontally)
-        .width(36.dp)
-        .height(4.dp)
+        .width(36.dp).height(4.dp)
         .clip(RoundedCornerShape(2.dp))
-        .background(AcsOutline)
+        .background(MaterialTheme.colorScheme.outline)
     )
     Spacer(Modifier.height(16.dp))
 
     // Header
     Row(verticalAlignment = Alignment.CenterVertically) {
-      Icon(
-        Icons.Filled.Link,
-        contentDescription = null,
-        tint = AcsGold,
-        modifier = Modifier.size(22.dp)
-      )
+      Icon(Icons.Filled.Link, contentDescription = null,
+        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
       Spacer(Modifier.width(10.dp))
-      Text(
-        "Clone Repository",
-        fontSize = 18.sp,
-        fontWeight = FontWeight.SemiBold,
-        color = AcsOnSurface
-      )
+      Text("Clone Repository", fontSize = 18.sp, fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurface)
       Spacer(Modifier.weight(1f))
       IconButton(onClick = onDismiss) {
-        Icon(Icons.Filled.Close, "Close", tint = AcsOnSurfaceDim)
+        Icon(Icons.Filled.Close, "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant)
       }
     }
     Spacer(Modifier.height(20.dp))
 
     // Repository URL
-    Text("Repository URL", fontSize = 12.sp, color = AcsOnSurfaceVariant)
+    Text("Repository URL", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(6.dp))
     OutlinedTextField(
-      value = repoUrl,
-      onValueChange = { repoUrl = it },
-      placeholder = { Text("https://github.com/user/repo.git", color = AcsOnSurfaceDim) },
-      modifier = Modifier.fillMaxWidth(),
-      singleLine = true,
+      value = repoUrl, onValueChange = { repoUrl = it },
+      placeholder = { Text("https://github.com/user/repo.git", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+      modifier = Modifier.fillMaxWidth(), singleLine = true,
       colors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = AcsGold,
-        unfocusedBorderColor = AcsOutline,
-        focusedTextColor = AcsOnSurface,
-        unfocusedTextColor = AcsOnSurface,
-        cursorColor = AcsGold
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        cursorColor = MaterialTheme.colorScheme.primary
       ),
       keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
       shape = RoundedCornerShape(10.dp)
@@ -96,39 +84,35 @@ fun CloneGitSheet(
     Spacer(Modifier.height(16.dp))
 
     // Branch
-    Text("Branch", fontSize = 12.sp, color = AcsOnSurfaceVariant)
+    Text("Branch", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(6.dp))
     OutlinedTextField(
-      value = branch,
-      onValueChange = { branch = it },
-      modifier = Modifier.fillMaxWidth(),
-      singleLine = true,
+      value = branch, onValueChange = { branch = it },
+      modifier = Modifier.fillMaxWidth(), singleLine = true,
       colors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = AcsGold,
-        unfocusedBorderColor = AcsOutline,
-        focusedTextColor = AcsOnSurface,
-        unfocusedTextColor = AcsOnSurface,
-        cursorColor = AcsGold
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        cursorColor = MaterialTheme.colorScheme.primary
       ),
       keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
       shape = RoundedCornerShape(10.dp)
     )
     Spacer(Modifier.height(16.dp))
 
-    // Token (optional)
-    Text("Personal Access Token (optional)", fontSize = 12.sp, color = AcsOnSurfaceVariant)
+    // Token
+    Text("Personal Access Token (optional)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(6.dp))
     OutlinedTextField(
-      value = token,
-      onValueChange = { token = it },
-      modifier = Modifier.fillMaxWidth(),
-      singleLine = true,
+      value = token, onValueChange = { token = it },
+      modifier = Modifier.fillMaxWidth(), singleLine = true,
       colors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = AcsGold,
-        unfocusedBorderColor = AcsOutline,
-        focusedTextColor = AcsOnSurface,
-        unfocusedTextColor = AcsOnSurface,
-        cursorColor = AcsGold
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        cursorColor = MaterialTheme.colorScheme.primary
       ),
       keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
       keyboardActions = KeyboardActions(onDone = {
@@ -138,7 +122,7 @@ fun CloneGitSheet(
       visualTransformation = if (showToken) VisualTransformation.None else PasswordVisualTransformation(),
       trailingIcon = {
         TextButton(onClick = { showToken = !showToken }) {
-          Text(if (showToken) "Hide" else "Show", fontSize = 11.sp, color = AcsOnSurfaceDim)
+          Text(if (showToken) "Hide" else "Show", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
       }
     )
@@ -148,18 +132,12 @@ fun CloneGitSheet(
     Button(
       onClick = { onClone(repoUrl, branch, token) },
       enabled = repoUrl.isNotBlank(),
-      modifier = Modifier
-        .fillMaxWidth()
-        .height(48.dp),
-      colors = ButtonDefaults.buttonColors(containerColor = AcsGold),
+      modifier = Modifier.fillMaxWidth().height(48.dp),
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
       shape = RoundedCornerShape(10.dp)
     ) {
-      Text(
-        "Clone Repository",
-        color = AcsBg,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.SemiBold
-      )
+      Text("Clone Repository", color = MaterialTheme.colorScheme.onPrimary,
+        fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
     Spacer(Modifier.height(8.dp))
   }

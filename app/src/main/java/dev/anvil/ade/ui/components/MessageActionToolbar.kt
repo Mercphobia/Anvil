@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.ui.theme.*
 
 /** Actions available on a chat message or agent step. */
 @Composable
@@ -29,17 +29,14 @@ fun MessageActionToolbar(
   Row(
     modifier = modifier
       .clip(RoundedCornerShape(8.dp))
-      .background(AcsSurface3)
+      .background(MaterialTheme.colorScheme.surfaceContainerHigh)
       .padding(horizontal = 4.dp, vertical = 2.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
     ActionButton(Icons.Filled.ContentCopy, "Copy", onCopy)
     ActionButton(Icons.Filled.Refresh, "Retry", onRetry)
     ActionButton(
-      if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder,
-      "Favorite",
-      onToggleFavorite
-    )
+      if (isFavorite) Icons.Filled.Star else Icons.Filled.StarBorder, "Favorite", onToggleFavorite)
     ActionButton(Icons.Filled.Delete, "Delete", onDelete)
   }
 }
@@ -51,18 +48,11 @@ private fun ActionButton(
   onClick: () -> Unit
 ) {
   Row(
-    modifier = Modifier
-      .clickable(onClick = onClick)
-      .padding(horizontal = 6.dp, vertical = 4.dp),
+    modifier = Modifier.clickable(onClick = onClick).padding(horizontal = 6.dp, vertical = 4.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
-    Icon(
-      icon,
-      contentDescription = label,
-      tint = AcsOnSurfaceDim,
-      modifier = Modifier.size(14.dp)
-    )
+    Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(14.dp))
     Spacer(Modifier.width(3.dp))
-    Text(label, fontSize = 10.sp, color = AcsOnSurfaceDim)
+    Text(label, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
   }
 }

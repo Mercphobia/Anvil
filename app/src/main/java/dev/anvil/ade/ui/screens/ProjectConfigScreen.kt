@@ -1,4 +1,5 @@
 package dev.anvil.ade.ui.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,7 +14,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.ui.theme.*
 
 @Composable
 fun ProjectConfigScreen(
@@ -27,21 +27,26 @@ fun ProjectConfigScreen(
   var lang by remember { mutableStateOf("Java") }
   var minSdk by remember { mutableStateOf("API 21") }
   var useKts by remember { mutableStateOf(true) }
-  Column(modifier.fillMaxSize().background(AcsBg)) {
+  Column(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-      IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Back", tint = AcsOnSurface) }
-      Text("Project Configuration", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = AcsOnSurface)
+      IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface) }
+      Text("Project Configuration", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
     }
-    HorizontalDivider(color = AcsOutlineVariant)
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     Column(Modifier.weight(1f).padding(16.dp)) {
-      OutlinedTextField(name, { name = it }, label = { Text("Project name") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AcsGold))
+      OutlinedTextField(name, { name = it }, label = { Text("Project name") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary))
       Spacer(Modifier.height(12.dp))
-      OutlinedTextField(pkg, { pkg = it }, label = { Text("Package name") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AcsGold))
+      OutlinedTextField(pkg, { pkg = it }, label = { Text("Package name") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary))
       Spacer(Modifier.height(12.dp))
-      OutlinedTextField(loc, { loc = it }, label = { Text("Location") }, modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AcsGold))
+      OutlinedTextField(loc, { loc = it }, label = { Text("Location") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = MaterialTheme.colorScheme.primary))
     }
-    Button(onClick = { onCreateProject(name, pkg, loc, lang, minSdk, useKts) }, modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = AcsGold)) {
-      Text("Create Project", color = AcsBg, fontWeight = FontWeight.SemiBold)
+    Button(onClick = { onCreateProject(name, pkg, loc, lang, minSdk, useKts) },
+      modifier = Modifier.fillMaxWidth().padding(16.dp), shape = RoundedCornerShape(12.dp),
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+      Text("Create Project", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.SemiBold)
     }
   }
 }

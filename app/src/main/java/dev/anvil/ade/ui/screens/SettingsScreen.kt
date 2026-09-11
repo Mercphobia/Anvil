@@ -1,4 +1,5 @@
 package dev.anvil.ade.ui.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -14,7 +15,6 @@ import dev.anvil.ade.ui.components.AcsCardGroup
 import dev.anvil.ade.ui.components.AcsCardRow
 import dev.anvil.ade.ui.components.AcsCardSwitchRow
 import dev.anvil.ade.ui.components.AcsSectionLabel
-import dev.anvil.ade.ui.theme.*
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
@@ -24,12 +24,12 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
   var hooksEnabled by remember { mutableStateOf(false) }
   val autonomyLabels = listOf("Safe (ask always)", "Moderate", "Full auto")
 
-  Column(modifier.fillMaxSize().background(AcsBg)) {
+  Column(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-      IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Back", tint = AcsOnSurface) }
-      Text("Settings", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = AcsOnSurface)
+      IconButton(onClick = onBack) { Icon(Icons.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onSurface) }
+      Text("Settings", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface)
     }
-    HorizontalDivider(color = AcsOutlineVariant)
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     Column(Modifier.weight(1f).padding(16.dp)) {
       AcsSectionLabel("Appearance")
       AcsCardGroup {

@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -17,7 +18,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.ui.theme.*
 
 @Composable
 fun AcsCardGroup(
@@ -29,8 +29,8 @@ fun AcsCardGroup(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(AcsSurface2)
-            .border(0.5.dp, AcsOutlineVariant, RoundedCornerShape(16.dp)),
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
         content = content
     )
 }
@@ -44,7 +44,7 @@ fun AcsSectionLabel(
         text = text,
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
-        color = AcsGold,
+        color = MaterialTheme.colorScheme.primary,
         letterSpacing = 1.sp,
         modifier = modifier.padding(start = 20.dp, top = 16.dp, bottom = 6.dp)
     )
@@ -70,16 +70,16 @@ fun AcsCardRow(
             modifier = Modifier
                 .size(36.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(AcsGold.copy(alpha = 0.12f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = AcsGold, modifier = Modifier.size(18.dp))
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = AcsOnSurface)
+            Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
             if (subtitle != null) {
-                Text(subtitle, fontSize = 11.sp, color = AcsOnSurfaceVariant, maxLines = 1)
+                Text(subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             }
         }
         if (trailing != null) trailing()
@@ -102,7 +102,7 @@ fun AcsCardSwitchRow(
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(checkedTrackColor = AcsGold)
+                colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
             )
         },
         modifier = modifier
