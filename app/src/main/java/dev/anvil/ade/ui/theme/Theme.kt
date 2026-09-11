@@ -107,11 +107,9 @@ fun AnvilTheme(
     val tokens: ThemeTokens = remember(engine) {
         when (engine) {
             ThemeEngine.BLUEPRINT -> BlueprintTokens
-            // VERCEL / MONET / LINEAR — stub: reuse Blueprint untuk sekarang,
-            // nanti diganti dengan implementasi spesifik masing-masing.
-            ThemeEngine.VERCEL,
-            ThemeEngine.MONET,
-            ThemeEngine.LINEAR -> BlueprintTokens
+            ThemeEngine.VERCEL   -> VercelTokens
+            // MONET / LINEAR — stub: reuse Blueprint untuk sekarang.
+            ThemeEngine.MONET, ThemeEngine.LINEAR -> BlueprintTokens
         }
     }
 

@@ -152,17 +152,30 @@ fun TabbedBottomPanel(
                             } else {
                                 Text("${buildErrors.size} build error(s):",
                                     color = tokens.err, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                Spacer(Modifier.height(8.dp))
-                                buildErrors.forEach { err ->
-                                    Row(Modifier.padding(vertical = 2.dp)) {
-                                        Text("\u2715 ", color = tokens.err, fontSize = 12.sp, fontFamily = GeistMono)
-                                        Text("${err.file}:${err.line}",
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontSize = 12.sp, fontFamily = GeistMono)
-                                    }
-                                    Text(err.message, color = tokens.err,
-                                        fontSize = 11.sp, fontFamily = GeistMono,
-                                        modifier = Modifier.padding(start = 18.dp))
+                                Spacer(Modifier.height(6.dp))
+                                buildErrors.forEachIndexed { index, err ->
+                                    AnvilListRow(
+                                        leadingIcon = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                                    .clip(RoundedCornerShape(14.dp))
+                                                    .background(MaterialTheme.colorScheme.errorContainer),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = "${index + 1}",
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                                )
+                                            }
+                                        },
+                                        title = err.file.substringAfterLast('/'),
+                                        subtitle = err.message,
+                                        titleMono = true,
+                                        showDivider = index < buildErrors.lastIndex
+                                    )
                                 }
                             }
                         }

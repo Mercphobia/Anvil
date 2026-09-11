@@ -23,7 +23,7 @@ import dev.anvil.ade.viewmodel.WizardStep
 
 /**
  * Fullscreen onboarding wizard — Blueprint design system.
- * Flow: Welcome → Bootstrap → AI Assistant → Project Source → Template.
+ * Flow: Welcome → Provider Setup → Workspace Permission → Ready.
  * Progress indicator: ruler-tick motif (short-long-short dashes),
  * consistent with the engineering blueprint visual language.
  */
