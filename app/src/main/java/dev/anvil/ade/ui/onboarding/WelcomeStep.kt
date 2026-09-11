@@ -18,14 +18,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.anvil.ade.viewmodel.AnvilViewModel
 
 /**
- * Welcome step - Vercel Geist style: monochrome anvil mark drawn in Canvas
- * (same geometry as the launcher icon), compressed display type, one dark
- * CTA button. No decorative color.
+ * Welcome step — Blueprint style.
+ * Wordmark ANVIL, amber CTA button, blueprintGrid background
+ * via the parent OnboardingFlow Surface.
  */
 @Composable
 fun WelcomeStep(viewModel: AnvilViewModel) {
@@ -36,35 +38,38 @@ fun WelcomeStep(viewModel: AnvilViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Anvil logomark — monochrome, tinted with primary (amber)
         AnvilMark(
-            modifier = Modifier.size(96.dp),
-            tint = MaterialTheme.colorScheme.onBackground
+            modifier = Modifier.size(88.dp),
+            tint = MaterialTheme.colorScheme.primary
         )
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Anvil",
-            style = MaterialTheme.typography.displayMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            text = "ANVIL",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            letterSpacing = 6.sp
         )
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "The agentic development environment that lives in your pocket. Build Android APKs on-device, edit any language, ship from anywhere.",
+            text = "Coding agent di genggaman",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(0.85f)
+            textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(44.dp))
         Button(
             onClick = { viewModel.advanceWizard() },
             shape = MaterialTheme.shapes.small,
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.onBackground,
-                contentColor = MaterialTheme.colorScheme.background
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ),
-            modifier = Modifier.fillMaxWidth(0.6f).height(44.dp)
+            modifier = Modifier.fillMaxWidth(0.7f).height(48.dp)
         ) {
-            Text("Get Started", style = MaterialTheme.typography.labelLarge)
+            Text("Get Started", style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold)
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
@@ -76,8 +81,8 @@ fun WelcomeStep(viewModel: AnvilViewModel) {
 }
 
 /**
- * Monochrome anvil logomark - Canvas vector mirroring the launcher icon
- * geometry: body with horn, waist, base. Single color, flat.
+ * Monochrome anvil logomark — Canvas vector matching the launcher icon.
+ * Body with horn, waist, base. Single color, flat fill.
  */
 @Composable
 fun AnvilMark(modifier: Modifier = Modifier, tint: androidx.compose.ui.graphics.Color) {
@@ -89,7 +94,6 @@ fun AnvilMark(modifier: Modifier = Modifier, tint: androidx.compose.ui.graphics.
         fun x(v: Float) = v * sx
         fun y(v: Float) = v * sy
 
-        // Body with horn (left point) and heel (right)
         val body = Path().apply {
             moveTo(x(18f), y(30f))
             lineTo(x(58f), y(30f))
@@ -102,7 +106,6 @@ fun AnvilMark(modifier: Modifier = Modifier, tint: androidx.compose.ui.graphics.
             cubicTo(x(19f), y(38f), x(17f), y(35f), x(18f), y(30f))
             close()
         }
-        // Waist
         val waist = Path().apply {
             moveTo(x(40f), y(41f))
             lineTo(x(66f), y(41f))
@@ -110,7 +113,6 @@ fun AnvilMark(modifier: Modifier = Modifier, tint: androidx.compose.ui.graphics.
             lineTo(x(45f), y(57f))
             close()
         }
-        // Base
         val base = Path().apply {
             moveTo(x(34f), y(60f))
             lineTo(x(72f), y(60f))
