@@ -15,14 +15,17 @@ import dev.anvil.ade.ui.components.AcsCardGroup
 import dev.anvil.ade.ui.components.AcsCardRow
 import dev.anvil.ade.ui.components.AcsCardSwitchRow
 import dev.anvil.ade.ui.components.AcsSectionLabel
+import dev.anvil.ade.ui.theme.ThemeEngine
 
 @Composable
 fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
   var darkTheme by remember { mutableStateOf(true) }
+  var themeEngine by remember { mutableStateOf(ThemeEngine.BLUEPRINT) }
   var autonomyLevel by remember { mutableStateOf(0) }
   var mcpEnabled by remember { mutableStateOf(false) }
   var hooksEnabled by remember { mutableStateOf(false) }
   val autonomyLabels = listOf("Safe (ask always)", "Moderate", "Full auto")
+  val themeNames = ThemeEngine.entries.map { it.name }
 
   Column(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -33,6 +36,14 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     Column(Modifier.weight(1f).padding(16.dp)) {
       AcsSectionLabel("Appearance")
       AcsCardGroup {
+        AcsCardRow(
+          Icons.Filled.Palette, "Theme Engine",
+          themeEngine.name,
+          onClick = {
+            val next = ThemeEngine.entries[(themeEngine.ordinal + 1) % ThemeEngine.entries.size]
+            themeEngine = next
+          }
+        )
         AcsCardSwitchRow(Icons.Filled.DarkMode, "Dark theme", "Use dark color scheme", darkTheme, { darkTheme = !darkTheme })
       }
       Spacer(Modifier.height(16.dp))
