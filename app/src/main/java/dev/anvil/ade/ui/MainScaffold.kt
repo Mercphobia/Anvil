@@ -480,7 +480,6 @@ fun MainScaffold(viewModel: AnvilViewModel) {
         } // end Box
           } // end else
         } // end Scaffold content
-      } // end Scaffold
     } // end ModalNavigationDrawer
   } // end BoxWithConstraints
 } // end MainScaffold
