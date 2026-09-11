@@ -110,7 +110,7 @@ fun ChatScreen(
       .background(MaterialTheme.colorScheme.surface)
       .blueprintGrid(spacing = 24)
   ) {
-    // Gemini Top Header: Model Pill & Mode Indicator
+    // Header: Model selector & mode indicator
     Row(
       modifier = Modifier
         .fillMaxWidth()
@@ -118,7 +118,7 @@ fun ChatScreen(
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically
     ) {
-      // Gemini Model Dropdown Pill
+      // Model selector pill
       Surface(
         onClick = { viewModel.toggleSettingsDialog(true) },
         shape = RoundedCornerShape(20.dp),
@@ -137,7 +137,7 @@ fun ChatScreen(
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = "Gemini 2.5 Flash",
+            text = providerConfig.provider.displayName,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
@@ -176,15 +176,15 @@ fun ChatScreen(
       }
     }
 
-    // Main Chat Message Area or Gemini Zero State
+    // Main chat area
     Box(
       modifier = Modifier
         .fillMaxWidth()
         .weight(1f)
     ) {
       if (steps.isEmpty()) {
-        // Iconic Gemini Empty Greeting State
-        GeminiEmptyState(
+        // Welcome greeting
+        ChatWelcomeState(
           onSelectPrompt = { inputText = it },
           activeType = activeType
         )
@@ -198,16 +198,16 @@ fun ChatScreen(
         ) {
           items(steps, key = { it.id }) { step ->
             when (step.kind) {
-              StepKind.USER -> GeminiUserMessage(step)
-              StepKind.AGENT_TEXT -> GeminiAgentMessage(
+              StepKind.USER -> ChatUserMessage(step)
+              StepKind.AGENT_TEXT -> ChatAgentMessage(
                 step = step,
                 onCopy = { clipboardManager.setText(AnnotatedString(step.text)) },
                 onOpenEditor = { viewModel.setRoute("editor") }
               )
-              StepKind.TOOL_CALL -> GeminiToolCallStep(step)
-              StepKind.TOOL_RESULT -> GeminiToolResultStep(step)
-              StepKind.INFO -> GeminiInfoCard(step)
-              StepKind.ERROR -> GeminiErrorCard(step)
+              StepKind.TOOL_CALL -> ChatToolCallStep(step)
+              StepKind.TOOL_RESULT -> ChatToolResultStep(step)
+              StepKind.INFO -> ChatInfoCard(step)
+              StepKind.ERROR -> ChatErrorCard(step)
             }
           }
 
@@ -241,7 +241,7 @@ fun ChatScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                  text = "Gemini sedang memproses & menyusun kode...",
+                  text = "Claude sedang memproses...",
                   style = MaterialTheme.typography.bodySmall,
                   color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -509,7 +509,7 @@ fun ChatScreen(
       }
     }
 
-    // Gemini Floating Bottom Input Bar (Capsule Pill Shape)
+    // Floating input bar
     Surface(
       modifier = Modifier
         .fillMaxWidth()
@@ -569,7 +569,7 @@ fun ChatScreen(
           }
         }
 
-        // Gemini Prompt Input Field
+        // Prompt input
         BasicTextField(
           value = inputText,
           onValueChange = { inputText = it },
@@ -585,7 +585,7 @@ fun ChatScreen(
           decorationBox = { innerTextField ->
             if (inputText.isEmpty()) {
               Text(
-                text = "Tanya Gemini...",
+                text = "Tanya Claude...",
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                 fontSize = 14.sp
               )
@@ -639,7 +639,7 @@ fun ChatScreen(
 }
 
 @Composable
-private fun GeminiEmptyState(
+private fun ChatWelcomeState(
   onSelectPrompt: (String) -> Unit,
   activeType: ProjectType
 ) {
@@ -649,7 +649,7 @@ private fun GeminiEmptyState(
       .padding(horizontal = 20.dp),
     verticalArrangement = Arrangement.Center
   ) {
-    // Gemini Sparkle & Greeting
+    // Welcome greeting
     Row(verticalAlignment = Alignment.CenterVertically) {
       Box(
         modifier = Modifier
@@ -751,7 +751,7 @@ private fun GeminiEmptyState(
 }
 
 @Composable
-private fun GeminiUserMessage(step: AgentStep) {
+private fun ChatUserMessage(step: AgentStep) {
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -776,7 +776,7 @@ private fun GeminiUserMessage(step: AgentStep) {
 }
 
 @Composable
-private fun GeminiAgentMessage(
+private fun ChatAgentMessage(
   step: AgentStep,
   onCopy: () -> Unit,
   onOpenEditor: () -> Unit
@@ -787,7 +787,7 @@ private fun GeminiAgentMessage(
       .padding(vertical = 4.dp),
     horizontalArrangement = Arrangement.Start
   ) {
-    // Gemini Spark Icon
+    // Agent icon
     Box(
       modifier = Modifier
         .size(28.dp)
@@ -817,7 +817,7 @@ private fun GeminiAgentMessage(
         lineHeight = 22.sp
       )
 
-      // Gemini Response Quick Actions Row
+      // Response quick actions
       Row(
         modifier = Modifier
           .fillMaxWidth()
@@ -857,7 +857,7 @@ private fun GeminiAgentMessage(
 }
 
 @Composable
-private fun GeminiToolCallStep(step: AgentStep) {
+private fun ChatToolCallStep(step: AgentStep) {
   Surface(
     modifier = Modifier
       .fillMaxWidth()
@@ -895,7 +895,7 @@ private fun GeminiToolCallStep(step: AgentStep) {
 }
 
 @Composable
-private fun GeminiToolResultStep(step: AgentStep) {
+private fun ChatToolResultStep(step: AgentStep) {
   Surface(
     modifier = Modifier
       .fillMaxWidth()
@@ -925,7 +925,7 @@ private fun GeminiToolResultStep(step: AgentStep) {
 }
 
 @Composable
-private fun GeminiInfoCard(step: AgentStep) {
+private fun ChatInfoCard(step: AgentStep) {
   Surface(
     modifier = Modifier
       .fillMaxWidth()
@@ -943,7 +943,7 @@ private fun GeminiInfoCard(step: AgentStep) {
 }
 
 @Composable
-private fun GeminiErrorCard(step: AgentStep) {
+private fun ChatErrorCard(step: AgentStep) {
   Surface(
     modifier = Modifier
       .fillMaxWidth()
