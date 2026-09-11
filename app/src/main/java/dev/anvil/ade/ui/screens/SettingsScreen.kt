@@ -11,10 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import dev.anvil.ade.ui.components.AcsCardGroup
-import dev.anvil.ade.ui.components.AcsCardRow
-import dev.anvil.ade.ui.components.AcsCardSwitchRow
-import dev.anvil.ade.ui.components.AcsSectionLabel
+import dev.anvil.ade.ui.components.SettingsCardGroup
+import dev.anvil.ade.ui.components.SettingsCardRow
+import dev.anvil.ade.ui.components.SettingsCardSwitchRow
+import dev.anvil.ade.ui.components.SettingsSectionLabel
 import dev.anvil.ade.ui.theme.ThemeEngine
 
 @Composable
@@ -34,9 +34,9 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     Column(Modifier.weight(1f).padding(16.dp)) {
-      AcsSectionLabel("Appearance")
-      AcsCardGroup {
-        AcsCardRow(
+      SettingsSectionLabel("Appearance")
+      SettingsCardGroup {
+        SettingsCardRow(
           Icons.Filled.Palette, "Theme Engine",
           themeEngine.name,
           onClick = {
@@ -44,18 +44,18 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             themeEngine = next
           }
         )
-        AcsCardSwitchRow(Icons.Filled.DarkMode, "Dark theme", "Use dark color scheme", darkTheme, { darkTheme = !darkTheme })
+        SettingsCardSwitchRow(Icons.Filled.DarkMode, "Dark theme", "Use dark color scheme", darkTheme, { darkTheme = !darkTheme })
       }
       Spacer(Modifier.height(16.dp))
-      AcsSectionLabel("Autonomy")
-      AcsCardGroup {
-        AcsCardRow(Icons.Filled.AutoAwesome, "Autonomy level", autonomyLabels[autonomyLevel], onClick = { autonomyLevel = (autonomyLevel + 1) % 3 })
+      SettingsSectionLabel("Autonomy")
+      SettingsCardGroup {
+        SettingsCardRow(Icons.Filled.AutoAwesome, "Autonomy level", autonomyLabels[autonomyLevel], onClick = { autonomyLevel = (autonomyLevel + 1) % 3 })
       }
       Spacer(Modifier.height(16.dp))
-      AcsSectionLabel("Services")
-      AcsCardGroup {
-        AcsCardSwitchRow(Icons.Filled.Hub, "MCP Server", "Expose tools via HTTP", mcpEnabled, { mcpEnabled = !mcpEnabled })
-        AcsCardSwitchRow(Icons.Filled.Link, "Hook Engine", "File event automation", hooksEnabled, { hooksEnabled = !hooksEnabled })
+      SettingsSectionLabel("Services")
+      SettingsCardGroup {
+        SettingsCardSwitchRow(Icons.Filled.Hub, "MCP Server", "Expose tools via HTTP", mcpEnabled, { mcpEnabled = !mcpEnabled })
+        SettingsCardSwitchRow(Icons.Filled.Link, "Hook Engine", "File event automation", hooksEnabled, { hooksEnabled = !hooksEnabled })
       }
     }
   }

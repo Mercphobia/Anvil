@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun AcsCardGroup(
+fun SettingsCardGroup(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -36,7 +36,7 @@ fun AcsCardGroup(
 }
 
 @Composable
-fun AcsSectionLabel(
+fun SettingsSectionLabel(
     text: String,
     modifier: Modifier = Modifier
 ) {
@@ -51,7 +51,7 @@ fun AcsSectionLabel(
 }
 
 @Composable
-fun AcsCardRow(
+fun SettingsCardRow(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
@@ -87,7 +87,7 @@ fun AcsCardRow(
 }
 
 @Composable
-fun AcsCardSwitchRow(
+fun SettingsCardSwitchRow(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
@@ -95,7 +95,7 @@ fun AcsCardSwitchRow(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    AcsCardRow(
+    SettingsCardRow(
         icon = icon, title = title, subtitle = subtitle,
         onClick = { onCheckedChange(!checked) },
         trailing = {
