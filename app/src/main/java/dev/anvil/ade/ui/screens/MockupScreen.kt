@@ -196,7 +196,8 @@ fun MockupScreen(
         modifier = Modifier
           .fillMaxWidth()
           .weight(1f)
-          .testTag("mockup_canvas_card"),
+          .testTag("mockup_canvas_card")
+          .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(28.dp)),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.elevatedCardColors(
           containerColor = MaterialTheme.colorScheme.surfaceContainerHighest

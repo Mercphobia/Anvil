@@ -54,14 +54,9 @@ fun ErrorLogBottomSheet(
         tonalElevation = 2.dp
     ) {
         Column {
-            // Drag handle
-            Box(
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .size(width = 32.dp, height = 4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.outlineVariant)
-                    .align(Alignment.CenterHorizontally)
+            // Drag handle — ruler-tick motif (Blueprint signature)
+            RulerTickDragHandle(
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             // Header: "Build errors (N)" + Retry
             Row(

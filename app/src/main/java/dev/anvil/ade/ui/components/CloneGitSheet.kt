@@ -40,13 +40,9 @@ fun CloneGitSheet(
       .background(MaterialTheme.colorScheme.surfaceContainer)
       .padding(20.dp)
   ) {
-    // Handle bar
-    Box(
-      modifier = Modifier
-        .align(Alignment.CenterHorizontally)
-        .width(36.dp).height(4.dp)
-        .clip(RoundedCornerShape(2.dp))
-        .background(MaterialTheme.colorScheme.outline)
+    // Handle bar — ruler-tick motif
+    RulerTickDragHandle(
+        modifier = Modifier.align(Alignment.CenterHorizontally)
     )
     Spacer(Modifier.height(16.dp))
 
