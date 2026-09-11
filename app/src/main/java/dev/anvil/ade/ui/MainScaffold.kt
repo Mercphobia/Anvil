@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.CallSplit
 import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Menu
@@ -119,6 +120,7 @@ fun MainScaffold(viewModel: AnvilViewModel) {
   // from the editor's Preview button.
   val destinations = listOf(
     NavDestination("chat", "Chat", Icons.Filled.ChatBubble, hasBadge = isBusy),
+    NavDestination("editor", "Editor", Icons.Filled.Code),
     NavDestination("git", "Git", Icons.AutoMirrored.Filled.CallSplit),
     NavDestination("terminal", "Terminal", Icons.Filled.Terminal, hasBadge = isBuilding)
   )
