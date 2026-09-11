@@ -54,10 +54,9 @@ fun OnboardingFlow(
             ) { current ->
                 when (current) {
                     WizardStep.WELCOME -> WelcomeStep(viewModel)
-                    WizardStep.BOOTSTRAP -> BootstrapStep(viewModel)
-                    WizardStep.AI_ASSISTANT -> AiAssistantStep(viewModel)
-                    WizardStep.PROJECT_SOURCE -> ProjectSourceStep(viewModel)
-                    WizardStep.TEMPLATE -> TemplateStep(viewModel)
+                    WizardStep.PROVIDER_SETUP -> AiAssistantStep(viewModel)
+                    WizardStep.WORKSPACE_PERMISSION -> WorkspacePermissionStep(viewModel)
+                    WizardStep.READY -> ReadyStep(viewModel)
                 }
             }
         }
@@ -73,11 +72,10 @@ fun OnboardingFlow(
 @Composable
 private fun BlueprintWizardProgress(step: WizardStep) {
     val steps = listOf(
-        WizardStep.BOOTSTRAP to "Environment",
-        WizardStep.AI_ASSISTANT to "AI",
-        WizardStep.PROJECT_SOURCE to "Project",
-        WizardStep.TEMPLATE to "Ready"
-    )
+            WizardStep.PROVIDER_SETUP to "Provider",
+            WizardStep.WORKSPACE_PERMISSION to "Permission",
+            WizardStep.READY to "Ready"
+        )
     val currentIndex = steps.indexOfFirst { it.first == step }.coerceAtLeast(0)
 
     Column(
